@@ -1,0 +1,27 @@
+# --- Quartus build artifacts (regenerated on every compile) ---
+db/
+incremental_db/
+greybox_tmp/
+.qsys_edit/
+*.rpt
+*.summary
+*.smsg
+*.done
+*.jdi
+*.pin
+*.sld
+*.qws
+c5_pin_model_dump.txt
+
+# --- Editor / tool leftovers ---
+*.bak
+*.asv
+*.o
+
+# --- Simulation artifacts (Aurora / Icarus Verilog) ---
+.aurora-wave/
+.aurora-missing-files.log
+projects/aurora/testbench/
+*.vcd
+*.vvp
+!verificacao/*.vcd

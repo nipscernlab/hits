@@ -1,0 +1,26 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:          fpga_load
+# Required-Start:    $local_fs
+# Default-Start:     S
+# Short-Description: Load FPGA bitstream at boot
+### END INIT INFO
+
+FPGA_BITSTREAM="/home/root/soc_system.rbf"
+
+case "$1" in
+  start)
+    echo "Loading FPGA bitstream..."
+    if [ -f "$FPGA_BITSTREAM" ]; then
+      dd if="$FPGA_BITSTREAM" of=/dev/fpga0 bs=1M
+    else
+      echo "Bitstream not found: $FPGA_BITSTREAM"
+    fi
+    ;;
+  *)
+    echo "Usage: $0 start"
+    exit 1
+esac
+
+exit 0
