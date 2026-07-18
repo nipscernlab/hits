@@ -12,10 +12,11 @@
     "basePath": "C:\\nipscern\\hits\\projects\\aurora",
     "folders": [],
     "processors": [],
-    "topLevelFile": "..\\..\\rtl\\FPGA_Simulator_v1_PZC.v",
+    "topLevelFile": "..\\..\\rtl_test\\FPGA_Simulator_v1_PZC.v",
     "testbenchFile": "sim_pulsos_tb.v",
     "synthesizableFiles": [
-      { "name": "FPGA_Simulator_v1_PZC.v", "path": "..\\..\\rtl\\FPGA_Simulator_v1_PZC.v", "isTopLevel": true },
+      { "name": "FPGA_Simulator_v1_PZC.v", "path": "..\\..\\rtl_test\\FPGA_Simulator_v1_PZC.v", "isTopLevel": true },
+      { "name": "FPGA_Simulator_v1.v", "path": "..\\..\\rtl\\FPGA_Simulator_v1.v", "isTopLevel": false },
       { "name": "Hits_Bunch_train.v", "path": "..\\..\\rtl\\Hits_Bunch_train.v", "isTopLevel": false },
       { "name": "hits_positions.v", "path": "..\\..\\rtl\\hits_positions.v", "isTopLevel": false },
       { "name": "bunch_train_mask.v", "path": "..\\..\\rtl\\bunch_train_mask.v", "isTopLevel": false },
@@ -30,7 +31,7 @@
       { "name": "iir_ordem1.v", "path": "..\\..\\rtl\\iir_ordem1.v", "isTopLevel": false },
       { "name": "iir_ordem2.v", "path": "..\\..\\rtl\\iir_ordem2.v", "isTopLevel": false },
       { "name": "clip_shaper.v", "path": "..\\..\\rtl\\clip_shaper.v", "isTopLevel": false },
-      { "name": "pzc_ped_track.v", "path": "..\\..\\rtl\\pzc_ped_track.v", "isTopLevel": false }
+      { "name": "pzc_ped_track.v", "path": "..\\..\\rtl_test\\pzc_ped_track.v", "isTopLevel": false }
     ],
     "testbenchFiles": [
       { "name": "sim_pulsos_tb.v", "path": "sim_pulsos_tb.v", "isTopLevel": true }

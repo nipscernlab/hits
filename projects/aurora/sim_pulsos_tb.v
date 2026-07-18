@@ -1,8 +1,9 @@
-// sim_pulsos_tb.v — testbench of the pulse simulator core (FPGA_Simulator_v1_PZC)
+// sim_pulsos_tb.v — testbench of the core+PZC test wrapper (FPGA_Simulator_v1_PZC)
 // for Aurora (Icarus Verilog + GTKWave), with no ARM/PLL/Qsys.
 // Aurora project: sim_pulsos.spf in this folder — the simulated RTL is the
-// ORIGINAL source in rtl/ (shared by the Quartus and Aurora projects, no
-// copies): edit the .v -> simulate -> commit.
+// ORIGINAL source: the simulator core in rtl/ plus the PZC-under-test in
+// rtl_test/ (both shared by the Quartus and Aurora projects, no copies):
+// edit the .v -> simulate -> commit.
 //
 // - 40 MHz clock (25 ns period), like the LHC bunch clock;
 // - short reset at the start;
