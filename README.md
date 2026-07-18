@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/nipscernlab/nipscernweb/main/assets/icons/hits-badge.svg"
+       alt="HITS emblem"
+       width="220">
+</p>
+
 # HITS: Hardware Impulse Train Synthesizer
 
 Real-time FPGA simulator of calorimeter readout pulses, running at 40 MHz on a
