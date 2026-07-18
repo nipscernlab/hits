@@ -2,11 +2,10 @@
 
 module iir_ordem1
 
-#( 
+#(
 	parameter BITS_IN = 33,
-	parameter G_ENTRADA = 2**32,
 	parameter G_SAIDA_LOG = 10,
-	parameter signed b0 =   785,  
+	parameter signed b0 =   785,
 	parameter signed a1 =  -1366
 )
 

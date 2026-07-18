@@ -10,7 +10,6 @@
 module shaper_fenics
 #(
 	parameter BITS_IN = 34,
-	parameter G_ENTRADA = 2**32,
 	parameter G_SAIDA_LOG = 10
 )
 (
@@ -27,7 +26,6 @@ wire signed [BITS_IN+16:0] out5 = -24 * in;
 iir_ordem1
 #(
 	.BITS_IN(BITS_IN),
-	.G_ENTRADA(G_ENTRADA),
 	.G_SAIDA_LOG(10),
 	.b0(-3),
 	.a1(-1022)
@@ -41,7 +39,6 @@ iir_ordem1
 iir_ordem2
 #(
 	.BITS_IN(BITS_IN),
-	.G_ENTRADA(G_ENTRADA),
 	.G_SAIDA_LOG(10),
 	.b0(746),
 	.b1(444),
@@ -57,7 +54,6 @@ iir_ordem2
 iir_ordem2
 #(
 	.BITS_IN(BITS_IN),
-	.G_ENTRADA(G_ENTRADA),
 	.G_SAIDA_LOG(10),
 	.b0(-3362),
 	.b1(-361),
@@ -73,7 +69,6 @@ iir_ordem2
 iir_ordem1
 #(
 	.BITS_IN(BITS_IN),
-	.G_ENTRADA(G_ENTRADA),
 	.G_SAIDA_LOG(10),
 	.b0(2644),
 	.a1(-373)
@@ -84,6 +79,9 @@ iir_ordem1
 	.out(out4)
 );
 
+// NOTE: the five sections are summed into `out` without extra guard bits. It
+// does not overflow for the current energy range, but widen `out` (and the
+// section outputs) if the input amplitudes ever grow.
 assign out = out1 + out2 + out3 + out4 + out5;
 
 endmodule

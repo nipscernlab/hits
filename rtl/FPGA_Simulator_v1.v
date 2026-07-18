@@ -86,7 +86,6 @@ energy_collisions
 shaper_fenics
 #(
 	.BITS_IN(ENG_OUT_BITS),
-	.G_ENTRADA(2**32),
 	.G_SAIDA_LOG(10)
 )sf
 (
@@ -96,6 +95,10 @@ shaper_fenics
 );
 
 
+// event_bt/event_all are unsigned but feed the signed shaper input of the same
+// width (ENG_OUT_BITS). This is safe because the energy LUT holds 12-bit
+// magnitudes, so the top bit is always 0 and the signed value stays >= 0.
+// Widen the shaper input (or reserve a sign bit) if the LUT ever uses ENG_OUT_BITS.
 assign event_bt = energy_out * hits_out;
 assign event_all = energy_out * hits_orig;
 
