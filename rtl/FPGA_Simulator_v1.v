@@ -48,6 +48,7 @@ module FPGA_Simulator_v1
 	output signed [NOISE_OUT_BITS-1:0] noise_out
 );
 
+wire hits_orig;   // ungated hit (before the bunch-train mask), used by event_all
 
 Hits_Bunch_train
 #(

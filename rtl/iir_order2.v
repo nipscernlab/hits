@@ -20,7 +20,7 @@ module iir_order2
 	output signed [BITS_IN+16:0] out
 	);
 	
-	reg signed  [BITS_IN:0] rx1 = 0;
+	reg signed  [BITS_IN-1:0] rx1 = 0;
 	reg signed  [BITS_IN+16:0] ry1 = 0, ry2 = 0;
 	wire signed [BITS_IN+16:0] yz;
 	wire signed [BITS_IN+G_OUT_LOG+16:0] yp;
