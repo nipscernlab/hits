@@ -25,7 +25,7 @@ rtl/                  Simulator source shared by all flows (.v modules + .mif me
 rtl_test/             PZC-under-test and the core+PZC test wrapper (not the simulator)
 projects/quartus/     Quartus Prime project for the DE10-Nano SoC (FPGA + ARM/HPS)
 projects/aurora/      Aurora (Icarus Verilog + GTKWave) simulation project + testbench
-verificacao/          Regression baseline: golden VCD + comparison script
+verification/         Regression baseline: golden VCD + comparison script
 ```
 
 ## How it works
@@ -38,7 +38,7 @@ The synthesizable simulator core (`rtl/`) chains four blocks, one sample per
 | Random number generation | `rand_LFSR.v`, `select_rand.v`, `random_number_generator.v` | Bank of 7 LFSRs with a selector, producing uncorrelated pseudo-random streams |
 | Hit generation | `Hits_Bunch_train.v`, `hits_positions.v`, `bunch_train_mask.v` | Bernoulli hit draw per bunch crossing, gated by the LHC bunch-train mask (`bunch_train_mask.mif`) and the programmable occupancy |
 | Amplitude and noise | `energy_*.v` + `A13_PART*.mif`, `noise_*.v` + `NOISE_PART*.mif` | Inverse-CDF lookup split across multiple memories (multi-memory approach), drawing energy amplitudes from a measured minimum-bias distribution and Gaussian electronic noise |
-| Shaping and digitization | `shaper_fenics.v`, `iir_ordem1/2.v`, `clip_shaper.v` | IIR implementation of the front-end shaper, then pedestal offset and clipping to the ADC range; the output `shaper_clip` is the simulated readout |
+| Shaping and digitization | `shaper_fenics.v`, `iir_order1/2.v`, `clip_shaper.v` | IIR implementation of the front-end shaper, then pedestal offset and clipping to the ADC range; the output `shaper_clip` is the simulated readout |
 
 The **pole-zero cancellation (PZC)** is not part of the simulator: it is a
 downstream reconstruction stage validated with the synthesized pulse train.
@@ -76,10 +76,10 @@ vvp tb.vvp                      # writes sim_pulsos_tb.vcd here
 ## Regression check
 
 Any change to the RTL must keep the testbench output bit-for-bit identical to
-the frozen baseline (`verificacao/sim_pulsos_tb_golden.vcd`):
+the frozen baseline (`verification/sim_pulsos_tb_golden.vcd`):
 
 ```sh
-python ../../verificacao/comparar_vcd.py sim_pulsos_tb.vcd   # exit 0 = identical
+python ../../verification/compare_vcd.py sim_pulsos_tb.vcd   # exit 0 = identical
 ```
 (paths as in the simulation recipe above, run from `projects/aurora/`)
 

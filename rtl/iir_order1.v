@@ -1,10 +1,10 @@
 `timescale 1ns/100ps
 
-module iir_ordem1
+module iir_order1
 
 #(
 	parameter BITS_IN = 33,
-	parameter G_SAIDA_LOG = 10,
+	parameter G_OUT_LOG = 10,
 	parameter signed b0 =   785,
 	parameter signed a1 =  -1366
 )
@@ -20,13 +20,13 @@ module iir_ordem1
 	
 	reg signed  [BITS_IN+16:0] ry = 0;
 	wire signed [BITS_IN+16:0] yz;
-	wire signed [BITS_IN+G_SAIDA_LOG+16:0] yp;
+	wire signed [BITS_IN+G_OUT_LOG+16:0] yp;
 		
 	
 	
 	assign yz =   b0*in;
 	assign yp = - a1*ry;
-	assign out =   yz + (yp >>> G_SAIDA_LOG);
+	assign out =   yz + (yp >>> G_OUT_LOG);
 	
 	always @(posedge clock)
 	begin

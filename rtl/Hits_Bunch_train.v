@@ -19,7 +19,6 @@ wire [RAND_BITS-1:0] rand_hits;
 random_number_generator
 #(
 	.RAND_OUT_SIZE(RAND_BITS),
-	.LFSR_B(42),
 	.SEED0(64'd461934351),
 	.SEED1(64'd363409739),
 	.SEED2(64'd209805534),

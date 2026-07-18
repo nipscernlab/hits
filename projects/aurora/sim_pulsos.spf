@@ -81,13 +81,13 @@
         "isTopLevel": false
       },
       {
-        "name": "iir_ordem1.v",
-        "path": "..\\..\\rtl\\iir_ordem1.v",
+        "name": "iir_order1.v",
+        "path": "..\\..\\rtl\\iir_order1.v",
         "isTopLevel": false
       },
       {
-        "name": "iir_ordem2.v",
-        "path": "..\\..\\rtl\\iir_ordem2.v",
+        "name": "iir_order2.v",
+        "path": "..\\..\\rtl\\iir_order2.v",
         "isTopLevel": false
       },
       {

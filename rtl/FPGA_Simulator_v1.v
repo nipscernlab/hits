@@ -86,7 +86,7 @@ energy_collisions
 shaper_fenics
 #(
 	.BITS_IN(ENG_OUT_BITS),
-	.G_SAIDA_LOG(10)
+	.G_OUT_LOG(10)
 )sf
 (
 	.clock(clk),

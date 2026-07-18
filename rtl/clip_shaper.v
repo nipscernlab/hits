@@ -2,12 +2,12 @@
 
 // Clips the shaper output to the ADC range [0, 2**BITS_OUT-1] after adding
 // the programmable pedestal offset and dropping the fixed-point scale
-// (>>> G_SAIDA_LOG).
+// (>>> G_OUT_LOG).
 module clip_shaper
 #(
 	parameter BITS_IN = 34,
 	parameter BITS_OUT = 12,
-	parameter G_SAIDA_LOG = 10
+	parameter G_OUT_LOG = 10
 )
 (
 	input  clk, rst,
@@ -18,7 +18,7 @@ module clip_shaper
 
 localparam integer ADC_MAX = 2**BITS_OUT - 1;
 
-wire signed [BITS_IN-1:0] in_offset = (in + (offset <<< G_SAIDA_LOG)) >>> G_SAIDA_LOG;
+wire signed [BITS_IN-1:0] in_offset = (in + (offset <<< G_OUT_LOG)) >>> G_OUT_LOG;
 
 always @(posedge clk or posedge rst) begin
 	if (rst) begin

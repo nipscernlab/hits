@@ -5,19 +5,21 @@
 //
 //   x^42 + x^27 + x^24 + x^14 + x^8 + x + 1
 //
-// Combinational feedback (no extra register in the loop): with LFSR_BITS = 42
-// and any non-zero seed the sequence has maximal length, period 2^42 - 1
-// (~1.27 days at 40 MHz). Tap indices assume LFSR_BITS = 42.
+// Combinational feedback (no extra register in the loop). The width is FIXED at
+// 42 bits: the tap indices below are specific to this polynomial, so the width
+// is not a parameter. With any non-zero seed the sequence has maximal length,
+// period 2^42 - 1 (~1.27 days at 40 MHz).
 module rand_LFSR
 #(
 	parameter seed = 64'd12345,
-	parameter DATA_OUT_SIZE = 7,
-	parameter LFSR_BITS = 64
+	parameter DATA_OUT_SIZE = 7
 )
 (
 	input clk, rst,
 	output [DATA_OUT_SIZE-1:0] rand_out
 );
+
+localparam LFSR_BITS = 42;
 
 reg [LFSR_BITS-1:0] lfsr = seed;  // shift register, seeded with a non-zero value
 

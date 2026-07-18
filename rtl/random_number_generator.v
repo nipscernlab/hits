@@ -3,7 +3,6 @@
 module random_number_generator
 #(
 	parameter RAND_OUT_SIZE = 7,
-	parameter LFSR_B = 42,
 	parameter SEED0 = 64'd461934351,
 	parameter SEED1 = 64'd363409739,
 	parameter SEED2 = 64'd209805534,
@@ -25,8 +24,7 @@ wire [RAND_OUT_SIZE-1:0] rand0, rand1, rand2, rand3, rand4,rand5,rand6;
 rand_LFSR
 #(
 	.seed(SEED0),
-	.DATA_OUT_SIZE(RAND_OUT_SIZE),
-	.LFSR_BITS(LFSR_B)
+	.DATA_OUT_SIZE(RAND_OUT_SIZE)
 )
 mod_rand0
 (
@@ -38,8 +36,7 @@ mod_rand0
 rand_LFSR
 #(
 	.seed(SEED1),
-	.DATA_OUT_SIZE(RAND_OUT_SIZE),
-	.LFSR_BITS(LFSR_B)
+	.DATA_OUT_SIZE(RAND_OUT_SIZE)
 )
 mod_rand1
 (
@@ -52,8 +49,7 @@ mod_rand1
 rand_LFSR
 #(
 	.seed(SEED2),
-	.DATA_OUT_SIZE(RAND_OUT_SIZE),
-	.LFSR_BITS(LFSR_B)
+	.DATA_OUT_SIZE(RAND_OUT_SIZE)
 )
 mod_rand2
 (
@@ -65,8 +61,7 @@ mod_rand2
 rand_LFSR
 #(
 	.seed(SEED3),
-	.DATA_OUT_SIZE(RAND_OUT_SIZE),
-	.LFSR_BITS(LFSR_B)
+	.DATA_OUT_SIZE(RAND_OUT_SIZE)
 )
 mod_rand3
 (
@@ -79,8 +74,7 @@ mod_rand3
 rand_LFSR
 #(
 	.seed(SEED4),
-	.DATA_OUT_SIZE(RAND_OUT_SIZE),
-	.LFSR_BITS(LFSR_B)
+	.DATA_OUT_SIZE(RAND_OUT_SIZE)
 )
 mod_rand4
 (
@@ -92,8 +86,7 @@ mod_rand4
 rand_LFSR
 #(
 	.seed(SEED5),
-	.DATA_OUT_SIZE(RAND_OUT_SIZE),
-	.LFSR_BITS(LFSR_B)
+	.DATA_OUT_SIZE(RAND_OUT_SIZE)
 )
 mod_rand5
 (
@@ -105,8 +98,7 @@ mod_rand5
 rand_LFSR
 #(
 	.seed(SEED6),
-	.DATA_OUT_SIZE(RAND_OUT_SIZE),
-	.LFSR_BITS(LFSR_B)
+	.DATA_OUT_SIZE(RAND_OUT_SIZE)
 )
 mod_rand6
 (

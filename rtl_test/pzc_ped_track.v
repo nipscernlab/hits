@@ -38,8 +38,8 @@ reg [20:0] cont1 = 0;                  // negative-sample counter
 reg [20:0] cont2 = 0;                  // pedestal-window sample counter
 reg [20:0] cont_bt = 0;                // samples with the mask low
 
-reg signed [NBITS_OUT+K_CORR - 1:0] soma = 0;    // sum of negative samples
-reg signed [NBITS_OUT+PED_CORR- 1:0] soma2 = 0;  // sum over the pedestal window
+reg signed [NBITS_OUT+K_CORR - 1:0] sum = 0;    // sum of negative samples
+reg signed [NBITS_OUT+PED_CORR- 1:0] sum2 = 0;  // sum over the pedestal window
 reg signed [NBITS_OUT -1:0] m_out = 0;           // accumulator correction
 reg signed [NBITS_OUT -1:0] ped_reg_out = 0;
 reg signed [NBITS_OUT -1:0] ped_reg_out_corr = 0;
@@ -59,7 +59,7 @@ begin
 		ped_reg_out_corr <= 0;
 		enable_acc_corr <= 1'd1;
 		io_out_delay <= 0;
-		soma2 <= 0;
+		sum2 <= 0;
 		enable_ped <= 1;
 		first_sample <= 0;
 		diff_last <= 0;
@@ -101,24 +101,24 @@ begin
 
 			if (io_out < 0) begin
 				cont1 <= cont1 + 1'd1;
-				soma <= soma + io_out;
+				sum <= sum + io_out;
 			end
 
 			if (enable_ped) begin
 				cont2 <= cont2 + 1'd1;
-				soma2 <= soma2 + io_out;
+				sum2 <= sum2 + io_out;
 			end
 			else begin
-				soma2 <= 0;
+				sum2 <= 0;
 				cont2 <= 0;
 			end
 
 
 			if (enable_acc_corr) begin
 				if (cont1 == K_CORR) begin              // enough negative samples:
-					m_out <= soma >>> $clog2(K_CORR);    // correct the accumulator
+					m_out <= sum >>> $clog2(K_CORR);    // correct the accumulator
 					cont1 <= 0;
-					soma <= 0;
+					sum <= 0;
 					enable_ped <= 0;
 					enable_diverge <= 0;
 				end
@@ -138,24 +138,24 @@ begin
 				diff_last <= 0;
 			end
 
-			if (diff_last > DRIFT_THRESH && soma2 > 0) begin
+			if (diff_last > DRIFT_THRESH && sum2 > 0) begin
 				enable_acc_corr <= 0;
 				enable_ped <= 0;
 				pedestal <= pedestal + 1'd1;
 				diff_last <= 0;
 				first_sample <= 0;
-				ped_reg_out_corr <= soma2 >>> $clog2(K_CORR);
+				ped_reg_out_corr <= sum2 >>> $clog2(K_CORR);
 				enable_diverge <= 0;
 			end
 			else begin
 
-				if (diff_last < -DRIFT_THRESH && soma2 < 0) begin
+				if (diff_last < -DRIFT_THRESH && sum2 < 0) begin
 					enable_acc_corr <= 0;
 					enable_ped <= 0;
 					pedestal <= pedestal - 1'd1;
 					diff_last <= 0;
 					first_sample <= 0;
-					ped_reg_out_corr <= soma2 >>> $clog2(K_CORR);
+					ped_reg_out_corr <= sum2 >>> $clog2(K_CORR);
 					enable_diverge <= 0;
 				end
 				else begin
@@ -169,12 +169,12 @@ begin
 		else begin                          // outside a long gap: idle state
 			cont1 <= 0;
 			cont2 <= 0;
-			soma <= 0;
+			sum <= 0;
 			m_out <= 0;
 			ped_reg_out <= 0;
 			enable_acc_corr <= 1'd1;
 			ped_reg_out_corr <= 0;
-			soma2 <= 0;
+			sum2 <= 0;
 			enable_ped <= 1'd1;
 			first_sample <= 0;
 			diff_last <= 0;

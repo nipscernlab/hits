@@ -23,7 +23,6 @@ wire rand3;
 random_number_generator
 #(
 	.RAND_OUT_SIZE(RAND_BITS),
-	.LFSR_B(42),
 	.SEED0(64'd3385518173586546),
 	.SEED1(64'd3257678097006247),
 	.SEED2(64'd1664473063922978),
@@ -43,7 +42,6 @@ random_number_generator
 random_number_generator
 #(
 	.RAND_OUT_SIZE(RAND_BITS),
-	.LFSR_B(42),
 	.SEED0(64'd551112509180781),
 	.SEED1(64'd233547771528969),
 	.SEED2(64'd2861039761049085),
@@ -64,7 +62,6 @@ random_number_generator
 random_number_generator
 #(
 	.RAND_OUT_SIZE(RAND_BITS),
-	.LFSR_B(42),
 	.SEED0(64'd267283878329760),
 	.SEED1(64'd1459877861036897),
 	.SEED2(64'd2178239822101905),
@@ -82,7 +79,6 @@ random_number_generator
 random_number_generator
 #(
 	.RAND_OUT_SIZE(1),
-	.LFSR_B(42),
 	.SEED0(64'd2007696818806566),
 	.SEED1(64'd1332771774909742),
 	.SEED2(64'd2539737469039079),

@@ -1,4 +1,4 @@
-# comparar_vcd.py — regression criterion of this repository (defined 2026-07-17):
+# compare_vcd.py — regression criterion of this repository (defined 2026-07-17):
 # "the testbench output must not change AT ALL".
 #
 # Compares two VCDs ignoring only what is not DUT behavior:
@@ -11,7 +11,7 @@
 # Everything else — signal definitions, timestamps and values — must be
 # IDENTICAL.
 #
-# Usage:  python comparar_vcd.py <new.vcd> [golden.vcd]
+# Usage:  python compare_vcd.py <new.vcd> [golden.vcd]
 #         (golden default: sim_pulsos_tb_golden.vcd next to this script)
 # Exits with code 0 if identical, 1 if different.
 
@@ -66,7 +66,7 @@ def body(path):
 
 def main():
     if len(sys.argv) < 2:
-        print(__doc__ or "usage: python comparar_vcd.py <new.vcd> [golden.vcd]")
+        print(__doc__ or "usage: python compare_vcd.py <new.vcd> [golden.vcd]")
         return 2
     new = Path(sys.argv[1])
     golden = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(__file__).parent / "sim_pulsos_tb_golden.vcd"
