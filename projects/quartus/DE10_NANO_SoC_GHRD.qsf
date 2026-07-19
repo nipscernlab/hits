@@ -700,12 +700,12 @@ set_global_assignment -name MIF_FILE ../../rtl/A13_PART3.mif
 set_global_assignment -name MIF_FILE ../../rtl/A13_PART2.mif
 set_global_assignment -name MIF_FILE ../../rtl/A13_PART1.mif
 set_global_assignment -name VERILOG_FILE sw_converter.v
-set_global_assignment -name VERILOG_FILE ../../rtl/shaper_fenics.v
+set_global_assignment -name VERILOG_FILE ../../rtl/filtros/shaper_fenics.v
 set_global_assignment -name VERILOG_FILE ../../rtl/select_rand.v
 set_global_assignment -name VERILOG_FILE ../../rtl/random_number_generator.v
 set_global_assignment -name VERILOG_FILE ../../rtl/rand_LFSR.v
-set_global_assignment -name VERILOG_FILE ../../rtl/iir_order2.v
-set_global_assignment -name VERILOG_FILE ../../rtl/iir_order1.v
+set_global_assignment -name VERILOG_FILE ../../rtl/filtros/iir_order2.v
+set_global_assignment -name VERILOG_FILE ../../rtl/filtros/iir_order1.v
 set_global_assignment -name VERILOG_FILE ../../rtl/hits_positions.v
 set_global_assignment -name VERILOG_FILE ../../rtl/Hits_Bunch_train.v
 set_global_assignment -name VERILOG_FILE FPGA_Simulator_v1_PZC_SOC.v

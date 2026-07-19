@@ -77,17 +77,17 @@
       },
       {
         "name": "shaper_fenics.v",
-        "path": "..\\..\\rtl\\shaper_fenics.v",
+        "path": "..\\..\\rtl\\filtros\\shaper_fenics.v",
         "isTopLevel": false
       },
       {
         "name": "iir_order1.v",
-        "path": "..\\..\\rtl\\iir_order1.v",
+        "path": "..\\..\\rtl\\filtros\\iir_order1.v",
         "isTopLevel": false
       },
       {
         "name": "iir_order2.v",
-        "path": "..\\..\\rtl\\iir_order2.v",
+        "path": "..\\..\\rtl\\filtros\\iir_order2.v",
         "isTopLevel": false
       },
       {

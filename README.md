@@ -22,6 +22,7 @@ Fora, Brazil).
 
 ```
 rtl/                  Simulator source shared by all flows (.v modules + .mif memories)
+rtl/filtros/          Shaper filters: the one in use plus alternatives not yet wired in
 rtl_test/             PZC-under-test and the core+PZC test wrapper (not the simulator)
 projects/quartus/     Quartus Prime project for the DE10-Nano SoC (FPGA + ARM/HPS)
 projects/aurora/      Aurora (Icarus Verilog + GTKWave) simulation project + testbench
@@ -38,7 +39,19 @@ The synthesizable simulator core (`rtl/`) chains four blocks, one sample per
 | Random number generation | `rand_LFSR.v`, `select_rand.v`, `random_number_generator.v` | Bank of 7 LFSRs with a selector, producing uncorrelated pseudo-random streams |
 | Hit generation | `Hits_Bunch_train.v`, `hits_positions.v`, `bunch_train_mask.v` | Bernoulli hit draw per bunch crossing, gated by the LHC bunch-train mask (`bunch_train_mask.mif`) and the programmable occupancy |
 | Amplitude and noise | `energy_*.v` + `A13_PART*.mif`, `noise_*.v` + `NOISE_PART*.mif` | Inverse-CDF lookup split across multiple memories (multi-memory approach), drawing energy amplitudes from a measured minimum-bias distribution and Gaussian electronic noise |
-| Shaping and digitization | `shaper_fenics.v`, `iir_order1/2.v`, `clip_shaper.v` | IIR implementation of the front-end shaper, then pedestal offset and clipping to the ADC range; the output `shaper_clip` is the simulated readout |
+| Shaping and digitization | `filtros/shaper_fenics.v`, `filtros/iir_order1/2.v`, `clip_shaper.v` | IIR implementation of the front-end shaper, then pedestal offset and clipping to the ADC range; the output `shaper_clip` is the simulated readout |
+
+### Shaper filters (`rtl/filtros/`)
+
+| Filter | Status | Description |
+|---|---|---|
+| `shaper_fenics.v` + `iir_order1.v` + `iir_order2.v` | **in use** | Parallel IIR sections, coefficients at a 2**10 scale. This is what `FPGA_Simulator_v1.v` instantiates and what the golden VCD covers. |
+| `shaper_fenics_f34.v` | **not wired in** | Newer design: 13-tap FIR head plus 5 IIR sections (3 leaky, 2 coupled), derived from a 14-pole transfer function of the FENICS front end. Zero DC gain is imposed rather than fitted, so it cannot produce a baseline sag the real front end does not have. Shape error 0.026% of peak. Generated from the design study, not written by hand: see the header of the file. |
+
+`shaper_fenics_f34.v` is compiled by the regression (so it stays syntax-clean)
+but nothing instantiates it, so the golden VCD is unaffected. Swapping it in is
+a deliberate change: it has a different interface scale and its own reset, and
+it would require regenerating the golden VCD.
 
 The **pole-zero cancellation (PZC)** is not part of the simulator: it is a
 downstream reconstruction stage validated with the synthesized pulse train.
@@ -69,7 +82,7 @@ With Icarus Verilog directly:
 
 ```sh
 cd projects/aurora
-iverilog -s sim_pulsos_tb -o tb.vvp ../../rtl/*.v ../../rtl_test/*.v sim_pulsos_tb.v
+iverilog -s sim_pulsos_tb -o tb.vvp ../../rtl/*.v ../../rtl/filtros/*.v ../../rtl_test/*.v sim_pulsos_tb.v
 vvp tb.vvp                      # writes sim_pulsos_tb.vcd here
 ```
 
