@@ -57,9 +57,9 @@ localparam integer B_C     = 12;   // FIR tap fraction bits
 localparam integer N_DELAY = 3;    // shared delay of the slow sections
 // State width is sized PER SECTION: a section holds at most |G|*|x|*2**EX,
 // so it needs (BITS_IN-1) + EX + ceil(log2|G|) + 1 bits, plus guard for the
-// transient. A single uniform width would overflow the tau = 10.1 ms section
-// at small BITS_IN (it carries the largest EX) while wasting bits on the fast
-// ones. WP is the product width: the coefficient adds W_COEF fraction bits.
+// transient. A single uniform width overflows the tau = 10.1 ms section (the
+// largest EX) at small BITS_IN, while wasting bits on the fast ones. In the
+// HITS simulator BITS_IN is 13, which is exactly where that bites.
 localparam signed [W_COEF:0] MEIO = 1 <<< (W_COEF-1);
 
 // ---------------------------------------------------------- FIR head -----
