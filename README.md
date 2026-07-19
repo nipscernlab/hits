@@ -43,15 +43,38 @@ The synthesizable simulator core (`rtl/`) chains four blocks, one sample per
 
 ### Shaper filters (`rtl/filtros/`)
 
-| Filter | Status | Description |
-|---|---|---|
-| `shaper_fenics.v` + `iir_order1.v` + `iir_order2.v` | **in use** | Parallel IIR sections, coefficients at a 2**10 scale. This is what `FPGA_Simulator_v1.v` instantiates and what the golden VCD covers. |
-| `shaper_fenics_f34.v` | **not wired in** | Newer design: 13-tap FIR head plus 5 IIR sections (3 leaky, 2 coupled), derived from a 14-pole transfer function of the FENICS front end. Zero DC gain is imposed rather than fitted, so it cannot produce a baseline sag the real front end does not have. Shape error 0.026% of peak. Generated from the design study, not written by hand: see the header of the file. |
+Which one is built is a **synthesis-time choice**, selected by the
+`USE_SHAPER_F34` macro (see *Selecting the shaper* below):
 
-`shaper_fenics_f34.v` is compiled by the regression (so it stays syntax-clean)
-but nothing instantiates it, so the golden VCD is unaffected. Swapping it in is
-a deliberate change: it has a different interface scale and its own reset, and
-it would require regenerating the golden VCD.
+| Filter | Selected by | Description |
+|---|---|---|
+| `shaper_fenics.v` + `iir_order1.v` + `iir_order2.v` | **default** | Parallel IIR sections, coefficients at a 2**10 scale. |
+| `shaper_fenics_f34.v` | `USE_SHAPER_F34` | 13-tap FIR head plus 5 IIR sections (3 leaky, 2 coupled), derived from a 14-pole transfer function of the FENICS front end. Zero DC gain is **imposed** rather than fitted, so it cannot produce a baseline sag the real front end does not have. Shape error 0.026% of peak. Generated from the design study, not written by hand: see the header of the file. |
+
+Both share the same output scale (`2**G_OUT_LOG`), so nothing downstream
+changes. The F34 module additionally takes a reset, which the top level wires
+for it.
+
+### Selecting the shaper
+
+Either uncomment the `` `define `` at the top of `rtl/FPGA_Simulator_v1.v`, or
+define the macro externally and leave the file untouched (an `` `ifndef `` guard
+makes the external define win):
+
+```sh
+iverilog -DUSE_SHAPER_F34 ...                                     # Icarus
+```
+```tcl
+set_global_assignment -name VERILOG_MACRO "USE_SHAPER_F34=1"      # Quartus
+```
+
+⚠️ **Each choice has its own golden VCD** — the two builds produce different
+pulses, which is the whole point:
+
+| Build | Golden |
+|---|---|
+| default | `verification/sim_pulsos_tb_golden.vcd` |
+| `USE_SHAPER_F34` | `verification/sim_pulsos_tb_golden_f34.vcd` |
 
 The **pole-zero cancellation (PZC)** is not part of the simulator: it is a
 downstream reconstruction stage validated with the synthesized pulse train.
@@ -95,6 +118,16 @@ the frozen baseline (`verification/sim_pulsos_tb_golden.vcd`):
 python ../../verification/compare_vcd.py sim_pulsos_tb.vcd   # exit 0 = identical
 ```
 (paths as in the simulation recipe above, run from `projects/aurora/`)
+
+For a build with `USE_SHAPER_F34`, compare against that build's own golden:
+
+```sh
+iverilog -DUSE_SHAPER_F34 -s sim_pulsos_tb -o tb.vvp \
+    ../../rtl/*.v ../../rtl/filtros/*.v ../../rtl_test/*.v sim_pulsos_tb.v
+vvp tb.vvp
+python ../../verification/compare_vcd.py sim_pulsos_tb.vcd \
+    ../../verification/sim_pulsos_tb_golden_f34.vcd
+```
 
 The comparator ignores only run metadata (`$date`, `$version` and the testbench
 `RTL_DIR` path parameter). Intentional behavior changes require regenerating the

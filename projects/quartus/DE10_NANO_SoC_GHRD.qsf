@@ -700,6 +700,10 @@ set_global_assignment -name MIF_FILE ../../rtl/A13_PART3.mif
 set_global_assignment -name MIF_FILE ../../rtl/A13_PART2.mif
 set_global_assignment -name MIF_FILE ../../rtl/A13_PART1.mif
 set_global_assignment -name VERILOG_FILE sw_converter.v
+# Shaper selection: uncomment to synthesize the F34 shaper instead of the
+# legacy one. Each choice has its own golden VCD (see README).
+#set_global_assignment -name VERILOG_MACRO "USE_SHAPER_F34=1"
+set_global_assignment -name VERILOG_FILE ../../rtl/filtros/shaper_fenics_f34.v
 set_global_assignment -name VERILOG_FILE ../../rtl/filtros/shaper_fenics.v
 set_global_assignment -name VERILOG_FILE ../../rtl/select_rand.v
 set_global_assignment -name VERILOG_FILE ../../rtl/random_number_generator.v

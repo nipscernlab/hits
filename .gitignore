@@ -24,4 +24,4 @@ c5_pin_model_dump.txt
 projects/aurora/testbench/
 *.vcd
 *.vvp
-!verificacao/*.vcd
+!verification/*.vcd

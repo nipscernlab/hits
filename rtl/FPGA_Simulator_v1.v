@@ -1,5 +1,27 @@
 `timescale 1ns/100ps
 
+// ---------------------------------------------------------------------------
+// SHAPER SELECTION (synthesis-time)
+//
+// Uncomment the line below to build with the F34 shaper instead of the legacy
+// one, or define USE_SHAPER_F34 externally without touching this file:
+//
+//   Icarus / Verilator : iverilog -DUSE_SHAPER_F34 ...
+//   Quartus            : set_global_assignment -name VERILOG_MACRO "USE_SHAPER_F34=1"
+//
+// The `ifndef guard means an external define wins and this line stays inert.
+//
+//   default (undefined) : shaper_fenics       - legacy parallel IIR sections
+//   USE_SHAPER_F34      : shaper_fenics_f34   - 13-tap FIR head + 5 IIR
+//                                               sections, zero DC gain imposed
+//
+// Both live in rtl/filtros/ and share the same output scale (2**G_OUT_LOG), so
+// nothing downstream changes. They differ in the pulse they produce, which is
+// the point: WARNING, the golden VCD in verification/ covers the DEFAULT build.
+// Selecting F34 changes shaper_out and the regression will report differences.
+// ---------------------------------------------------------------------------
+//`define USE_SHAPER_F34
+
 // HITS simulator core (no PZC).
 //
 // The full front-end signal chain of the calorimeter readout, one sample per
@@ -84,6 +106,23 @@ energy_collisions
 );
 
 
+`ifdef USE_SHAPER_F34
+// F34 shaper: 13-tap FIR head + 5 IIR sections (3 leaky, 2 coupled), derived
+// from a 14-pole transfer function of the FENICS front end. Zero DC gain is
+// imposed rather than fitted, so it cannot produce a baseline sag the real
+// front end does not have. Unlike the legacy shaper it needs a reset.
+shaper_fenics_f34
+#(
+	.BITS_IN(ENG_OUT_BITS),
+	.G_OUT_LOG(10)
+)sf
+(
+	.clock(clk),
+	.rst(rst),
+	.in(event_bt),
+	.out(shaper_out)
+);
+`else
 shaper_fenics
 #(
 	.BITS_IN(ENG_OUT_BITS),
@@ -94,6 +133,7 @@ shaper_fenics
 	.in(event_bt),
 	.out(shaper_out)
 );
+`endif
 
 
 // event_bt/event_all are unsigned but feed the signed shaper input of the same

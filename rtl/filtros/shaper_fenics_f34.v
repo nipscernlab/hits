@@ -23,11 +23,12 @@
 // The naive delta form is unusable here: its DC gain depends on d1+d2, which
 // is itself a cancellation (+4.75e-5 and -4.75e-5 for the 1.053 ms pair).
 //
-// ROUNDING IS NOT OPTIONAL. Every product shift adds MEIO = 2**(W_COEF-1)
-// and every output shift adds half an LSB. A plain arithmetic shift is
-// FLOOR, and the bias accumulates: without rounding, a state parked just
-// below zero emits -1 LSB on every sample forever and the integrated charge
-// balance drifts to -43% of the peak instead of ~0.
+// ROUNDING: every product shift adds MEIO = 2**(W_COEF-1) and every output
+// shift adds half an LSB. A plain arithmetic shift is FLOOR, so a state
+// parked just below zero would emit -1 LSB on every sample. Measured in
+// steady state the difference is ~1e-10 of peak, so this is fixed-point
+// hygiene rather than a fix for a real defect -- but it costs one adder per
+// section, so it stays.
 //
 // All coefficients are 2-term CSD constants, so each constant multiply below
 // synthesizes to two shifts and one add: no DSP blocks, no generic
@@ -54,8 +55,11 @@ module shaper_fenics_f34
 localparam integer W_COEF  = 30;   // coefficient fraction bits
 localparam integer B_C     = 12;   // FIR tap fraction bits
 localparam integer N_DELAY = 3;    // shared delay of the slow sections
-localparam integer WS = BITS_IN + 24;            // widest section state
-localparam integer WP = WS + W_COEF + 2;         // product width
+// State width is sized PER SECTION: a section holds at most |G|*|x|*2**EX,
+// so it needs (BITS_IN-1) + EX + ceil(log2|G|) + 1 bits, plus guard for the
+// transient. A single uniform width would overflow the tau = 10.1 ms section
+// at small BITS_IN (it carries the largest EX) while wasting bits on the fast
+// ones. WP is the product width: the coefficient adds W_COEF fraction bits.
 localparam signed [W_COEF:0] MEIO = 1 <<< (W_COEF-1);
 
 // ---------------------------------------------------------- FIR head -----
@@ -122,9 +126,11 @@ wire signed [BITS_IN-1:0] xs = xd[2];
 localparam integer EX_L0 = 14;
 localparam signed [W_COEF+1:0] K_L0 = 1572864;
 localparam signed [W_COEF+1:0] G_L0 = -272629760;
-reg  signed [WS-1:0] acc_L0 = 0;
-wire signed [WP-1:0] tgt_L0 = (G_L0 * (xs <<< EX_L0) + MEIO) >>> W_COEF;
-wire signed [WP-1:0] inc_L0 = (K_L0 * (tgt_L0 - acc_L0) + MEIO) >>> W_COEF;
+localparam integer WS_L0 = BITS_IN + EX_L0 + 4;
+localparam integer WP_L0 = WS_L0 + W_COEF + 2;
+reg  signed [WS_L0-1:0] acc_L0 = 0;
+wire signed [WP_L0-1:0] tgt_L0 = (G_L0 * (xs <<< EX_L0) + MEIO) >>> W_COEF;
+wire signed [WP_L0-1:0] inc_L0 = (K_L0 * (tgt_L0 - acc_L0) + MEIO) >>> W_COEF;
 always @(posedge clock or posedge rst)
 	if (rst) acc_L0 <= 0; else acc_L0 <= acc_L0 + inc_L0;
 wire signed [BITS_IN+16:0] out_L0 =
@@ -135,9 +141,11 @@ wire signed [BITS_IN+16:0] out_L0 =
 localparam integer EX_L1 = 15;
 localparam signed [W_COEF+1:0] K_L1 = 557056;
 localparam signed [W_COEF+1:0] G_L1 = -2139095040;
-reg  signed [WS-1:0] acc_L1 = 0;
-wire signed [WP-1:0] tgt_L1 = (G_L1 * (xs <<< EX_L1) + MEIO) >>> W_COEF;
-wire signed [WP-1:0] inc_L1 = (K_L1 * (tgt_L1 - acc_L1) + MEIO) >>> W_COEF;
+localparam integer WS_L1 = BITS_IN + EX_L1 + 4;
+localparam integer WP_L1 = WS_L1 + W_COEF + 2;
+reg  signed [WS_L1-1:0] acc_L1 = 0;
+wire signed [WP_L1-1:0] tgt_L1 = (G_L1 * (xs <<< EX_L1) + MEIO) >>> W_COEF;
+wire signed [WP_L1-1:0] inc_L1 = (K_L1 * (tgt_L1 - acc_L1) + MEIO) >>> W_COEF;
 always @(posedge clock or posedge rst)
 	if (rst) acc_L1 <= 0; else acc_L1 <= acc_L1 + inc_L1;
 wire signed [BITS_IN+16:0] out_L1 =
@@ -148,9 +156,11 @@ wire signed [BITS_IN+16:0] out_L1 =
 localparam integer EX_L2 = 23;
 localparam signed [W_COEF+1:0] K_L2 = 2560;
 localparam signed [W_COEF+1:0] G_L2 = 287168285;
-reg  signed [WS-1:0] acc_L2 = 0;
-wire signed [WP-1:0] tgt_L2 = (G_L2 * (xs <<< EX_L2) + MEIO) >>> W_COEF;
-wire signed [WP-1:0] inc_L2 = (K_L2 * (tgt_L2 - acc_L2) + MEIO) >>> W_COEF;
+localparam integer WS_L2 = BITS_IN + EX_L2 + 4;
+localparam integer WP_L2 = WS_L2 + W_COEF + 2;
+reg  signed [WS_L2-1:0] acc_L2 = 0;
+wire signed [WP_L2-1:0] tgt_L2 = (G_L2 * (xs <<< EX_L2) + MEIO) >>> W_COEF;
+wire signed [WP_L2-1:0] inc_L2 = (K_L2 * (tgt_L2 - acc_L2) + MEIO) >>> W_COEF;
 always @(posedge clock or posedge rst)
 	if (rst) acc_L2 <= 0; else acc_L2 <= acc_L2 + inc_L2;
 wire signed [BITS_IN+16:0] out_L2 =
@@ -163,12 +173,14 @@ localparam signed [W_COEF+1:0] C_A0 = 24576;
 localparam signed [W_COEF+1:0] S_A0 = 528;
 localparam signed [W_COEF+1:0] RA_A0 = 1280;
 localparam signed [W_COEF+1:0] RB_A0 = -40;
-reg  signed [WS-1:0] u_A0 = 0, v_A0 = 0;
-wire signed [WP-1:0] xn_A0 = xs <<< EX_A0;
-wire signed [WP-1:0] un_A0 = u_A0
+localparam integer WS_A0 = BITS_IN + EX_A0 + 4;
+localparam integer WP_A0 = WS_A0 + W_COEF + 2;
+reg  signed [WS_A0-1:0] u_A0 = 0, v_A0 = 0;
+wire signed [WP_A0-1:0] xn_A0 = xs <<< EX_A0;
+wire signed [WP_A0-1:0] un_A0 = u_A0
 	- ((C_A0*u_A0 + MEIO) >>> W_COEF) - ((S_A0*v_A0 + MEIO) >>> W_COEF)
 	+ ((RA_A0*xn_A0 + MEIO) >>> W_COEF);
-wire signed [WP-1:0] vn_A0 = v_A0
+wire signed [WP_A0-1:0] vn_A0 = v_A0
 	- ((C_A0*v_A0 + MEIO) >>> W_COEF) + ((S_A0*u_A0 + MEIO) >>> W_COEF)
 	+ ((RB_A0*xn_A0 + MEIO) >>> W_COEF);
 always @(posedge clock or posedge rst) begin
@@ -185,12 +197,14 @@ localparam signed [W_COEF+1:0] C_A1 = 1310720;
 localparam signed [W_COEF+1:0] S_A1 = 1835008;
 localparam signed [W_COEF+1:0] RA_A1 = 57344;
 localparam signed [W_COEF+1:0] RB_A1 = 49152;
-reg  signed [WS-1:0] u_A1 = 0, v_A1 = 0;
-wire signed [WP-1:0] xn_A1 = xs <<< EX_A1;
-wire signed [WP-1:0] un_A1 = u_A1
+localparam integer WS_A1 = BITS_IN + EX_A1 + 4;
+localparam integer WP_A1 = WS_A1 + W_COEF + 2;
+reg  signed [WS_A1-1:0] u_A1 = 0, v_A1 = 0;
+wire signed [WP_A1-1:0] xn_A1 = xs <<< EX_A1;
+wire signed [WP_A1-1:0] un_A1 = u_A1
 	- ((C_A1*u_A1 + MEIO) >>> W_COEF) - ((S_A1*v_A1 + MEIO) >>> W_COEF)
 	+ ((RA_A1*xn_A1 + MEIO) >>> W_COEF);
-wire signed [WP-1:0] vn_A1 = v_A1
+wire signed [WP_A1-1:0] vn_A1 = v_A1
 	- ((C_A1*v_A1 + MEIO) >>> W_COEF) + ((S_A1*u_A1 + MEIO) >>> W_COEF)
 	+ ((RB_A1*xn_A1 + MEIO) >>> W_COEF);
 always @(posedge clock or posedge rst) begin
