@@ -1,6 +1,38 @@
 `timescale 1ns/100ps
 
-// Test composition: HITS simulator core + PZC under test.
+// ---------------------------------------------------------------------------
+// BASELINE-CORRECTION SELECTION (synthesis-time)
+//
+// Uncomment the line below to build with the adaptive baseline estimator
+// instead of the PZC, or define USE_BASELINE_EST externally without touching
+// this file:
+//
+//   Icarus / Verilator : iverilog -DUSE_BASELINE_EST ...
+//   Quartus            : set_global_assignment -name VERILOG_MACRO "USE_BASELINE_EST=1"
+//
+// The `ifndef guard means an external define wins and this line stays inert.
+//
+//   default (undefined) : pzc_ped_track       - pole-zero cancellation + pedestal
+//                                               tracking (the FPGA firmware port)
+//   USE_BASELINE_EST    : estimador_baseline  - fast level tracker + slow
+//                                               per-BCID shape, anchored on the
+//                                               bunch-train mask (F14)
+//
+// Only ONE of them is instantiated; both drive `pzc_out`.
+//
+// ⚠️⚠️ THE TWO OUTPUTS ARE NOT ON THE SAME SCALE. The PZC output carries a gain
+// of (M_FACTOR+1) = 455: io_out = (M+1)*(in-ped) + accumulator. The estimator
+// output is in ADC counts (gain 1). Divide pzc_out by (PZC_M_FACTOR+1) before
+// comparing the two. Plotting them together without this makes the PZC look
+// 455x noisier, which is an artifact.
+//
+// ⚠️ The golden VCD in verification/ covers the DEFAULT build. Selecting the
+// estimator changes pzc_out and the regression will report differences — there
+// is a separate golden for it, exactly as for USE_SHAPER_F34.
+// ---------------------------------------------------------------------------
+//`define USE_BASELINE_EST
+
+// Test composition: HITS simulator core + baseline correction under test.
 //
 // The PZC (pole-zero cancellation) is NOT part of the simulator; it is a
 // downstream reconstruction stage being validated with the synthesized pulse
@@ -34,7 +66,20 @@ module FPGA_Simulator_v1_PZC
 	parameter MEM_NOISE2 = "NOISE_PART3.mif",
 	parameter MEM_NOISE0_THRESH = 1007,
 	parameter MEM_NOISE1_THRESH = 1007,
-	parameter PZC_M_FACTOR = 454
+	parameter PZC_M_FACTOR = 454,
+	// --- adaptive baseline estimator (USE_BASELINE_EST) ---
+	parameter EST_FRAC       = 6,             // fractional bits of level and shape
+	parameter EST_FRAC_I     = 6,             // fractional bits of the interp accumulator
+	parameter EST_K_NIVEL    = 4,             // level memory: 2^K anchors (~2.2 us)
+	parameter EST_K_FORMA    = 8,             // shape memory: 2^K orbits  (~22.8 ms)
+	parameter EST_N_ANC      = 654,           // anchors per orbit (from the MASK)
+	parameter EST_WS         = 14,            // shape word width
+	parameter EST_K_VAZIO    = 13,            // empty slots before a sample is an anchor
+	parameter EST_LATENCIA   = 2,             // shaper pipeline delay, in samples
+	parameter EST_RECIP_MEM  = "recip.mem",   // reciprocal ROM (depends on the MASK)
+	parameter EST_S_INIT_MEM = "",            // preloaded shape ("" = start from zero)
+	parameter signed [31:0] EST_L_INIT = 0,   // preloaded level, in the FRAC grid
+	parameter integer EST_IA_INIT = 0         // anchor-index phase (MEASURE it)
 )
 (
 	input clk, rst,
@@ -94,6 +139,59 @@ FPGA_Simulator_v1
 );
 
 
+`ifdef USE_BASELINE_EST
+// Adaptive baseline estimator under test (rtl_test/) — F14 of the
+// Reconstrucao_Energia vault. Fast level tracker on the anchors plus a slow
+// per-BCID shape, interpolated between anchors by a slope accumulator.
+// Both forgetting factors ARE the shifts: lambda = 1 - 2^-K.
+//
+// ⚠️ Scale: output is in ADC counts (gain 1), unlike the PZC (gain M+1).
+// ⚠️ EST_RECIP_MEM depends on the bunch-train MASK: change the fill pattern
+// and the ROM must be regenerated (modelo_etapa2.py in the vault).
+wire ancora;
+
+gerador_ancora
+#(
+	.K_VAZIO(EST_K_VAZIO),
+	.LATENCIA(EST_LATENCIA)
+)ga
+(
+	.clk(clk),
+	.rst(rst),
+	.bt_mask(bt_mask_out),
+	.ancora(ancora)
+);
+
+wire signed [CLIP_OUT_BITS+1-1:0] est_y;
+
+estimador_baseline
+#(
+	.BITS_IN(CLIP_OUT_BITS+1),
+	.FRAC(EST_FRAC),
+	.FRAC_I(EST_FRAC_I),
+	.K_NIVEL(EST_K_NIVEL),
+	.K_FORMA(EST_K_FORMA),
+	.N_ANC(EST_N_ANC),
+	.WS(EST_WS),
+	.RECIP_MEM(EST_RECIP_MEM),
+	.S_INIT_MEM(EST_S_INIT_MEM),
+	.L_INIT(EST_L_INIT),
+	.IA_INIT(EST_IA_INIT)
+)est
+(
+	.clk(clk),
+	.rst(rst),
+	.valid(1'b1),
+	.x({1'd0,shaper_clip}),
+	.ancora(ancora),
+	.y(est_y),
+	.correcao(pedestal_out)             // the tracked baseline, same role as `pedestal`
+);
+
+// sign-extend into the shared correction-output port
+assign pzc_out = {{(PZC_OUT_BITS-(CLIP_OUT_BITS+1)){est_y[CLIP_OUT_BITS]}}, est_y};
+
+`else
 // PZC under test (rtl_test/) — consumes the digitized ADC sample.
 pzc_ped_track
 #(
@@ -109,5 +207,6 @@ pzc_ped_track
 	.pedestal(pedestal_out),
 	.io_out(pzc_out)
 );
+`endif
 
 endmodule
