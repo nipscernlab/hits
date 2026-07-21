@@ -73,9 +73,36 @@ module estimador_baseline #(
     localparam integer IAW  = $clog2(N_ANC);
     localparam signed [WL:0] MEIO = (FRAC > 0) ? (1 <<< (FRAC - 1)) : 0;
 
-    // ⚠️ SINTESE: leitura de dois enderecos por ciclo ⇒ RAM DUAL-PORT.
+    // ⭐⭐ LEITURA SINCRONA COM PRE-BUSCA — o que faz a memoria virar M10K.
+    //
+    // A versao anterior lia `s_ram[ia]` e `s_ram[ia_prox]` por `assign`, ou
+    // seja ASSINCRONO. O bloco de memoria do Cyclone V exige ENDERECO DE
+    // LEITURA REGISTRADO, entao a sintese caia toda em logica: medido no
+    // Quartus, 8285 ALMs + 9255 registradores (= 654x14, a RAM inteira virou
+    // banco de flip-flops) e ZERO bloco de memoria. Ver a F15.
+    //
+    // ⭐ A PRE-BUSCA SAI DE GRACA porque `ia` anda exatamente 1 por ancora:
+    // o `s[ia+1]` lido na ancora k E' o `s[ia]` de que a ancora k+1 precisa.
+    // Basta carregar um registrador com o outro:
+    //     na ancora k:  s_a <= s_b            (s[i_k+1] vira o s_cur de k+1)
+    //                   le s_ram[i_k+2]  -> chega em s_b a tempo de k+1
+    //                   le recip[i_k+1]  -> chega em rc  a tempo de k+1
+    // O pior caso e' ancora em ciclos CONSECUTIVOS (631 dos 654 vaos tem
+    // N = 1), e mesmo ai a leitura chega: e' emitida um ciclo antes.
+    //
+    // ⭐ E A ARITMETICA FICA IDENTICA. Entre a ancora k-1 e a k a unica escrita
+    // e' em `s_ram[i_{k-1}]`, endereco diferente de i_k e de i_k+1 ⇒ o valor
+    // pre-buscado e' o mesmo que a leitura assincrona daria. Verificado
+    // bit-a-bit contra o modelo (F15): 0 divergencias em 400 orbitas.
+    // ⚠️ So o ARRANQUE muda: `prime` gasta um ciclo apos o reset carregando
+    // s_a/s_b/rc. Como a 1a ancora vem >= 13 ciclos depois, nao ha conflito.
     reg signed [WS-1:0]  s_ram [0:N_ANC-1];
     reg        [WR-1:0]  recip [0:N_ANC-1];
+
+    reg signed [WS-1:0]  s_a, s_b;    // s[ia] e s[ia+1], pre-buscados
+    reg        [WR-1:0]  rc;          // recip[ia], pre-buscado
+    reg        [IAW-1:0] ra_s, ra_r;  // enderecos mantidos entre ancoras
+    reg                  prime;
 
     reg signed [WL-1:0]  l_reg;
     reg signed [WA-1:0]  acc;
@@ -90,9 +117,17 @@ module estimador_baseline #(
     end
 
     wire [IAW-1:0] ia_prox = (ia == N_ANC-1) ? {IAW{1'b0}} : ia + 1'b1;
+    wire [IAW-1:0] ia_p2   = (ia_prox == N_ANC-1) ? {IAW{1'b0}} : ia_prox + 1'b1;
 
-    wire signed [WS:0] s_cur  = $signed({s_ram[ia][WS-1],  s_ram[ia]});
-    wire signed [WS:0] s_prox = $signed({s_ram[ia_prox][WS-1], s_ram[ia_prox]});
+    wire passo = valid & ancora;      // a ancora so conta se a amostra vale
+
+    // enderecos apresentados a memoria NESTE ciclo (o dado chega no seguinte)
+    wire [IAW-1:0] a_s = rst ? IA_INIT[IAW-1:0] : (passo ? ia_p2   : ra_s);
+    wire [IAW-1:0] a_r = rst ? IA_INIT[IAW-1:0] : (passo ? ia_prox : ra_r);
+
+    // os valores pre-buscados entram no lugar da leitura assincrona
+    wire signed [WS:0] s_cur  = $signed({s_a[WS-1], s_a});
+    wire signed [WS:0] s_prox = $signed({s_b[WS-1], s_b});
 
     // x promovido a malha fracionaria
     wire signed [WL:0] x_ext = $signed({{(FRAC+1){x[BITS_IN-1]}}, x}) <<< FRAC;
@@ -110,7 +145,7 @@ module estimador_baseline #(
 
     // --- interpolacao: recarrega na ancora, acumula nos demais
     wire signed [WI-1:0] prod = ($signed(s_prox) - $signed({s_new[WS-1], s_new}))
-                                * $signed({1'b0, recip[ia]});   // 1 produto/âncora
+                                * $signed({1'b0, rc});          // 1 produto/âncora
     wire signed [WA-1:0] inc_novo = prod >>> (R - FRAC_I);
     wire signed [WA-1:0] acc_efet = ancora ? ($signed({s_new[WS-1], s_new}) <<< FRAC_I)
                                            : (acc + inc);
@@ -118,6 +153,16 @@ module estimador_baseline #(
     // --- soma na malha comum e UM arredondamento
     wire signed [WL:0] total = l_efet + $signed(acc_efet >>> FRAC_I);
     wire signed [WL-FRAC:0] corr = (total + MEIO) >>> FRAC;
+
+    // ⭐ A MEMORIA, no formato canonico que o Quartus mapeia em M10K: escrita
+    // sincrona + leitura sincrona por endereco REGISTRADO, no mesmo bloco.
+    // ⚠️ NAO ha conflito leitura/escrita: na ancora escreve-se `ia` e le-se
+    // `ia+2` (e a ROM, `ia+1`) — enderecos sempre distintos, pois N_ANC > 2.
+    always @(posedge clk) begin
+        if (!rst && passo) s_ram[ia] <= s_new;
+        s_b <= s_ram[a_s];
+        rc  <= recip[a_r];
+    end
 
     always @(posedge clk) begin
         if (rst) begin
@@ -130,16 +175,28 @@ module estimador_baseline #(
             ia       <= IA_INIT[IAW-1:0];
             y        <= {BITS_IN{1'b0}};
             correcao <= {BITS_IN{1'b0}};
-        end else if (valid) begin
-            if (ancora) begin
-                l_reg      <= l_prox[WL-1:0];
-                s_ram[ia]  <= s_new;
-                ia         <= ia_prox;
-                inc        <= inc_novo;
+            // arranque da pre-busca: no reset le-se s[IA_INIT] e recip[IA_INIT];
+            // no ciclo seguinte (`prime`) s_a recebe s_b e le-se s[IA_INIT+1].
+            ra_s     <= (IA_INIT[IAW-1:0] == N_ANC-1) ? {IAW{1'b0}}
+                                                      : IA_INIT[IAW-1:0] + 1'b1;
+            ra_r     <= IA_INIT[IAW-1:0];
+            prime    <= 1'b1;
+        end else begin
+            prime <= 1'b0;
+            if (prime) s_a <= s_b;          // conclui o arranque da pre-busca
+            if (valid) begin
+                if (ancora) begin
+                    l_reg <= l_prox[WL-1:0];
+                    ia    <= ia_prox;
+                    inc   <= inc_novo;
+                    s_a   <= s_b;           // s[ia+1] vira o s[ia] da proxima
+                    ra_s  <= ia_p2;
+                    ra_r  <= ia_prox;
+                end
+                acc      <= acc_efet;
+                correcao <= corr[BITS_IN-1:0];
+                y        <= x - corr[BITS_IN-1:0];
             end
-            acc        <= acc_efet;
-            correcao   <= corr[BITS_IN-1:0];
-            y          <= x - corr[BITS_IN-1:0];
         end
     end
 
