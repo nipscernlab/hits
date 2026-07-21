@@ -79,7 +79,20 @@ module FPGA_Simulator_v1_PZC
 	parameter EST_RECIP_MEM  = "recip.mem",   // reciprocal ROM (depends on the MASK)
 	parameter EST_S_INIT_MEM = "",            // preloaded shape ("" = start from zero)
 	parameter signed [31:0] EST_L_INIT = 0,   // preloaded level, in the FRAC grid
-	parameter integer EST_IA_INIT = 0         // anchor-index phase (MEASURE it)
+	// ⚠️⚠️ MEASURED, not chosen. `ia` free-runs on anchors and assumes exactly
+	// EST_N_ANC of them per orbit, which holds in steady state — but NOT in the
+	// FIRST orbit: reset truncates the anchor block that straddles the orbit
+	// boundary, so that orbit yields 640 anchors instead of 654 and `ia` is left
+	// permanently out of phase.
+	// With the wrong phase recip[ia] is another anchor's gap, and since 631 of
+	// the 654 gaps have N = 1, the ramp blows up in the 23 LONG gaps: measured
+	// with EST_IA_INIT = 0, recip matched the real gap in 93% of anchors but in
+	// 0 of 230 long gaps (read 65536, the N=1 reciprocal, where 712 was due).
+	// ⚠️ The error is INVISIBLE AT THE ANCHORS — `acc` is reloaded there — so a
+	// metric that only samples anchors cannot see it. Do not sweep this
+	// parameter against such a metric; check recip[ia] against the measured gap
+	// instead (diagnostico8.py in the F15 vault, 100% match at +12).
+	parameter integer EST_IA_INIT = 12        // anchor-index phase (MEASURED)
 )
 (
 	input clk, rst,
