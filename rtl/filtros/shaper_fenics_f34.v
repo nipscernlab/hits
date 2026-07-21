@@ -41,7 +41,7 @@
 // NOTE: the sampling phase is FIXED at 1.4128 ns after the bunch crossing.
 // This filter reproduces ONE phase. Arbitrary phases (jitter, TOF) would
 // need a polyphase bank: N coefficient sets, same arithmetic.
-module shaper_fenics_f34
+(* multstyle = "logic" *) module shaper_fenics_f34
 #(
 	parameter BITS_IN = 34,
 	parameter G_OUT_LOG = 10
@@ -88,6 +88,7 @@ always @(posedge clock or posedge rst) begin
 	end
 end
 
+(* multstyle = "logic" *)
 wire signed [BITS_IN+B_C+4:0] fir_acc =
 	  TAP00*d[0]
 	+ TAP01*d[1]
@@ -215,11 +216,40 @@ wire signed [BITS_IN+16:0] out_A1 =
 	((u_A1 <<< 1) + (1 <<< (EX_A1-G_OUT_LOG-1))) >>> (EX_A1-G_OUT_LOG);
 
 // ------------------------------------------------------------- output ----
-assign out = fir_out
-	+ out_L0
-	+ out_L1
-	+ out_L2
-	+ out_A0
-	+ out_A1;
+// PIPELINE STAGE (01_Timing_40MHz, 2026-07-21): register every component
+// output before the final sum. Without this the path 'FIR DSP cascade ->
+// output sum -> clip' is combinational end to end and closes at 26.45 MHz
+// in the full HITS build (slack -12.8 ns at 40 MHz): the Quartus maps the
+// 13-tap FIR sum onto a SERIAL chain of DSP MACs (~21 ns) and the adder
+// chain to the clip adds ~16 ns more. Registering the components splits it.
+// Every term is delayed by exactly one sample, so the SHAPE IS UNCHANGED:
+// out_new[n] = out_old[n-1]. TOTAL LATENCY IS +1 SAMPLE (was 3, now 4).
+// Anything aligned downstream shifts with it: golden VCDs, and the anchor
+// alignment of the baseline estimator (EST_LATENCIA, EST_IA_INIT).
+reg signed [BITS_IN+16:0] fir_out_r, out_L0_r, out_L1_r, out_L2_r, out_A0_r, out_A1_r;
+always @(posedge clock or posedge rst) begin
+	if (rst) begin
+		fir_out_r <= 0;
+		out_L0_r <= 0;
+		out_L1_r <= 0;
+		out_L2_r <= 0;
+		out_A0_r <= 0;
+		out_A1_r <= 0;
+	end else begin
+		fir_out_r <= fir_out;
+		out_L0_r <= out_L0;
+		out_L1_r <= out_L1;
+		out_L2_r <= out_L2;
+		out_A0_r <= out_A0;
+		out_A1_r <= out_A1;
+	end
+end
+
+assign out = fir_out_r
+	+ out_L0_r
+	+ out_L1_r
+	+ out_L2_r
+	+ out_A0_r
+	+ out_A1_r;
 
 endmodule
