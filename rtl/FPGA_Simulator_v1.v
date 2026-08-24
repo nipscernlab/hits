@@ -3,8 +3,8 @@
 // ---------------------------------------------------------------------------
 // SHAPER SELECTION (synthesis-time)
 //
-// Uncomment the line below to build with the F34 shaper instead of the legacy
-// one, or define USE_SHAPER_F34 externally without touching this file:
+// Uncomment ONE of the lines below to select a shaper other than the legacy
+// one, or define the macro externally without touching this file:
 //
 //   Icarus / Verilator : iverilog -DUSE_SHAPER_F34 ...
 //   Quartus            : set_global_assignment -name VERILOG_MACRO "USE_SHAPER_F34=1"
