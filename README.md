@@ -44,16 +44,18 @@ The synthesizable simulator core (`rtl/`) chains four blocks, one sample per
 ### Shaper filters (`rtl/filtros/`)
 
 Which one is built is a **synthesis-time choice**, selected by the
-`USE_SHAPER_F34` macro (see *Selecting the shaper* below):
+`USE_SHAPER_F34` / `USE_SHAPER_CSA_CR4RC` macros (see *Selecting the shaper*
+below):
 
 | Filter | Selected by | Description |
 |---|---|---|
 | `shaper_fenics.v` + `iir_order1.v` + `iir_order2.v` | **default** | Parallel IIR sections, coefficients at a 2**10 scale. |
 | `shaper_fenics_f34.v` | `USE_SHAPER_F34` | 13-tap FIR head plus 5 IIR sections (3 leaky, 2 coupled), derived from a 14-pole transfer function of the FENICS front end. Zero DC gain is **imposed** rather than fitted, so it cannot produce a baseline sag the real front end does not have. Shape error 0.026% of peak. Generated from the design study, not written by hand: see the header of the file. |
+| `shaper_csa_cr4rc.v` | `USE_SHAPER_CSA_CR4RC` | The generic "paper" pulse: the exact readout chain of the group's papers (bi-exponential detector pulse, CSA with a 51 ns feedback pole, unbuffered CR-4RC with a 500 us CR and four 5 ns RC stages -- the Electronics 14:493 signal generator). 4-tap FIR head plus 3 first-order IIR sections; peak 60.1 ns on sample 2, FWHM 114 ns, shape error 1e-7 of peak. Generated, not written by hand: see the header of the file. |
 
-Both share the same output scale (`2**G_OUT_LOG`), so nothing downstream
-changes. The F34 module additionally takes a reset, which the top level wires
-for it.
+All three share the same output scale (`2**G_OUT_LOG`), so nothing downstream
+changes. The F34 and CSA+CR-4RC modules additionally take a reset, which the
+top level wires for them.
 
 ### Selecting the shaper
 
@@ -68,13 +70,14 @@ iverilog -DUSE_SHAPER_F34 ...                                     # Icarus
 set_global_assignment -name VERILOG_MACRO "USE_SHAPER_F34=1"      # Quartus
 ```
 
-⚠️ **Each choice has its own golden VCD** — the two builds produce different
+⚠️ **Each choice has its own golden VCD** — the builds produce different
 pulses, which is the whole point:
 
 | Build | Golden |
 |---|---|
 | default | `verification/sim_pulsos_tb_golden.vcd` |
 | `USE_SHAPER_F34` | `verification/sim_pulsos_tb_golden_f34.vcd` |
+| `USE_SHAPER_CSA_CR4RC` | `verification/sim_pulsos_tb_golden_csa_cr4rc.vcd` |
 
 The **pole-zero cancellation (PZC)** is not part of the simulator: it is a
 downstream reconstruction stage validated with the synthesized pulse train.

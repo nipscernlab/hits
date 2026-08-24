@@ -11,16 +11,20 @@
 //
 // The `ifndef guard means an external define wins and this line stays inert.
 //
-//   default (undefined) : shaper_fenics       - legacy parallel IIR sections
-//   USE_SHAPER_F34      : shaper_fenics_f34   - 13-tap FIR head + 5 IIR
-//                                               sections, zero DC gain imposed
+//   default (undefined)  : shaper_fenics       - legacy parallel IIR sections
+//   USE_SHAPER_F34       : shaper_fenics_f34   - 13-tap FIR head + 5 IIR
+//                                                sections, zero DC gain imposed
+//   USE_SHAPER_CSA_CR4RC : shaper_csa_cr4rc    - the generic "paper" pulse
+//                                                (CSA + CR-4RC readout chain,
+//                                                peak 60.1 ns on sample 2)
 //
-// Both live in rtl/filtros/ and share the same output scale (2**G_OUT_LOG), so
+// All live in rtl/filtros/ and share the same output scale (2**G_OUT_LOG), so
 // nothing downstream changes. They differ in the pulse they produce, which is
-// the point: WARNING, the golden VCD in verification/ covers the DEFAULT build.
-// Selecting F34 changes shaper_out and the regression will report differences.
+// the point: WARNING, each build has its OWN golden VCD in verification/ (see
+// the README); comparing against the wrong golden reports differences.
 // ---------------------------------------------------------------------------
 //`define USE_SHAPER_F34
+//`define USE_SHAPER_CSA_CR4RC
 
 // HITS simulator core (no PZC).
 //
@@ -106,7 +110,24 @@ energy_collisions
 );
 
 
-`ifdef USE_SHAPER_F34
+`ifdef USE_SHAPER_CSA_CR4RC
+// CSA + CR-4RC shaper: the generic "paper simulator" pulse -- the exact
+// readout chain of the group's papers (bi-exponential detector pulse, CSA
+// with a 51 ns feedback pole, unbuffered CR-4RC with a 500 us CR and four
+// 5 ns RC stages). Peak = 1 (at scale 2**G_OUT_LOG) on sample 2; 1 cycle of
+// latency; needs a reset.
+shaper_csa_cr4rc
+#(
+	.BITS_IN(ENG_OUT_BITS),
+	.G_OUT_LOG(10)
+)sf
+(
+	.clock(clk),
+	.rst(rst),
+	.in(event_bt),
+	.out(shaper_out)
+);
+`elsif USE_SHAPER_F34
 // F34 shaper: 13-tap FIR head + 5 IIR sections (3 leaky, 2 coupled), derived
 // from a 14-pole transfer function of the FENICS front end. Zero DC gain is
 // imposed rather than fitted, so it cannot produce a baseline sag the real
