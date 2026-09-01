@@ -57,8 +57,8 @@ localparam signed [SC+1:0] Q1 = 657673614;
 localparam signed [SC+1:0] Q2 = 587460796;
 // input gains r_k * 2**(G_OUT_LOG+F)
 localparam signed [35:0] R0 = -273473;
-localparam signed [35:0] R1 = 15294322478;
-localparam signed [35:0] R2 = -15580950631;
+localparam signed [35:0] R1 =  36'sd15294322478;
+localparam signed [35:0] R2 = -36'sd15580950631;
 // FIR taps c_m * 2**(G_OUT_LOG+BC) (the 5 fast poles, collapsed)
 localparam signed [27:0] T0 = 92737730;
 localparam signed [27:0] T1 = 1545777;
