@@ -15,8 +15,9 @@
 // ⚠️ ALIGNMENT: `bt_mask_out` marks the slot where a hit is INJECTED, but the
 // digitized sample only reflects it after the shaper pipeline. LATENCIA shifts
 // the anchor flag to the ADC time base. It is a PARAMETER and not a constant
-// because it depends on which shaper is built (legacy or F34) — sweep it and
-// measure, do not guess. Wrong alignment does not raise an error: it silently
+// because it depends on which shaper is built (legacy, F34 or CSA+CR-4RC —
+// see the SHAPER COMBINATIONS warning in FPGA_Simulator_v1_PZC.v) — sweep it
+// and measure, do not guess. Wrong alignment does not raise an error: it silently
 // feeds the estimator samples that still carry pulse, biasing the baseline.
 
 module gerador_ancora
