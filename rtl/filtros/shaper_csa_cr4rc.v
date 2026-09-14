@@ -51,19 +51,22 @@ localparam integer BC = 18;      // fraction bits of the FIR taps
 localparam integer WY = BITS_IN + 40;             // section state width
 localparam integer WS = WY + 2;                   // final adder width
 
+// Constants are SIZED literals on purpose: an unsized decimal literal is
+// 32 bits in Verilog, which silently truncates R1/R2 (34 bits) -- found on
+// Vivado (2026-09-01).
 // feedback coefficients q_k * 2**SC (tau = 500 us, 51 ns, 41.5 ns)
-localparam signed [SC+1:0] Q0 = 1073688140;
-localparam signed [SC+1:0] Q1 = 657673614;
-localparam signed [SC+1:0] Q2 = 587460796;
+localparam signed [SC+1:0] Q0 =  32'sd1073688140;
+localparam signed [SC+1:0] Q1 =  32'sd657673614;
+localparam signed [SC+1:0] Q2 =  32'sd587460796;
 // input gains r_k * 2**(G_OUT_LOG+F)
-localparam signed [35:0] R0 = -273473;
+localparam signed [35:0] R0 = -36'sd273473;
 localparam signed [35:0] R1 =  36'sd15294322478;
 localparam signed [35:0] R2 = -36'sd15580950631;
 // FIR taps c_m * 2**(G_OUT_LOG+BC) (the 5 fast poles, collapsed)
-localparam signed [27:0] T0 = 92737730;
-localparam signed [27:0] T1 = 1545777;
-localparam signed [27:0] T2 = 16631;
-localparam signed [27:0] T3 = 154;
+localparam signed [27:0] T0 =  28'sd92737730;
+localparam signed [27:0] T1 =  28'sd1545777;
+localparam signed [27:0] T2 =  28'sd16631;
+localparam signed [27:0] T3 =  28'sd154;
 
 localparam signed [SC:0] MEIO_SC = 1 <<< (SC - 1);
 localparam signed [F:0]  MEIO_F  = 1 <<< (F - 1);
