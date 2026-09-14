@@ -185,16 +185,16 @@ against the golden VCDs (see *Regression check*) must pass on every merge.
 Selected publications by the group about this simulator (full list at
 [nipscern.com/publications](https://www.nipscern.com/publications)):
 
-- T. Paschoalin, L. Quirino, L. Andrade Filho, *Multi-Memory Approach for Random
+- T. Paschoalin, T. Quirino, L. Andrade Filho, *Multi-Memory Approach for Random
   Number Generators in FPGA*, Applied Sciences 16(5) 2537, 2026.
-- F. Luna, T. Paschoalin, L. Quirino, L. Andrade Filho, *Digital Implementation of
+- F. Luna, T. Paschoalin, T. Quirino, L. Andrade Filho, *Digital Implementation of
   a Signal Conditioning Stage on FPGA for Pulse Simulation in Nuclear
   Instrumentation*, 10th INSCIT, 2026.
-- T. Paschoalin, A. Dias, M. Aguiar, V. Santos, L. Quirino, L. Andrade Filho,
+- T. Paschoalin, U. Dias, M. Aguiar, D. Santos, T. Quirino, L. Andrade Filho,
   *Uncorrelated Pseudo-Random Generator for FPGA*, 38th SBCCI, 2025.
-- F. Luna, A. Dias, G. Lisboa, T. Paschoalin, L. Quirino, L. Andrade Filho,
+- F. Luna, U. Dias, P. Lisboa, T. Paschoalin, T. Quirino, L. Andrade Filho,
   *Real-time FPGA-based simulator for the Tile Calorimeter readout system in the
-  ATLAS experiment*, XXVII ENEMC, 2024.
+  ATLAS experiment*, XXVII ENMC, 2024.
 
 ## License
 
