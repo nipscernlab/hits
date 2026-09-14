@@ -159,6 +159,14 @@ To rebuild the FPGA design instead of using the prebuilt bitstream: compile the
 project in Quartus (ready-to-flash `.sof`/`.rbf` are kept in
 `projects/quartus/output_files/`).
 
+## Contributing (branch workflow)
+
+Nobody commits directly to `main` (rule set 2026-09-14). Each contributor works
+on their own branch (e.g. `fabio/shaper-tweaks`) and what enters `main` is
+decided together, in review, before merging. `main` is the reference the
+group's papers cite, so it must stay reproducible at all times: the regression
+against the golden VCDs (see *Regression check*) must pass on every merge.
+
 ## Publications
 
 Selected publications by the group about this simulator (full list at
