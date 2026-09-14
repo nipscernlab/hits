@@ -23,7 +23,9 @@
 module gerador_ancora
 #(
 	parameter integer K_VAZIO  = 13,   // empty slots required before a sample counts
-	parameter integer LATENCIA = 2     // shaper pipeline delay, in samples
+	parameter integer LATENCIA = 3     // shaper pipeline delay, in samples; default = the
+	                                   // F34-calibrated value (other shapers: re-measure,
+	                                   // see the wrapper warning)
 )
 (
 	input  wire clk,
