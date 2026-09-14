@@ -23,7 +23,7 @@ Fora, Brazil).
 ```
 rtl/                  Simulator source shared by all flows (.v modules + .mif memories)
 rtl/filtros/          Shaper filters: the one in use plus alternatives not yet wired in
-rtl_test/             PZC-under-test and the core+PZC test wrapper (not the simulator)
+rtl_test/             PZC and baseline estimator under test + the core+correction wrapper (not the simulator)
 projects/quartus/     Quartus Prime project for the DE10-Nano SoC (FPGA + ARM/HPS)
 projects/aurora/      Aurora (Icarus Verilog + GTKWave) simulation project + testbench
 verification/         Regression baseline: golden VCD + comparison script
@@ -78,11 +78,24 @@ pulses, which is the whole point:
 | default | `verification/sim_pulsos_tb_golden.vcd` |
 | `USE_SHAPER_F34` | `verification/sim_pulsos_tb_golden_f34.vcd` |
 | `USE_SHAPER_CSA_CR4RC` | `verification/sim_pulsos_tb_golden_csa_cr4rc.vcd` |
+| `USE_SHAPER_F34` + `USE_BASELINE_EST` | `verification/sim_pulsos_tb_golden_f34_est.vcd` |
 
 The **pole-zero cancellation (PZC)** is not part of the simulator: it is a
 downstream reconstruction stage validated with the synthesized pulse train.
 It lives in `rtl_test/` (`pzc_ped_track.v`) and is composed with the core by the
 `FPGA_Simulator_v1_PZC.v` test wrapper.
+
+### Baseline correction under test
+
+The `USE_BASELINE_EST` macro (same mechanism as the shaper macros) makes the
+`FPGA_Simulator_v1_PZC.v` wrapper instantiate the adaptive baseline estimator
+(`rtl_test/estimador_baseline.v` + `gerador_ancora.v` + the `recip.mem` ROM)
+instead of the PZC. Both drive the same `pzc_out` port, but **not on the same
+scale**: the PZC output carries a gain of (M+1) = 455, while the estimator
+outputs plain ADC counts. ⚠️ The estimator's anchor parameters are calibrated
+for the `USE_SHAPER_F34` build only — combining it with another shaper compiles
+but is silently mis-anchored (see the SHAPER COMBINATIONS warning in the
+wrapper header). Its golden is the fourth row of the table above.
 
 Top-level modules: `rtl/FPGA_Simulator_v1.v` (the simulator core, no PZC),
 `rtl_test/FPGA_Simulator_v1_PZC.v` (core plus PZC, the top used in simulation and
