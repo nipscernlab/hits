@@ -10,7 +10,7 @@
 //   Icarus / Verilator : iverilog -DUSE_BASELINE_EST ...
 //   Quartus            : set_global_assignment -name VERILOG_MACRO "USE_BASELINE_EST=1"
 //
-// The `ifndef guard means an external define wins and this line stays inert.
+// The `define line below ships commented out, so an external define always wins.
 //
 //   default (undefined) : pzc_ped_track       - pole-zero cancellation + pedestal
 //                                               tracking (the FPGA firmware port)

@@ -9,7 +9,7 @@
 //   Icarus / Verilator : iverilog -DUSE_SHAPER_F34 ...
 //   Quartus            : set_global_assignment -name VERILOG_MACRO "USE_SHAPER_F34=1"
 //
-// The `ifndef guard means an external define wins and this line stays inert.
+// The `define lines below ship commented out, so an external define always wins.
 //
 //   default (undefined)  : shaper_fenics       - legacy parallel IIR sections
 //   USE_SHAPER_F34       : shaper_fenics_f34   - 13-tap FIR head + 5 IIR
@@ -31,7 +31,7 @@
 // The full front-end signal chain of the calorimeter readout, one sample per
 // 25 ns clock cycle: pseudo-random hit generation gated by the LHC bunch-train
 // mask, energy amplitudes from the measured distribution, analog pulse shaping
-// (FENICS), electronic noise, and digitization (pedestal offset + clip to the
+// (the selected shaper), electronic noise, and digitization (pedestal offset + clip to the
 // ADC range). The digitized sample `shaper_clip` IS the simulator output.
 //
 // The pole-zero cancellation (PZC) is NOT part of the simulator: it is a
