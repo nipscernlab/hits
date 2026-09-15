@@ -115,7 +115,18 @@ vvp tb.vvp                      # writes sim_pulsos_tb.vcd here
 ## Regression check
 
 Any change to the RTL must keep the testbench output bit-for-bit identical to
-the frozen baseline (`verification/sim_pulsos_tb_golden.vcd`):
+the frozen baselines. The whole matrix runs with one command, from the repo
+root -- all four golden builds, also failing on any `$readmem` error:
+
+```sh
+python verification/regress.py            # exit 0 = all four bit-identical
+```
+
+CI runs the same script on every pull request and every push to `main`
+(`.github/workflows/regressao.yml`), and the `regressao-golden` check is
+required for merging.
+
+To check a single build by hand:
 
 ```sh
 python ../../verification/compare_vcd.py sim_pulsos_tb.vcd   # exit 0 = identical
@@ -165,7 +176,9 @@ Nobody commits directly to `main` (rule set 2026-09-14). Each contributor works
 on their own branch (e.g. `fabio/shaper-tweaks`) and what enters `main` is
 decided together, in review, before merging. `main` is the reference the
 group's papers cite, so it must stay reproducible at all times: the regression
-against the golden VCDs (see *Regression check*) must pass on every merge.
+against the golden VCDs (see *Regression check*) must pass on every merge --
+the `regressao-golden` CI check runs `verification/regress.py` on every pull
+request and is required.
 
 ## Publications
 
