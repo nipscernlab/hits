@@ -4,7 +4,7 @@
        width="220">
 </p>
 
-# HITS: Hardware Impulse Train Synthesizer 
+# HITS: Hardware Impulse Train Synthesizer
 
 Real-time FPGA simulator of calorimeter readout pulses, running at 40 MHz on a
 Terasic DE10-Nano (Intel Cyclone V SoC). It emulates the front-end signal chain
