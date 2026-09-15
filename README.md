@@ -4,7 +4,7 @@
        width="220">
 </p>
 
-# HITS: Hardware Impulse Train Synthesizer 
+# HITS: Hardware Impulse Train Synthesizer
 
 Real-time FPGA simulator of calorimeter readout pulses, running at 40 MHz on a
 Terasic DE10-Nano (Intel Cyclone V SoC). It emulates the front-end signal chain
@@ -22,8 +22,8 @@ Fora, Brazil).
 
 ```
 rtl/                  Simulator source shared by all flows (.v modules + .mif memories)
-rtl/filtros/          Shaper filters: the one in use plus alternatives not yet wired in
-rtl_test/             PZC-under-test and the core+PZC test wrapper (not the simulator)
+rtl/filtros/          Shaper filters: three pulse shapes, selectable at synthesis time (see below)
+rtl_test/             PZC and baseline estimator under test + the core+correction wrapper (not the simulator)
 projects/quartus/     Quartus Prime project for the DE10-Nano SoC (FPGA + ARM/HPS)
 projects/aurora/      Aurora (Icarus Verilog + GTKWave) simulation project + testbench
 verification/         Regression baseline: golden VCD + comparison script
@@ -39,7 +39,7 @@ The synthesizable simulator core (`rtl/`) chains four blocks, one sample per
 | Random number generation | `rand_LFSR.v`, `select_rand.v`, `random_number_generator.v` | Bank of 7 LFSRs with a selector, producing uncorrelated pseudo-random streams |
 | Hit generation | `Hits_Bunch_train.v`, `hits_positions.v`, `bunch_train_mask.v` | Bernoulli hit draw per bunch crossing, gated by the LHC bunch-train mask (`bunch_train_mask.mif`) and the programmable occupancy |
 | Amplitude and noise | `energy_*.v` + `A13_PART*.mif`, `noise_*.v` + `NOISE_PART*.mif` | Inverse-CDF lookup split across multiple memories (multi-memory approach), drawing energy amplitudes from a measured minimum-bias distribution and Gaussian electronic noise |
-| Shaping and digitization | `filtros/shaper_fenics.v`, `filtros/iir_order1/2.v`, `clip_shaper.v` | IIR implementation of the front-end shaper, then pedestal offset and clipping to the ADC range; the output `shaper_clip` is the simulated readout |
+| Shaping and digitization | one of the three `filtros/shaper_*.v` (see *Shaper filters* below), `clip_shaper.v` | IIR implementation of the selected pulse shape, then pedestal offset and clipping to the ADC range; the output `shaper_clip` is the simulated readout |
 
 ### Shaper filters (`rtl/filtros/`)
 
@@ -60,8 +60,8 @@ top level wires for them.
 ### Selecting the shaper
 
 Either uncomment the `` `define `` at the top of `rtl/FPGA_Simulator_v1.v`, or
-define the macro externally and leave the file untouched (an `` `ifndef `` guard
-makes the external define win):
+define the macro externally and leave the file untouched (the `` `define ``
+lines ship commented out, so an external define always wins):
 
 ```sh
 iverilog -DUSE_SHAPER_F34 ...                                     # Icarus
@@ -78,11 +78,24 @@ pulses, which is the whole point:
 | default | `verification/sim_pulsos_tb_golden.vcd` |
 | `USE_SHAPER_F34` | `verification/sim_pulsos_tb_golden_f34.vcd` |
 | `USE_SHAPER_CSA_CR4RC` | `verification/sim_pulsos_tb_golden_csa_cr4rc.vcd` |
+| `USE_SHAPER_F34` + `USE_BASELINE_EST` | `verification/sim_pulsos_tb_golden_f34_est.vcd` |
 
 The **pole-zero cancellation (PZC)** is not part of the simulator: it is a
 downstream reconstruction stage validated with the synthesized pulse train.
 It lives in `rtl_test/` (`pzc_ped_track.v`) and is composed with the core by the
 `FPGA_Simulator_v1_PZC.v` test wrapper.
+
+### Baseline correction under test
+
+The `USE_BASELINE_EST` macro (same mechanism as the shaper macros) makes the
+`FPGA_Simulator_v1_PZC.v` wrapper instantiate the adaptive baseline estimator
+(`rtl_test/estimador_baseline.v` + `gerador_ancora.v` + the `recip.mem` ROM)
+instead of the PZC. Both drive the same `pzc_out` port, but **not on the same
+scale**: the PZC output carries a gain of (M+1) = 455, while the estimator
+outputs plain ADC counts. ⚠️ The estimator's anchor parameters are calibrated
+for the `USE_SHAPER_F34` build only — combining it with another shaper compiles
+but is silently mis-anchored (see the SHAPER COMBINATIONS warning in the
+wrapper header). Its golden is the fourth row of the table above.
 
 Top-level modules: `rtl/FPGA_Simulator_v1.v` (the simulator core, no PZC),
 `rtl_test/FPGA_Simulator_v1_PZC.v` (core plus PZC, the top used in simulation and
@@ -172,16 +185,16 @@ against the golden VCDs (see *Regression check*) must pass on every merge.
 Selected publications by the group about this simulator (full list at
 [nipscern.com/publications](https://www.nipscern.com/publications)):
 
-- T. Paschoalin, L. Quirino, L. Andrade Filho, *Multi-Memory Approach for Random
+- T. Paschoalin, T. Quirino, L. Andrade Filho, *Multi-Memory Approach for Random
   Number Generators in FPGA*, Applied Sciences 16(5) 2537, 2026.
-- F. Luna, T. Paschoalin, L. Quirino, L. Andrade Filho, *Digital Implementation of
+- F. Luna, T. Paschoalin, T. Quirino, L. Andrade Filho, *Digital Implementation of
   a Signal Conditioning Stage on FPGA for Pulse Simulation in Nuclear
   Instrumentation*, 10th INSCIT, 2026.
-- T. Paschoalin, A. Dias, M. Aguiar, V. Santos, L. Quirino, L. Andrade Filho,
+- T. Paschoalin, U. Dias, M. Aguiar, D. Santos, T. Quirino, L. Andrade Filho,
   *Uncorrelated Pseudo-Random Generator for FPGA*, 38th SBCCI, 2025.
-- F. Luna, A. Dias, G. Lisboa, T. Paschoalin, L. Quirino, L. Andrade Filho,
+- F. Luna, U. Dias, P. Lisboa, T. Paschoalin, T. Quirino, L. Andrade Filho,
   *Real-time FPGA-based simulator for the Tile Calorimeter readout system in the
-  ATLAS experiment*, XXVII ENEMC, 2024.
+  ATLAS experiment*, XXVII ENMC, 2024.
 
 ## License
 

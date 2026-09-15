@@ -8,7 +8,7 @@
 // - 40 MHz clock (25 ns period), like the LHC bunch clock;
 // - short reset at the start;
 // - occupancy starts at 25/127 and steps to 80/127 halfway through
-//   (reproduces the SignalTap test of the ENEMC 2025 paper, now in GTKWave);
+//   (reproduces the SignalTap test of the ENMC 2024 paper, now in GTKWave);
 // - offset (pedestal) = 146 ADC;
 // - 3 full bunch-train orbits (3 x 3564 slots) + margin;
 // - the .mif files are loaded by $readmemb through RTL_DIR, RELATIVE to this

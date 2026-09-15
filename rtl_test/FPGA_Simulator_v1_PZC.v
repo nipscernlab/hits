@@ -10,7 +10,7 @@
 //   Icarus / Verilator : iverilog -DUSE_BASELINE_EST ...
 //   Quartus            : set_global_assignment -name VERILOG_MACRO "USE_BASELINE_EST=1"
 //
-// The `ifndef guard means an external define wins and this line stays inert.
+// The `define line below ships commented out, so an external define always wins.
 //
 //   default (undefined) : pzc_ped_track       - pole-zero cancellation + pedestal
 //                                               tracking (the FPGA firmware port)
@@ -29,6 +29,19 @@
 // ⚠️ The golden VCD in verification/ covers the DEFAULT build. Selecting the
 // estimator changes pzc_out and the regression will report differences — there
 // is a separate golden for it, exactly as for USE_SHAPER_F34.
+//
+// ⚠️⚠️ SHAPER COMBINATIONS: every estimator parameter below that is marked
+// MEASURED (EST_LATENCIA, EST_K_VAZIO, EST_N_ANC/recip.mem, EST_IA_INIT) was
+// measured for the USE_SHAPER_F34 build. Combining USE_BASELINE_EST with the
+// CSA+CR-4RC shaper (or the legacy one) compiles and runs, but is silently
+// MIS-ANCHORED: the CSA pulse has a different latency (1 cycle vs 4) and does
+// not vanish at gap+13 (about 1.5% of the peak remains, since it decays
+// geometrically instead of ending with a FIR head), so anchors carry pulse
+// residue and bias the baseline. No error is raised anywhere, and only the
+// F34+estimator build has a golden (sim_pulsos_tb_golden_f34_est.vcd).
+// Re-calibrating for another shaper is a measurement campaign, not a
+// parameter tweak (F15 recipe): changing K_VAZIO changes the anchor count,
+// which regenerates recip.mem / EST_N_ANC and re-measures EST_IA_INIT.
 // ---------------------------------------------------------------------------
 //`define USE_BASELINE_EST
 

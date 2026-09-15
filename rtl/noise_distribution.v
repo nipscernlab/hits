@@ -8,8 +8,8 @@ module noise_distribution
 	parameter MEM_NOISE0 = "NOISE_PART1.mif",
 	parameter MEM_NOISE1 = "NOISE_PART2.mif",
 	parameter MEM_NOISE2 = "NOISE_PART3.mif",
-	parameter MEM_NOISE0_THRESH = 1014,
-	parameter MEM_NOISE1_THRESH = 1018
+	parameter MEM_NOISE0_THRESH = 1007,    // 8 ADC (the earlier 2 ADC setting used 1014/1018)
+	parameter MEM_NOISE1_THRESH = 1007     // 8 ADC
 )
 (
 	input clk, rst,
