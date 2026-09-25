@@ -695,6 +695,9 @@ set_global_assignment -name MIF_FILE ../../rtl/NOISE_PART1.mif
 set_global_assignment -name VERILOG_FILE ../../rtl/noise_distribution.v
 set_global_assignment -name VERILOG_FILE ../../rtl/noise_collisions.v
 set_global_assignment -name VERILOG_FILE ../../reconstrucao/pzc/pzc_ped_track.v
+set_global_assignment -name VERILOG_FILE ../../reconstrucao/estimador_baseline/estimador_baseline.v
+set_global_assignment -name VERILOG_FILE ../../reconstrucao/estimador_baseline/gerador_ancora.v
+set_global_assignment -name MIF_FILE ../../reconstrucao/estimador_baseline/recip.mem
 set_global_assignment -name MIF_FILE ../../rtl/bunch_train_mask.mif
 set_global_assignment -name MIF_FILE ../../rtl/A13_PART3.mif
 set_global_assignment -name MIF_FILE ../../rtl/A13_PART2.mif
@@ -705,6 +708,7 @@ set_global_assignment -name VERILOG_FILE sw_converter.v
 #set_global_assignment -name VERILOG_MACRO "USE_SHAPER_F34=1"
 set_global_assignment -name VERILOG_FILE ../../rtl/filtros/shaper_fenics_f34.v
 set_global_assignment -name VERILOG_FILE ../../rtl/filtros/shaper_fenics.v
+set_global_assignment -name VERILOG_FILE ../../rtl/filtros/shaper_csa_cr4rc.v
 set_global_assignment -name VERILOG_FILE ../../rtl/select_rand.v
 set_global_assignment -name VERILOG_FILE ../../rtl/random_number_generator.v
 set_global_assignment -name VERILOG_FILE ../../rtl/rand_LFSR.v
@@ -721,8 +725,8 @@ set_global_assignment -name VERILOG_FILE ../../rtl/bunch_train_mask.v
 set_global_assignment -name SDC_FILE DE10_NANO_SOC_GHRD.sdc
 set_global_assignment -name SEARCH_PATH ../../rtl
 # One SEARCH_PATH per reconstruction technique (reconstrucao/<technique>/).
-# The estimator (USE_BASELINE_EST) is not listed as VERILOG_FILE: its modules
-# AND its recip.mem ROM ($readmemh "recip.mem") are found through this path.
+# The estimator's recip.mem ROM ($readmemh "recip.mem", a bare name) is
+# resolved through this path (checked with Quartus 24.1, 2026-09-25).
 set_global_assignment -name SEARCH_PATH ../../reconstrucao/pzc
 set_global_assignment -name SEARCH_PATH ../../reconstrucao/estimador_baseline
 set_global_assignment -name VERILOG_FILE ip/intr_capturer/intr_capturer.v
