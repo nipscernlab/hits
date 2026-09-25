@@ -9,6 +9,12 @@
 // 42 bits: the tap indices below are specific to this polynomial, so the width
 // is not a parameter. With any non-zero seed the sequence has maximal length,
 // period 2^42 - 1 (~1.27 days at 40 MHz).
+//
+// ⚠️ Seeds WIDER than 42 bits are silently truncated: the effective seed is
+// seed[41:0]. Several instantiated seeds (the noise ones, ~4e15) exceed
+// 2^42-1, so the number written there is not the seed in effect. This is
+// frozen by the goldens: do NOT 'fix' those seeds -- every golden would
+// change.
 module rand_LFSR
 #(
 	parameter seed = 64'd12345,

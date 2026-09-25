@@ -4,7 +4,7 @@
        width="220">
 </p>
 
-# HITS: Hardware Impulse Train Synthesizer 
+# HITS: Hardware Impulse Train Synthesizer
 
 Real-time FPGA simulator of calorimeter readout pulses, running at 40 MHz on a
 Terasic DE10-Nano (Intel Cyclone V SoC). It emulates the front-end signal chain
@@ -23,7 +23,7 @@ Fora, Brazil).
 
 ```
 rtl/                  Simulator source shared by all flows (.v modules + .mif memories)
-rtl/filtros/          Shaper filters: the one in use plus alternatives not yet wired in
+rtl/filtros/          Shaper filters: three pulse shapes, selectable at synthesis time (see below)
 reconstrucao/         Reconstruction techniques under test and the core+technique wrapper (not the simulator)
 reconstrucao/pzc/                 Pole-zero cancellation + pedestal tracking
 reconstrucao/estimador_baseline/  Adaptive baseline estimator (+ its recip.mem ROM)
@@ -43,7 +43,7 @@ The synthesizable simulator core (`rtl/`) chains four blocks, one sample per
 | Random number generation | `rand_LFSR.v`, `select_rand.v`, `random_number_generator.v` | Bank of 7 LFSRs with a selector, producing uncorrelated pseudo-random streams |
 | Hit generation | `Hits_Bunch_train.v`, `hits_positions.v`, `bunch_train_mask.v` | Bernoulli hit draw per bunch crossing, gated by the LHC bunch-train mask (`bunch_train_mask.mif`) and the programmable occupancy |
 | Amplitude and noise | `energy_*.v` + `A13_PART*.mif`, `noise_*.v` + `NOISE_PART*.mif` | Inverse-CDF lookup split across multiple memories (multi-memory approach), drawing energy amplitudes from a measured minimum-bias distribution and Gaussian electronic noise |
-| Shaping and digitization | `filtros/shaper_fenics.v`, `filtros/iir_order1/2.v`, `clip_shaper.v` | IIR implementation of the front-end shaper, then pedestal offset and clipping to the ADC range; the output `shaper_clip` is the simulated readout |
+| Shaping and digitization | one of the three `filtros/shaper_*.v` (see *Shaper filters* below), `clip_shaper.v` | IIR implementation of the selected pulse shape, then pedestal offset and clipping to the ADC range; the output `shaper_clip` is the simulated readout |
 
 ### Shaper filters (`rtl/filtros/`)
 
@@ -64,8 +64,8 @@ top level wires for them.
 ### Selecting the shaper
 
 Either uncomment the `` `define `` at the top of `rtl/FPGA_Simulator_v1.v`, or
-define the macro externally and leave the file untouched (an `` `ifndef `` guard
-makes the external define win):
+define the macro externally and leave the file untouched (the `` `define ``
+lines ship commented out, so an external define always wins):
 
 ```sh
 iverilog -DUSE_SHAPER_F34 ...                                     # Icarus
@@ -86,6 +86,13 @@ the default) and `estimador_baseline/` (adaptive baseline estimator, selected by
 the `USE_BASELINE_EST` macro). The `reconstrucao/FPGA_Simulator_v1_PZC.v` wrapper
 composes the core with the technique under test. How to add a new technique:
 [`reconstrucao/README.md`](reconstrucao/README.md).
+
+The two techniques drive the same `pzc_out` port, but **not on the same
+scale**: the PZC output carries a gain of (M+1) = 455, while the estimator
+outputs plain ADC counts. ⚠️ The estimator's anchor parameters are calibrated
+for the `USE_SHAPER_F34` build only: combining it with another shaper compiles
+but is silently mis-anchored (see the SHAPER COMBINATIONS warning in the
+wrapper header). Its golden is `f34_est` in the table of *Regression check*.
 
 Top-level modules: `rtl/FPGA_Simulator_v1.v` (the simulator core, no
 reconstruction), `reconstrucao/FPGA_Simulator_v1_PZC.v` (core plus the technique
@@ -226,16 +233,16 @@ request and is required.
 Selected publications by the group about this simulator (full list at
 [nipscern.com/publications](https://www.nipscern.com/publications)):
 
-- T. Paschoalin, L. Quirino, L. Andrade Filho, *Multi-Memory Approach for Random
+- T. Paschoalin, T. Quirino, L. Andrade Filho, *Multi-Memory Approach for Random
   Number Generators in FPGA*, Applied Sciences 16(5) 2537, 2026.
-- F. Luna, T. Paschoalin, L. Quirino, L. Andrade Filho, *Digital Implementation of
+- F. Luna, T. Paschoalin, T. Quirino, L. Andrade Filho, *Digital Implementation of
   a Signal Conditioning Stage on FPGA for Pulse Simulation in Nuclear
   Instrumentation*, 10th INSCIT, 2026.
-- T. Paschoalin, A. Dias, M. Aguiar, V. Santos, L. Quirino, L. Andrade Filho,
+- T. Paschoalin, U. Dias, M. Aguiar, D. Santos, T. Quirino, L. Andrade Filho,
   *Uncorrelated Pseudo-Random Generator for FPGA*, 38th SBCCI, 2025.
-- F. Luna, A. Dias, G. Lisboa, T. Paschoalin, L. Quirino, L. Andrade Filho,
+- F. Luna, U. Dias, P. Lisboa, T. Paschoalin, T. Quirino, L. Andrade Filho,
   *Real-time FPGA-based simulator for the Tile Calorimeter readout system in the
-  ATLAS experiment*, XXVII ENEMC, 2024.
+  ATLAS experiment*, XXVII ENMC, 2024.
 
 ## License
 
