@@ -64,15 +64,17 @@ comparing them.
 6. **Memory files.** Icarus resolves a relative `$readmemh` name against the
    cwd of the simulation (`projects/aurora/`), not against the folder of the
    `.v`. The testbench must therefore pass the full relative path as a
-   parameter (`../../reconstrucao/<technique>/<file>`), otherwise the read fails
-   and the simulation goes on with X. ⚠️ This is the case of the estimator on
-   `main` today: its `recip.mem` is not found in Icarus, and the
-   `sim_pulsos_tb_golden_f34_est.vcd` golden froze that run. The fix (the
-   testbench passing `EST_RECIP_MEM`, with the golden regenerated) is on the
-   `claude/regressao-ci` branch.
+   parameter, as it does for the estimator
+   (`` .EST_RECIP_MEM({`EST_DIR, "/recip.mem"}) ``); otherwise the read fails and
+   the simulation goes on with X. Pass it through a `` `define ``, not a new
+   `localparam`: a localparam of the testbench enters the VCD and would break
+   every existing golden.
 
-7. **Golden.** A build with the new macro gets its own golden in
-   `verification/`, generated from a run whose `vvp` output has no error
-   (`$readmem: Unable to open` included; a golden taken from a broken run passes
-   the comparison forever). Document it in the golden table of the main README.
-   The goldens of the other builds must stay bit-identical.
+7. **Choice and regression.** Add the macro to `projects/aurora/simulacao.v`
+   (commented), add the build to `BUILDS` in `verification/regress.py`, group
+   `reconstrucao`, and create its golden from a clean run with
+   `python verification/regress.py --gera <build>`, which refuses to overwrite
+   an existing golden. Add the row to the golden table of the main README. The
+   goldens of the other builds, above all the `simulador` ones, must stay
+   bit-identical: if one of those changes, the new technique touched the
+   simulator.

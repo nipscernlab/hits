@@ -73,14 +73,8 @@ iverilog -DUSE_SHAPER_F34 ...                                     # Icarus
 set_global_assignment -name VERILOG_MACRO "USE_SHAPER_F34=1"      # Quartus
 ```
 
-⚠️ **Each choice has its own golden VCD** — the builds produce different
-pulses, which is the whole point:
-
-| Build | Golden |
-|---|---|
-| default | `verification/sim_pulsos_tb_golden.vcd` |
-| `USE_SHAPER_F34` | `verification/sim_pulsos_tb_golden_f34.vcd` |
-| `USE_SHAPER_CSA_CR4RC` | `verification/sim_pulsos_tb_golden_csa_cr4rc.vcd` |
+⚠️ **Each choice has its own golden VCD** (table in *Regression check*): the
+builds produce different pulses, which is the whole point.
 
 ### Reconstruction techniques (`reconstrucao/`)
 
@@ -108,53 +102,79 @@ All paths are relative, so the project works from any clone location. The one
 requirement is that the simulation runs with cwd = `projects/aurora/`, because
 the `.mif` memories are loaded via the relative `RTL_DIR` of the testbench.
 
-With [Aurora](https://nipscern.com): open `projects/aurora/sim_pulsos.spf` and
-press the wave button (Icarus Verilog → GTKWave). Requires an Aurora build from
+### Choosing the simulation
+
+`projects/aurora/simulacao.v` is the menu: uncomment the lines you want and
+nothing else changes. It picks what follows the simulator (nothing,
+`SIMULATOR_ONLY`; the PZC, the default; or the estimator, `USE_BASELINE_EST`)
+and the shaper (default, `USE_SHAPER_F34` or `USE_SHAPER_CSA_CR4RC`). An
+impossible combination stops the compilation with an `Unknown module type:
+ERROR_...` that names the problem.
+
+The choice lives in its own file, not in the testbench, because Icarus applies a
+`` `define `` only to the files compiled after it and Aurora compiles the
+testbench last; `simulacao.v` is the first entry of the `.spf`. Commit it with
+every line commented: the regression refuses to run otherwise.
+
+With [Aurora](https://nipscern.com): open `projects/aurora/sim_pulsos.spf`, set
+the choice in `simulacao.v` and press the wave button (Icarus Verilog, then
+GTKWave or Surfer, chosen in the toolbar). Requires an Aurora build from
 2026-07-17 or newer (older builds ran the simulation from Aurora's temp dir and
 cannot resolve the relative paths).
 
-With Icarus Verilog directly:
+With Icarus Verilog directly, `simulacao.v` first, or `-D` instead of it:
 
 ```sh
 cd projects/aurora
-iverilog -s sim_pulsos_tb -o tb.vvp ../../rtl/*.v ../../rtl/filtros/*.v ../../reconstrucao/*.v ../../reconstrucao/*/*.v sim_pulsos_tb.v
+iverilog -s sim_pulsos_tb -o tb.vvp simulacao.v ../../rtl/*.v ../../rtl/filtros/*.v     ../../reconstrucao/*.v ../../reconstrucao/*/*.v sim_pulsos_tb.v
 vvp tb.vvp                      # writes sim_pulsos_tb.vcd here
 ```
 
 ## Regression check
 
 Any change to the RTL must keep the testbench output bit-for-bit identical to
-the frozen baselines. The whole matrix runs with one command, from the repo
-root -- all four golden builds, also failing on any `$readmem` error:
+the frozen baselines. One command runs every build, from the repo root, and also
+fails on any `$readmem` error (a golden taken from a broken run would otherwise
+bless it forever):
 
 ```sh
-python verification/regress.py            # exit 0 = all four bit-identical
+python verification/regress.py            # exit 0 = every build bit-identical
+python verification/regress.py sim f34    # a subset
 ```
 
-CI runs the same script on every pull request and every push to `main`
-(`.github/workflows/regressao.yml`), and the `regressao-golden` check is
-required for merging.
+The builds come in two groups, so a failure says what broke: if a `simulador`
+build fails, the simulator changed; if only `reconstrucao` builds fail, the
+technique changed and the simulator is intact.
 
-To check a single build by hand:
-
-```sh
-python ../../verification/compare_vcd.py sim_pulsos_tb.vcd   # exit 0 = identical
-```
-(paths as in the simulation recipe above, run from `projects/aurora/`)
-
-For a build with `USE_SHAPER_F34`, compare against that build's own golden:
-
-```sh
-iverilog -DUSE_SHAPER_F34 -s sim_pulsos_tb -o tb.vvp \
-    ../../rtl/*.v ../../rtl/filtros/*.v ../../reconstrucao/*.v ../../reconstrucao/*/*.v sim_pulsos_tb.v
-vvp tb.vvp
-python ../../verification/compare_vcd.py sim_pulsos_tb.vcd \
-    ../../verification/sim_pulsos_tb_golden_f34.vcd
-```
+| Build | Group | Macros | Golden (`verification/`) |
+|---|---|---|---|
+| `sim` | simulador | `SIMULATOR_ONLY` | `sim_pulsos_tb_golden_simulador.vcd` |
+| `sim_f34` | simulador | `SIMULATOR_ONLY USE_SHAPER_F34` | `sim_pulsos_tb_golden_simulador_f34.vcd` |
+| `sim_csa_cr4rc` | simulador | `SIMULATOR_ONLY USE_SHAPER_CSA_CR4RC` | `sim_pulsos_tb_golden_simulador_csa_cr4rc.vcd` |
+| `default` | reconstrucao | (none: PZC) | `sim_pulsos_tb_golden.vcd` |
+| `f34` | reconstrucao | `USE_SHAPER_F34` | `sim_pulsos_tb_golden_f34.vcd` |
+| `csa_cr4rc` | reconstrucao | `USE_SHAPER_CSA_CR4RC` | `sim_pulsos_tb_golden_csa_cr4rc.vcd` |
+| `f34_est` | reconstrucao | `USE_SHAPER_F34 USE_BASELINE_EST` | `sim_pulsos_tb_golden_f34_est.vcd` |
 
 The comparator ignores only run metadata (`$date`, `$version` and the testbench
 `RTL_DIR` path parameter). Intentional behavior changes require regenerating the
-golden VCD in the same commit.
+golden VCD, by hand, in the same commit. A NEW build (a new technique) gets its
+golden with `python verification/regress.py --gera <build>`, which only creates
+goldens that do not exist yet.
+
+**When it runs by itself:**
+
+- **before each commit**, on your machine, if you enable the hook once per
+  clone: `git config core.hooksPath .githooks`. A commit that touches `rtl/`,
+  `reconstrucao/`, `projects/aurora/` or `verification/` runs the regression
+  first and is blocked if it fails. It tests the working tree.
+- **on every pull request and every push to `main`**, in CI
+  (`.github/workflows/regressao.yml`). Its `regressao-golden` check is required
+  to merge: this is the real gate, the hook only catches the error earlier.
+
+A `vvp` that dies with no message (the machine short of memory) is re-run up to
+twice and listed at the end of the run; a complete but wrong waveform fails at
+once.
 
 ## Running on the DE10-Nano board
 

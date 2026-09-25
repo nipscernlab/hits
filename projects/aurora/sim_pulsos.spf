@@ -16,6 +16,11 @@
     "testbenchFile": "sim_pulsos_tb.v",
     "synthesizableFiles": [
       {
+        "name": "simulacao.v",
+        "path": "simulacao.v",
+        "isTopLevel": false
+      },
+      {
         "name": "FPGA_Simulator_v1_PZC.v",
         "path": "..\\..\\reconstrucao\\FPGA_Simulator_v1_PZC.v",
         "isTopLevel": true
@@ -98,6 +103,26 @@
       {
         "name": "pzc_ped_track.v",
         "path": "..\\..\\reconstrucao\\pzc\\pzc_ped_track.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "shaper_fenics_f34.v",
+        "path": "..\\..\\rtl\\filtros\\shaper_fenics_f34.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "shaper_csa_cr4rc.v",
+        "path": "..\\..\\rtl\\filtros\\shaper_csa_cr4rc.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "estimador_baseline.v",
+        "path": "..\\..\\reconstrucao\\estimador_baseline\\estimador_baseline.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "gerador_ancora.v",
+        "path": "..\\..\\reconstrucao\\estimador_baseline\\gerador_ancora.v",
         "isTopLevel": false
       }
     ],

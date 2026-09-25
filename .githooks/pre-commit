@@ -1,0 +1,36 @@
+#!/bin/sh
+# pre-commit: runs the golden regression before any commit that touches the
+# RTL, the techniques, the Aurora project or the goldens. A failing build
+# blocks the commit.
+#
+# Enable it once per clone (git does not do it by itself):
+#     git config core.hooksPath .githooks
+#
+# It tests the WORKING TREE, not only what is staged: a broken edit left out
+# of the commit still blocks it. The real gate is the CI check
+# regressao-golden, required to merge into main; this hook only catches the
+# error before it leaves the machine.
+# Skipping it (git commit --no-verify) is possible, and the CI will still run.
+
+if ! git diff --cached --name-only | grep -qE '^(rtl|reconstrucao|projects/aurora|verification)/'; then
+    exit 0
+fi
+
+PY=""
+for c in python python3 py; do
+    if "$c" -c "import sys" >/dev/null 2>&1; then PY="$c"; break; fi
+done
+if [ -z "$PY" ]; then
+    echo "pre-commit: Python not found; the HITS regression could not run." >&2
+    exit 1
+fi
+if ! command -v iverilog >/dev/null 2>&1 || ! command -v vvp >/dev/null 2>&1; then
+    echo "pre-commit: iverilog/vvp not on PATH; the HITS regression could not run." >&2
+    exit 1
+fi
+
+echo "pre-commit: HITS regression (verification/regress.py)..."
+if ! "$PY" "$(git rev-parse --show-toplevel)/verification/regress.py"; then
+    echo "pre-commit: commit BLOCKED, the regression failed (see above)." >&2
+    exit 1
+fi

@@ -1,9 +1,18 @@
-// sim_pulsos_tb.v — testbench of the core+PZC test wrapper (FPGA_Simulator_v1_PZC)
-// for Aurora (Icarus Verilog + GTKWave), with no ARM/PLL/Qsys.
+// sim_pulsos_tb.v — testbench of the HITS simulator, alone or followed by the
+// reconstruction technique under test, for Aurora (Icarus Verilog + GTKWave),
+// with no ARM/PLL/Qsys.
 // Aurora project: sim_pulsos.spf in this folder — the simulated RTL is the
-// ORIGINAL source: the simulator core in rtl/ plus the PZC-under-test in
+// ORIGINAL source: the simulator core in rtl/ plus the techniques in
 // reconstrucao/ (both shared by the Quartus and Aurora projects, no copies):
 // edit the .v -> simulate -> commit.
+//
+// WHICH simulation runs is chosen in simulacao.v (next to this file), not here:
+//   SIMULATOR_ONLY    -> DUT = FPGA_Simulator_v1 (rtl/), no pedestal_out/pzc_out
+//   (default)         -> DUT = FPGA_Simulator_v1_PZC, simulator + PZC
+//   USE_BASELINE_EST  -> DUT = FPGA_Simulator_v1_PZC, simulator + estimator
+//   plus the shaper: default, USE_SHAPER_F34 or USE_SHAPER_CSA_CR4RC.
+// An impossible combination stops the COMPILATION with an "Unknown module
+// type: ERROR_..." whose name says what is wrong.
 //
 // - 40 MHz clock (25 ns period), like the LHC bunch clock;
 // - short reset at the start;
@@ -38,6 +47,46 @@ module sim_pulsos_tb;
     wire signed [29:0] shaper_out, shaper_corrupted;
     wire [11:0] shaper_clip;
     wire signed [16:0] noise_out;
+`ifdef SIMULATOR_ONLY
+  `ifdef USE_BASELINE_EST
+    ERROR_SIMULATOR_ONLY_and_USE_BASELINE_EST_together_pick_one_in_simulacao_v e1();
+  `endif
+`endif
+`ifdef USE_SHAPER_F34
+  `ifdef USE_SHAPER_CSA_CR4RC
+    ERROR_two_shapers_USE_SHAPER_F34_and_USE_SHAPER_CSA_CR4RC_pick_one_in_simulacao_v e2();
+  `endif
+`endif
+
+`ifdef SIMULATOR_ONLY
+    // the simulator alone: its output ends at shaper_clip
+    FPGA_Simulator_v1
+    #(
+        .BUNCH_MEM ({RTL_DIR, "/bunch_train_mask.mif"}),
+        .MEM_ENG0  ({RTL_DIR, "/A13_PART1.mif"}),
+        .MEM_ENG1  ({RTL_DIR, "/A13_PART2.mif"}),
+        .MEM_ENG2  ({RTL_DIR, "/A13_PART3.mif"}),
+        .MEM_NOISE0({RTL_DIR, "/NOISE_PART1.mif"}),
+        .MEM_NOISE1({RTL_DIR, "/NOISE_PART2.mif"}),
+        .MEM_NOISE2({RTL_DIR, "/NOISE_PART3.mif"})
+    ) dut
+    (
+        .clk(clk),
+        .rst(rst),
+        .occupancy(occupancy),
+        .offset(offset),
+        .hits_out(hits_out),
+        .bt_mask_out(bt_mask_out),
+        .energy_out(energy_out),
+        .event_bt(event_bt),
+        .event_all(event_all),
+        .shaper_out(shaper_out),
+        .shaper_corrupted(shaper_corrupted),
+        .shaper_clip(shaper_clip),
+        .noise_out(noise_out)
+    );
+`else
+    // simulator + the reconstruction technique under test (reconstrucao/)
     wire signed [12:0] pedestal_out;
     wire signed [28:0] pzc_out;
 
@@ -71,6 +120,7 @@ module sim_pulsos_tb;
         .pedestal_out(pedestal_out),
         .pzc_out(pzc_out)
     );
+`endif
 
     // 40 MHz clock
     always #12.5 clk = ~clk;

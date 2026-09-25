@@ -1,6 +1,7 @@
 # Regressao dos goldens em todo PR e todo push na main.
 # O job "regressao-golden" e o status check exigido pela protecao da main:
-# nenhuma branch entra sem os 4 builds bit-identicos aos goldens.
+# nenhuma branch entra sem todos os builds bit-identicos aos goldens
+# (simulador sozinho e simulador + tecnica de reconstrucao).
 name: regressao
 
 on:
@@ -18,5 +19,5 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends iverilog
       - name: Versao do simulador
         run: iverilog -V | head -1
-      - name: Regressao (4 builds com golden)
+      - name: Regressao (todos os builds com golden)
         run: python3 verification/regress.py
