@@ -20,6 +20,9 @@
 module sim_pulsos_tb;
 
     localparam RTL_DIR = "../../rtl";
+    // caminho da ROM do estimador via `define (macro nao aparece no VCD; um localparam
+    // novo entraria no dump e quebraria a comparacao com os goldens antigos)
+    `define EST_DIR "../../reconstrucao/estimador_baseline"
 
     localparam ORBITA    = 3564;             // 25 ns slots per orbit
     localparam N_ORBITAS = 3;
@@ -46,7 +49,10 @@ module sim_pulsos_tb;
         .MEM_ENG2  ({RTL_DIR, "/A13_PART3.mif"}),
         .MEM_NOISE0({RTL_DIR, "/NOISE_PART1.mif"}),
         .MEM_NOISE1({RTL_DIR, "/NOISE_PART2.mif"}),
-        .MEM_NOISE2({RTL_DIR, "/NOISE_PART3.mif"})
+        .MEM_NOISE2({RTL_DIR, "/NOISE_PART3.mif"}),
+        // so o build USE_BASELINE_EST le esta ROM; sem o caminho o $readmemh
+        // falhava em silencio e o golden f34_est congelou saidas com X (14/09)
+        .EST_RECIP_MEM({`EST_DIR, "/recip.mem"})
     ) dut
     (
         .clk(clk),
