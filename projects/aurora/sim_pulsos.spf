@@ -12,12 +12,12 @@
     "basePath": "C:\\nipscern\\hits\\projects\\aurora",
     "folders": [],
     "processors": [],
-    "topLevelFile": "..\\..\\rtl_test\\FPGA_Simulator_v1_PZC.v",
+    "topLevelFile": "..\\..\\reconstrucao\\FPGA_Simulator_v1_PZC.v",
     "testbenchFile": "sim_pulsos_tb.v",
     "synthesizableFiles": [
       {
         "name": "FPGA_Simulator_v1_PZC.v",
-        "path": "..\\..\\rtl_test\\FPGA_Simulator_v1_PZC.v",
+        "path": "..\\..\\reconstrucao\\FPGA_Simulator_v1_PZC.v",
         "isTopLevel": true
       },
       {
@@ -97,7 +97,7 @@
       },
       {
         "name": "pzc_ped_track.v",
-        "path": "..\\..\\rtl_test\\pzc_ped_track.v",
+        "path": "..\\..\\reconstrucao\\pzc\\pzc_ped_track.v",
         "isTopLevel": false
       }
     ],

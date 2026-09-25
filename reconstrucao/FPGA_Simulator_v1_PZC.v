@@ -157,9 +157,10 @@ FPGA_Simulator_v1
 
 
 `ifdef USE_BASELINE_EST
-// Adaptive baseline estimator under test (rtl_test/) — F14 of the
-// Reconstrucao_Energia vault. Fast level tracker on the anchors plus a slow
-// per-BCID shape, interpolated between anchors by a slope accumulator.
+// Adaptive baseline estimator under test (reconstrucao/estimador_baseline/)
+// — F14 of the Reconstrucao_Energia vault. Fast level tracker on the anchors
+// plus a slow per-BCID shape, interpolated between anchors by a slope
+// accumulator.
 // Both forgetting factors ARE the shifts: lambda = 1 - 2^-K.
 //
 // ⚠️ Scale: output is in ADC counts (gain 1), unlike the PZC (gain M+1).
@@ -209,7 +210,7 @@ estimador_baseline
 assign pzc_out = {{(PZC_OUT_BITS-(CLIP_OUT_BITS+1)){est_y[CLIP_OUT_BITS]}}, est_y};
 
 `else
-// PZC under test (rtl_test/) — consumes the digitized ADC sample.
+// PZC under test (reconstrucao/pzc/) — consumes the digitized ADC sample.
 pzc_ped_track
 #(
 	.NBITS_IN(CLIP_OUT_BITS+1),        // input data width

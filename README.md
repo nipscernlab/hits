@@ -10,10 +10,11 @@ Real-time FPGA simulator of calorimeter readout pulses, running at 40 MHz on a
 Terasic DE10-Nano (Intel Cyclone V SoC). It emulates the front-end signal chain
 of the ATLAS Tile Calorimeter readout: pseudo-random hit generation following
 the LHC bunch-train structure, energy amplitudes drawn from measured
-distributions, electronic noise, analog pulse shaping and an embedded pole-zero
-cancellation (PZC) stage. Occupancy and pedestal are configurable at runtime
-from the embedded ARM processor (HPS). It is used to validate online
-energy-reconstruction techniques without access to the experiment.
+distributions, electronic noise, analog pulse shaping and digitization.
+Occupancy and pedestal are configurable at runtime from the embedded ARM
+processor (HPS). It is used to validate online energy-reconstruction techniques
+without access to the experiment; those techniques are not part of the
+simulator and live in `reconstrucao/`.
 
 Developed by [NIPS-CERN](https://nipscern.com) (Federal University of Juiz de
 Fora, Brazil).
@@ -23,7 +24,9 @@ Fora, Brazil).
 ```
 rtl/                  Simulator source shared by all flows (.v modules + .mif memories)
 rtl/filtros/          Shaper filters: the one in use plus alternatives not yet wired in
-rtl_test/             PZC-under-test and the core+PZC test wrapper (not the simulator)
+reconstrucao/         Reconstruction techniques under test and the core+technique wrapper (not the simulator)
+reconstrucao/pzc/                 Pole-zero cancellation + pedestal tracking
+reconstrucao/estimador_baseline/  Adaptive baseline estimator (+ its recip.mem ROM)
 projects/quartus/     Quartus Prime project for the DE10-Nano SoC (FPGA + ARM/HPS)
 projects/aurora/      Aurora (Icarus Verilog + GTKWave) simulation project + testbench
 verification/         Regression baseline: golden VCD + comparison script
@@ -79,15 +82,21 @@ pulses, which is the whole point:
 | `USE_SHAPER_F34` | `verification/sim_pulsos_tb_golden_f34.vcd` |
 | `USE_SHAPER_CSA_CR4RC` | `verification/sim_pulsos_tb_golden_csa_cr4rc.vcd` |
 
-The **pole-zero cancellation (PZC)** is not part of the simulator: it is a
-downstream reconstruction stage validated with the synthesized pulse train.
-It lives in `rtl_test/` (`pzc_ped_track.v`) and is composed with the core by the
-`FPGA_Simulator_v1_PZC.v` test wrapper.
+### Reconstruction techniques (`reconstrucao/`)
 
-Top-level modules: `rtl/FPGA_Simulator_v1.v` (the simulator core, no PZC),
-`rtl_test/FPGA_Simulator_v1_PZC.v` (core plus PZC, the top used in simulation and
-on the board), and `projects/quartus/FPGA_Simulator_v1_PZC_SOC.v` (board top,
-connected to the HPS via Qsys).
+The reconstruction techniques are **not part of the simulator**: they are
+downstream stages validated with the synthesized pulse train, one subfolder
+each. Today there are two, `pzc/` (pole-zero cancellation, `pzc_ped_track.v`,
+the default) and `estimador_baseline/` (adaptive baseline estimator, selected by
+the `USE_BASELINE_EST` macro). The `reconstrucao/FPGA_Simulator_v1_PZC.v` wrapper
+composes the core with the technique under test. How to add a new technique:
+[`reconstrucao/README.md`](reconstrucao/README.md).
+
+Top-level modules: `rtl/FPGA_Simulator_v1.v` (the simulator core, no
+reconstruction), `reconstrucao/FPGA_Simulator_v1_PZC.v` (core plus the technique
+under test, the top used in simulation and on the board), and
+`projects/quartus/FPGA_Simulator_v1_PZC_SOC.v` (board top, connected to the HPS
+via Qsys).
 
 ## Simulating without hardware
 
@@ -108,7 +117,7 @@ With Icarus Verilog directly:
 
 ```sh
 cd projects/aurora
-iverilog -s sim_pulsos_tb -o tb.vvp ../../rtl/*.v ../../rtl/filtros/*.v ../../rtl_test/*.v sim_pulsos_tb.v
+iverilog -s sim_pulsos_tb -o tb.vvp ../../rtl/*.v ../../rtl/filtros/*.v ../../reconstrucao/*.v ../../reconstrucao/*/*.v sim_pulsos_tb.v
 vvp tb.vvp                      # writes sim_pulsos_tb.vcd here
 ```
 
@@ -126,7 +135,7 @@ For a build with `USE_SHAPER_F34`, compare against that build's own golden:
 
 ```sh
 iverilog -DUSE_SHAPER_F34 -s sim_pulsos_tb -o tb.vvp \
-    ../../rtl/*.v ../../rtl/filtros/*.v ../../rtl_test/*.v sim_pulsos_tb.v
+    ../../rtl/*.v ../../rtl/filtros/*.v ../../reconstrucao/*.v ../../reconstrucao/*/*.v sim_pulsos_tb.v
 vvp tb.vvp
 python ../../verification/compare_vcd.py sim_pulsos_tb.vcd \
     ../../verification/sim_pulsos_tb_golden_f34.vcd

@@ -694,7 +694,7 @@ set_global_assignment -name MIF_FILE ../../rtl/NOISE_PART2.mif
 set_global_assignment -name MIF_FILE ../../rtl/NOISE_PART1.mif
 set_global_assignment -name VERILOG_FILE ../../rtl/noise_distribution.v
 set_global_assignment -name VERILOG_FILE ../../rtl/noise_collisions.v
-set_global_assignment -name VERILOG_FILE ../../rtl_test/pzc_ped_track.v
+set_global_assignment -name VERILOG_FILE ../../reconstrucao/pzc/pzc_ped_track.v
 set_global_assignment -name MIF_FILE ../../rtl/bunch_train_mask.mif
 set_global_assignment -name MIF_FILE ../../rtl/A13_PART3.mif
 set_global_assignment -name MIF_FILE ../../rtl/A13_PART2.mif
@@ -713,14 +713,18 @@ set_global_assignment -name VERILOG_FILE ../../rtl/filtros/iir_order1.v
 set_global_assignment -name VERILOG_FILE ../../rtl/hits_positions.v
 set_global_assignment -name VERILOG_FILE ../../rtl/Hits_Bunch_train.v
 set_global_assignment -name VERILOG_FILE FPGA_Simulator_v1_PZC_SOC.v
-set_global_assignment -name VERILOG_FILE ../../rtl_test/FPGA_Simulator_v1_PZC.v
+set_global_assignment -name VERILOG_FILE ../../reconstrucao/FPGA_Simulator_v1_PZC.v
 set_global_assignment -name VERILOG_FILE ../../rtl/FPGA_Simulator_v1.v
 set_global_assignment -name VERILOG_FILE ../../rtl/energy_distribution.v
 set_global_assignment -name VERILOG_FILE ../../rtl/energy_collisions.v
 set_global_assignment -name VERILOG_FILE ../../rtl/bunch_train_mask.v
 set_global_assignment -name SDC_FILE DE10_NANO_SOC_GHRD.sdc
 set_global_assignment -name SEARCH_PATH ../../rtl
-set_global_assignment -name SEARCH_PATH ../../rtl_test
+# One SEARCH_PATH per reconstruction technique (reconstrucao/<technique>/).
+# The estimator (USE_BASELINE_EST) is not listed as VERILOG_FILE: its modules
+# AND its recip.mem ROM ($readmemh "recip.mem") are found through this path.
+set_global_assignment -name SEARCH_PATH ../../reconstrucao/pzc
+set_global_assignment -name SEARCH_PATH ../../reconstrucao/estimador_baseline
 set_global_assignment -name VERILOG_FILE ip/intr_capturer/intr_capturer.v
 set_global_assignment -name VERILOG_FILE ip/edge_detect/altera_edge_detector.v
 set_global_assignment -name VERILOG_FILE ip/debounce/debounce.v

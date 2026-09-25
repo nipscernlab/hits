@@ -2,7 +2,7 @@
 // for Aurora (Icarus Verilog + GTKWave), with no ARM/PLL/Qsys.
 // Aurora project: sim_pulsos.spf in this folder — the simulated RTL is the
 // ORIGINAL source: the simulator core in rtl/ plus the PZC-under-test in
-// rtl_test/ (both shared by the Quartus and Aurora projects, no copies):
+// reconstrucao/ (both shared by the Quartus and Aurora projects, no copies):
 // edit the .v -> simulate -> commit.
 //
 // - 40 MHz clock (25 ns period), like the LHC bunch clock;

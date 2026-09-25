@@ -35,8 +35,8 @@
 // ADC range). The digitized sample `shaper_clip` IS the simulator output.
 //
 // The pole-zero cancellation (PZC) is NOT part of the simulator: it is a
-// downstream reconstruction stage under test. It lives in rtl_test/ and is
-// composed with this core by the FPGA_Simulator_v1_PZC wrapper.
+// downstream reconstruction stage under test. It lives in reconstrucao/pzc/ and
+// is composed with this core by the FPGA_Simulator_v1_PZC wrapper.
 module FPGA_Simulator_v1
 #(
 	parameter RAND_BITS_HITS = 7,
