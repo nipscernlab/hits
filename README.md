@@ -28,7 +28,8 @@ reconstrucao/         Reconstruction techniques under test and the core+techniqu
 reconstrucao/pzc/                 Pole-zero cancellation + pedestal tracking
 reconstrucao/estimador_baseline/  Adaptive baseline estimator (+ its recip.mem ROM)
 projects/quartus/     Quartus Prime project for the DE10-Nano SoC (FPGA + ARM/HPS)
-projects/aurora/      Aurora (Icarus Verilog + GTKWave) simulation project + testbench
+projects/aurora_simulador/  Aurora project: the simulator alone, up to the ADC
+projects/aurora/      Aurora project: simulator + reconstruction technique
 verification/         Regression baseline: golden VCD + comparison script
 ```
 
@@ -102,32 +103,42 @@ All paths are relative, so the project works from any clone location. The one
 requirement is that the simulation runs with cwd = `projects/aurora/`, because
 the `.mif` memories are loaded via the relative `RTL_DIR` of the testbench.
 
-### Choosing the simulation
+### Two Aurora projects
 
-`projects/aurora/simulacao.v` is the menu: uncomment the lines you want and
-nothing else changes. It picks what follows the simulator (nothing,
-`SIMULATOR_ONLY`; the PZC, the default; or the estimator, `USE_BASELINE_EST`)
-and the shaper (default, `USE_SHAPER_F34` or `USE_SHAPER_CSA_CR4RC`). An
-impossible combination stops the compilation with an `Unknown module type:
-ERROR_...` that names the problem.
+| Project | Testbench | What runs | Compiles |
+|---|---|---|---|
+| `projects/aurora_simulador/simulador.spf` | `simulador_tb.v` | the simulator ALONE, up to the ADC quantization (`shaper_clip`) | `rtl/` only |
+| `projects/aurora/sim_pulsos.spf` | `sim_pulsos_tb.v` | simulator + the reconstruction technique under test | `rtl/` + `reconstrucao/` |
 
-The choice lives in its own file, not in the testbench, because Icarus applies a
-`` `define `` only to the files compiled after it and Aurora compiles the
-testbench last; `simulacao.v` is the first entry of the `.spf`. Commit it with
-every line commented: the regression refuses to run otherwise.
+With [Aurora](https://nipscern.com): open the `.spf` and press the wave button
+(Icarus Verilog, then GTKWave or Surfer, chosen in the toolbar). Requires an
+Aurora build from 2026-07-17 or newer (older builds ran the simulation from
+Aurora's temp dir and cannot resolve the relative paths).
 
-With [Aurora](https://nipscern.com): open `projects/aurora/sim_pulsos.spf`, set
-the choice in `simulacao.v` and press the wave button (Icarus Verilog, then
-GTKWave or Surfer, chosen in the toolbar). Requires an Aurora build from
-2026-07-17 or newer (older builds ran the simulation from Aurora's temp dir and
-cannot resolve the relative paths).
+**Shaper** (both projects): the `` `define `` lines at the top of
+`rtl/FPGA_Simulator_v1.v`, see *Selecting the shaper*.
 
-With Icarus Verilog directly, `simulacao.v` first, or `-D` instead of it:
+**Technique** (`projects/aurora/` only): `projects/aurora/simulacao.v` is the
+menu, PZC by default or `USE_BASELINE_EST`; it can also pick the shaper for
+that project. It is a file of its own, the first entry of the `.spf`, because
+Icarus applies a `` `define `` only to the files compiled after it and Aurora
+compiles the testbench last. Two shapers at once stop the compilation with an
+`Unknown module type: ERROR_...` that names the problem.
+
+Commit every one of these files with the choice lines commented: the
+regression passes its own macros with `-D` and refuses to run otherwise.
+
+With Icarus Verilog directly (`-D` to choose):
 
 ```sh
-cd projects/aurora
-iverilog -s sim_pulsos_tb -o tb.vvp simulacao.v ../../rtl/*.v ../../rtl/filtros/*.v     ../../reconstrucao/*.v ../../reconstrucao/*/*.v sim_pulsos_tb.v
-vvp tb.vvp                      # writes sim_pulsos_tb.vcd here
+cd projects/aurora_simulador        # the simulator alone
+iverilog -s simulador_tb -o tb.vvp ../../rtl/*.v ../../rtl/filtros/*.v simulador_tb.v
+vvp tb.vvp                          # writes simulador_tb.vcd here
+
+cd projects/aurora                  # simulator + technique
+iverilog -s sim_pulsos_tb -o tb.vvp simulacao.v ../../rtl/*.v ../../rtl/filtros/*.v \
+    ../../reconstrucao/*.v ../../reconstrucao/*/*.v sim_pulsos_tb.v
+vvp tb.vvp                          # writes sim_pulsos_tb.vcd here
 ```
 
 ## Regression check
@@ -142,15 +153,16 @@ python verification/regress.py            # exit 0 = every build bit-identical
 python verification/regress.py sim f34    # a subset
 ```
 
-The builds come in two groups, so a failure says what broke: if a `simulador`
-build fails, the simulator changed; if only `reconstrucao` builds fail, the
-technique changed and the simulator is intact.
+The builds come in two groups, one per Aurora project, so a failure says what
+broke: if a `simulador` build fails, the simulator changed (these compile only
+`rtl/` and stop at the ADC quantization); if only `reconstrucao` builds fail,
+the technique changed and the simulator is intact.
 
 | Build | Group | Macros | Golden (`verification/`) |
 |---|---|---|---|
-| `sim` | simulador | `SIMULATOR_ONLY` | `sim_pulsos_tb_golden_simulador.vcd` |
-| `sim_f34` | simulador | `SIMULATOR_ONLY USE_SHAPER_F34` | `sim_pulsos_tb_golden_simulador_f34.vcd` |
-| `sim_csa_cr4rc` | simulador | `SIMULATOR_ONLY USE_SHAPER_CSA_CR4RC` | `sim_pulsos_tb_golden_simulador_csa_cr4rc.vcd` |
+| `sim` | simulador | (none) | `simulador_tb_golden.vcd` |
+| `sim_f34` | simulador | `USE_SHAPER_F34` | `simulador_tb_golden_f34.vcd` |
+| `sim_csa_cr4rc` | simulador | `USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_csa_cr4rc.vcd` |
 | `default` | reconstrucao | (none: PZC) | `sim_pulsos_tb_golden.vcd` |
 | `f34` | reconstrucao | `USE_SHAPER_F34` | `sim_pulsos_tb_golden_f34.vcd` |
 | `csa_cr4rc` | reconstrucao | `USE_SHAPER_CSA_CR4RC` | `sim_pulsos_tb_golden_csa_cr4rc.vcd` |
@@ -166,7 +178,7 @@ goldens that do not exist yet.
 
 - **before each commit**, on your machine, if you enable the hook once per
   clone: `git config core.hooksPath .githooks`. A commit that touches `rtl/`,
-  `reconstrucao/`, `projects/aurora/` or `verification/` runs the regression
+  `reconstrucao/`, either Aurora project or `verification/` runs the regression
   first and is blocked if it fails. It tests the working tree.
 - **on every pull request and every push to `main`**, in CI
   (`.github/workflows/regressao.yml`). Its `regressao-golden` check is required

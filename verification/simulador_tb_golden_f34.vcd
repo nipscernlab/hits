@@ -1,5 +1,5 @@
 $date
-	Fri Sep 25 17:01:11 2026
+	Fri Sep 25 17:29:05 2026
 $end
 $version
 	Icarus Verilog
@@ -7,7 +7,7 @@ $end
 $timescale
 	100ps
 $end
-$scope module sim_pulsos_tb $end
+$scope module simulador_tb $end
 $var wire 30 ! shaper_out [29:0] $end
 $var wire 30 " shaper_corrupted [29:0] $end
 $var wire 12 # shaper_clip [11:0] $end

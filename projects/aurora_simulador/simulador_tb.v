@@ -1,32 +1,29 @@
-// sim_pulsos_tb.v — testbench of the core+PZC test wrapper (FPGA_Simulator_v1_PZC)
-// for Aurora (Icarus Verilog + GTKWave), with no ARM/PLL/Qsys.
-// Aurora project: sim_pulsos.spf in this folder — the simulated RTL is the
-// ORIGINAL source: the simulator core in rtl/ plus the PZC-under-test in
-// reconstrucao/ (both shared by the Quartus and Aurora projects, no copies):
-// edit the .v -> simulate -> commit.
+// simulador_tb.v — testbench of the HITS SIMULATOR ALONE, for Aurora (Icarus
+// Verilog + GTKWave/Surfer), with no ARM/PLL/Qsys.
 //
-// WHICH technique and shaper run is chosen in simulacao.v (next to this file,
-// compiled first). The simulator ALONE, up to the ADC quantization, has its
-// own project and testbench: projects/aurora_simulador/.
+// The DUT is FPGA_Simulator_v1 (rtl/) and nothing else: the chain ends at the
+// ADC quantization, `shaper_clip`. No reconstruction technique is compiled or
+// instantiated here; those are tested by projects/aurora/ (sim_pulsos_tb.v).
+// Aurora project: simulador.spf in this folder, which lists only rtl/ files.
+//
+// Shaper: chosen where the simulator chooses it, the `define lines at the top
+// of rtl/FPGA_Simulator_v1.v (default: shaper_fenics). Commit rtl/ with them
+// commented; the regression passes the macro with -D.
 //
 // - 40 MHz clock (25 ns period), like the LHC bunch clock;
 // - short reset at the start;
-// - occupancy starts at 25/127 and steps to 80/127 halfway through
-//   (reproduces the SignalTap test of the ENEMC 2025 paper, now in GTKWave);
+// - occupancy starts at 25/127 and steps to 80/127 halfway through;
 // - offset (pedestal) = 146 ADC;
 // - 3 full bunch-train orbits (3 x 3564 slots) + margin;
-// - the .mif files are loaded by $readmemb through RTL_DIR, RELATIVE to this
-//   folder: the simulation must run with cwd = projects/aurora (Aurora does
-//   that since 2026-07-17; on the command line, cd here first — see README).
+// - the .mif files are loaded through RTL_DIR, RELATIVE to this folder: the
+//   simulation must run with cwd = projects/aurora_simulador (Aurora runs it
+//   in the .spf folder).
 
 `timescale 1ns/100ps
 
-module sim_pulsos_tb;
+module simulador_tb;
 
     localparam RTL_DIR = "../../rtl";
-    // caminho da ROM do estimador via `define (macro nao aparece no VCD; um localparam
-    // novo entraria no dump e quebraria a comparacao com os goldens antigos)
-    `define EST_DIR "../../reconstrucao/estimador_baseline"
 
     localparam ORBITA    = 3564;             // 25 ns slots per orbit
     localparam N_ORBITAS = 3;
@@ -40,12 +37,16 @@ module sim_pulsos_tb;
     wire hits_out, bt_mask_out;
     wire [12:0] energy_out, event_bt, event_all;
     wire signed [29:0] shaper_out, shaper_corrupted;
-    wire [11:0] shaper_clip;
+    wire [11:0] shaper_clip;                 // THE simulator output (ADC sample)
     wire signed [16:0] noise_out;
-    wire signed [12:0] pedestal_out;
-    wire signed [28:0] pzc_out;
 
-    FPGA_Simulator_v1_PZC
+`ifdef USE_SHAPER_F34
+  `ifdef USE_SHAPER_CSA_CR4RC
+    ERROR_two_shapers_USE_SHAPER_F34_and_USE_SHAPER_CSA_CR4RC_pick_one e0();
+  `endif
+`endif
+
+    FPGA_Simulator_v1
     #(
         .BUNCH_MEM ({RTL_DIR, "/bunch_train_mask.mif"}),
         .MEM_ENG0  ({RTL_DIR, "/A13_PART1.mif"}),
@@ -53,10 +54,7 @@ module sim_pulsos_tb;
         .MEM_ENG2  ({RTL_DIR, "/A13_PART3.mif"}),
         .MEM_NOISE0({RTL_DIR, "/NOISE_PART1.mif"}),
         .MEM_NOISE1({RTL_DIR, "/NOISE_PART2.mif"}),
-        .MEM_NOISE2({RTL_DIR, "/NOISE_PART3.mif"}),
-        // so o build USE_BASELINE_EST le esta ROM; sem o caminho o $readmemh
-        // falhava em silencio e o golden f34_est congelou saidas com X (14/09)
-        .EST_RECIP_MEM({`EST_DIR, "/recip.mem"})
+        .MEM_NOISE2({RTL_DIR, "/NOISE_PART3.mif"})
     ) dut
     (
         .clk(clk),
@@ -71,20 +69,17 @@ module sim_pulsos_tb;
         .shaper_out(shaper_out),
         .shaper_corrupted(shaper_corrupted),
         .shaper_clip(shaper_clip),
-        .noise_out(noise_out),
-        .pedestal_out(pedestal_out),
-        .pzc_out(pzc_out)
+        .noise_out(noise_out)
     );
 
     // 40 MHz clock
     always #12.5 clk = ~clk;
 
     initial begin
-        $dumpfile("sim_pulsos_tb.vcd");
+        $dumpfile("simulador_tb.vcd");
         // testbench scope only: clk/rst/occupancy/offset + every DUT output
-        // (to dive into the hierarchy, use Aurora's Wave Configuration,
-        // which overrides this dumpvars)
-        $dumpvars(1, sim_pulsos_tb);
+        // (to dive into the hierarchy, use Aurora's Wave Configuration)
+        $dumpvars(1, simulador_tb);
 
         // reset for 4 cycles
         repeat (4) @(posedge clk);

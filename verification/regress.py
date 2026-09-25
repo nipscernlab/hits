@@ -4,13 +4,15 @@ each one bit-for-bit against its frozen baseline.
 
     python verification/regress.py                  # every build
     python verification/regress.py sim f34_est      # a subset
-    python verification/regress.py --gera sim_x     # CREATE a missing golden
+    python verification/regress.py --gera <build>   # CREATE a missing golden
 
 Two groups of builds, so a failure says WHAT broke:
-  simulador     the HITS simulator alone (SIMULATOR_ONLY), one per shaper. If
-                one of these fails, the SIMULATOR changed.
-  reconstrucao  simulator + the technique under test (reconstrucao/). If only
-                these fail, the TECHNIQUE changed, not the simulator.
+  simulador     the HITS simulator ALONE, up to the ADC quantization
+                (projects/aurora_simulador/, simulador_tb.v, only rtl/ is
+                compiled), one per shaper. If one fails, the SIMULATOR changed.
+  reconstrucao  simulator + the technique under test (projects/aurora/,
+                sim_pulsos_tb.v, rtl/ + reconstrucao/). If only these fail,
+                the TECHNIQUE changed, not the simulator.
 
 Exit 0 only if EVERY requested build is bit-identical to its golden AND no
 step reports an error. A correct golden does not absolve a broken run: any
@@ -37,18 +39,27 @@ import subprocess
 import sys
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-AURORA = os.path.join(RAIZ, "projects", "aurora")
 VERIF = os.path.join(RAIZ, "verification")
-SELECAO = os.path.join(AURORA, "simulacao.v")
 
-# name: (group, macros, golden)
+# the two projects: folder (the simulation cwd), testbench, top, VCD it
+# writes ($dumpfile is hardcoded in each tb) and what gets compiled
+PROJETOS = {
+    "simulador": (os.path.join(RAIZ, "projects", "aurora_simulador"),
+                  "simulador_tb.v", "simulador_tb", "simulador_tb.vcd",
+                  ("rtl/*.v", "rtl/filtros/*.v")),
+    "reconstrucao": (os.path.join(RAIZ, "projects", "aurora"),
+                     "sim_pulsos_tb.v", "sim_pulsos_tb", "sim_pulsos_tb.vcd",
+                     ("rtl/*.v", "rtl/filtros/*.v", "reconstrucao/*.v",
+                      "reconstrucao/*/*.v")),
+}
+
+# name: (project, macros, golden)
 BUILDS = {
-    "sim":           ("simulador", ["SIMULATOR_ONLY"],
-                      "sim_pulsos_tb_golden_simulador.vcd"),
-    "sim_f34":       ("simulador", ["SIMULATOR_ONLY", "USE_SHAPER_F34"],
-                      "sim_pulsos_tb_golden_simulador_f34.vcd"),
-    "sim_csa_cr4rc": ("simulador", ["SIMULATOR_ONLY", "USE_SHAPER_CSA_CR4RC"],
-                      "sim_pulsos_tb_golden_simulador_csa_cr4rc.vcd"),
+    "sim":           ("simulador", [], "simulador_tb_golden.vcd"),
+    "sim_f34":       ("simulador", ["USE_SHAPER_F34"],
+                      "simulador_tb_golden_f34.vcd"),
+    "sim_csa_cr4rc": ("simulador", ["USE_SHAPER_CSA_CR4RC"],
+                      "simulador_tb_golden_csa_cr4rc.vcd"),
     "default":       ("reconstrucao", [], "sim_pulsos_tb_golden.vcd"),
     "f34":           ("reconstrucao", ["USE_SHAPER_F34"],
                       "sim_pulsos_tb_golden_f34.vcd"),
@@ -58,11 +69,14 @@ BUILDS = {
                       "sim_pulsos_tb_golden_f34_est.vcd"),
 }
 
-# the tb hardcodes $dumpfile("sim_pulsos_tb.vcd"), so builds run serially and
-# every artifact is deleted before and after each one (a stale tb.vvp once
-# produced a false OK -- F15 lesson, 2026-07-21)
-VCD = os.path.join(AURORA, "sim_pulsos_tb.vcd")
-VVP = os.path.join(AURORA, "tb_regress.vvp")
+# where a choice can be left on by hand; the builds pass their own macros
+# with -D, so every one of these must be committed with the lines commented
+ESCOLHAS = ("projects/aurora/simulacao.v", "rtl/FPGA_Simulator_v1.v",
+            "reconstrucao/FPGA_Simulator_v1_PZC.v")
+
+# builds run serially and every artifact is deleted before and after each one
+# (a stale tb.vvp once produced a false OK -- F15 lesson, 2026-07-21)
+VVP_NOME = "tb_regress.vvp"
 
 ERRO_RE = re.compile(r"(?i)\berror\b|unable to open|vvp: can't", re.M)
 DEFINE_ATIVO_RE = re.compile(r"^\s*`define\b", re.M)
@@ -70,49 +84,56 @@ TENTATIVAS_VVP = 3          # the run plus two retries
 
 
 def confere_selecao():
-    """simulacao.v must be committed with every choice commented: the builds
-    here pass their macros with -D, and an active line would be added to all
-    of them."""
-    with open(SELECAO, encoding="utf-8") as f:
-        ativas = [l.strip() for l in f if DEFINE_ATIVO_RE.match(l)]
+    """A `define left active in one of ESCOLHAS would be added to every build."""
+    ativas = []
+    for rel in ESCOLHAS:
+        with open(os.path.join(RAIZ, *rel.split("/")), encoding="utf-8") as f:
+            ativas += ["%s: %s" % (rel, l.strip()) for l in f
+                       if DEFINE_ATIVO_RE.match(l)]
     if ativas:
-        sys.exit("regress: projects/aurora/simulacao.v tem escolha ativa (%s).\n"
-                 "Comente a linha antes de rodar a regressao ou de commitar: "
-                 "cada build passa as proprias macros." % "; ".join(ativas))
+        sys.exit("regress: escolha ativa (%s).\nComente a linha antes de rodar "
+                 "a regressao ou de commitar: cada build passa as proprias "
+                 "macros." % "; ".join(ativas))
 
 
-def fontes():
-    # simulacao.v stays OUT: the macros come from -D (see confere_selecao)
+def fontes(projeto):
+    pasta, tb, _, _, padroes = PROJETOS[projeto]
     lista = []
-    for padrao in ("rtl/*.v", "rtl/filtros/*.v", "reconstrucao/*.v",
-                   "reconstrucao/*/*.v", "projects/aurora/sim_pulsos_tb.v"):
+    for padrao in padroes:
         achados = sorted(glob.glob(os.path.join(RAIZ, *padrao.split("/"))))
         if not achados:
             sys.exit("regress: nenhum fonte casa com %s" % padrao)
         lista += achados
-    return lista
+    return lista + [os.path.join(pasta, tb)]
 
 
-def limpa():
-    for f in (VCD, VVP):
+def artefatos(projeto):
+    pasta, _, _, vcd, _ = PROJETOS[projeto]
+    return os.path.join(pasta, vcd), os.path.join(pasta, VVP_NOME)
+
+
+def limpa(projeto):
+    for f in artefatos(projeto):
         if os.path.exists(f):
             os.remove(f)
 
 
-def simula(defines):
+def simula(projeto, defines):
     """Builds and runs one configuration. Returns (error or None, retries)."""
-    limpa()
-    cmd = ["iverilog", "-s", "sim_pulsos_tb", "-o", VVP]
+    pasta, _, top, _, _ = PROJETOS[projeto]
+    VCD, VVP = artefatos(projeto)
+    limpa(projeto)
+    cmd = ["iverilog", "-s", top, "-o", VVP]
     cmd += ["-D%s" % d for d in defines]
-    cmd += fontes()
-    r = subprocess.run(cmd, cwd=AURORA, capture_output=True, text=True)
+    cmd += fontes(projeto)
+    r = subprocess.run(cmd, cwd=pasta, capture_output=True, text=True)
     if r.returncode != 0:
         return "iverilog falhou:\n" + (r.stdout + r.stderr)[-2000:], 0
 
     for tentativa in range(TENTATIVAS_VVP):
         if os.path.exists(VCD):
             os.remove(VCD)
-        r = subprocess.run(["vvp", VVP], cwd=AURORA, capture_output=True, text=True)
+        r = subprocess.run(["vvp", VVP], cwd=pasta, capture_output=True, text=True)
         saida = r.stdout + r.stderr
         m = ERRO_RE.search(saida)
         if m:
@@ -131,15 +152,16 @@ def simula(defines):
     return None, tentativa
 
 
-def roda(defines, golden):
-    erro, repeticoes = simula(defines)
+def roda(projeto, defines, golden):
+    erro, repeticoes = simula(projeto, defines)
     if erro:
-        limpa()
+        limpa(projeto)
         return erro, repeticoes
+    VCD, _ = artefatos(projeto)
     r = subprocess.run([sys.executable, os.path.join(VERIF, "compare_vcd.py"),
                         VCD, os.path.join(VERIF, golden)],
-                       cwd=AURORA, capture_output=True, text=True)
-    limpa()
+                       capture_output=True, text=True)
+    limpa(projeto)
     if r.returncode != 0:
         return "diferente do golden:\n" + (r.stdout + r.stderr)[-2000:], repeticoes
     return None, repeticoes
@@ -147,17 +169,17 @@ def roda(defines, golden):
 
 def gera(nomes):
     for nome in nomes:
-        _, defines, golden = BUILDS[nome]
+        projeto, defines, golden = BUILDS[nome]
         destino = os.path.join(VERIF, golden)
         if os.path.exists(destino):
             sys.exit("regress: %s ja existe; um golden existente so muda a mao, "
                      "em revisao" % golden)
-        erro, _ = simula(defines)
+        erro, _ = simula(projeto, defines)
         if erro:
-            limpa()
+            limpa(projeto)
             sys.exit("regress: %s nao gerado, a rodada falhou: %s" % (golden, erro))
-        shutil.move(VCD, destino)
-        limpa()
+        shutil.move(artefatos(projeto)[0], destino)
+        limpa(projeto)
         print("[GERADO] %-13s %s" % (nome, golden))
 
 
@@ -177,7 +199,7 @@ def main():
     falhas, repetidos = [], []
     for nome in pedidos:
         grupo, defines, golden = BUILDS[nome]
-        motivo, repeticoes = roda(defines, golden)
+        motivo, repeticoes = roda(grupo, defines, golden)
         if repeticoes:
             repetidos.append("%s (%dx)" % (nome, repeticoes))
         if motivo:
@@ -193,8 +215,8 @@ def main():
     if falhas:
         grupos = {g for _, g in falhas}
         if "simulador" in grupos:
-            print("O SIMULADOR mudou (rtl/): um build sem tecnica de "
-                  "reconstrucao falhou.")
+            print("O SIMULADOR mudou (rtl/): falhou um build do simulador "
+                  "sozinho, que vai so ate a quantizacao do ADC.")
         else:
             print("So builds com tecnica falharam: o simulador esta intacto, "
                   "mudou a tecnica (reconstrucao/).")

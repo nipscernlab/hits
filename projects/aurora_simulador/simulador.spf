@@ -1,0 +1,112 @@
+{
+  "metadata": {
+    "projectName": "simulador",
+    "createdAt": "2026-09-25T12:00:00.000Z",
+    "lastModified": "2026-09-25T12:00:00.000Z",
+    "computerName": "",
+    "appVersion": "",
+    "projectPath": "C:\\nipscern\\hits\\projects\\aurora_simulador",
+    "lastOpened": "2026-09-25T12:00:00.000Z"
+  },
+  "structure": {
+    "basePath": "C:\\nipscern\\hits\\projects\\aurora_simulador",
+    "folders": [],
+    "processors": [],
+    "topLevelFile": "..\\..\\rtl\\FPGA_Simulator_v1.v",
+    "testbenchFile": "simulador_tb.v",
+    "synthesizableFiles": [
+      {
+        "name": "FPGA_Simulator_v1.v",
+        "path": "..\\..\\rtl\\FPGA_Simulator_v1.v",
+        "isTopLevel": true
+      },
+      {
+        "name": "Hits_Bunch_train.v",
+        "path": "..\\..\\rtl\\Hits_Bunch_train.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "bunch_train_mask.v",
+        "path": "..\\..\\rtl\\bunch_train_mask.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "clip_shaper.v",
+        "path": "..\\..\\rtl\\clip_shaper.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "energy_collisions.v",
+        "path": "..\\..\\rtl\\energy_collisions.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "energy_distribution.v",
+        "path": "..\\..\\rtl\\energy_distribution.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "hits_positions.v",
+        "path": "..\\..\\rtl\\hits_positions.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "noise_collisions.v",
+        "path": "..\\..\\rtl\\noise_collisions.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "noise_distribution.v",
+        "path": "..\\..\\rtl\\noise_distribution.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "rand_LFSR.v",
+        "path": "..\\..\\rtl\\rand_LFSR.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "random_number_generator.v",
+        "path": "..\\..\\rtl\\random_number_generator.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "select_rand.v",
+        "path": "..\\..\\rtl\\select_rand.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "iir_order1.v",
+        "path": "..\\..\\rtl\\filtros\\iir_order1.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "iir_order2.v",
+        "path": "..\\..\\rtl\\filtros\\iir_order2.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "shaper_csa_cr4rc.v",
+        "path": "..\\..\\rtl\\filtros\\shaper_csa_cr4rc.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "shaper_fenics.v",
+        "path": "..\\..\\rtl\\filtros\\shaper_fenics.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "shaper_fenics_f34.v",
+        "path": "..\\..\\rtl\\filtros\\shaper_fenics_f34.v",
+        "isTopLevel": false
+      }
+    ],
+    "testbenchFiles": [
+      {
+        "name": "simulador_tb.v",
+        "path": "simulador_tb.v",
+        "isTopLevel": true
+      }
+    ]
+  }
+}

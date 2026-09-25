@@ -22,6 +22,8 @@ c5_pin_model_dump.txt
 .aurora-wave/
 .aurora-missing-files.log
 projects/aurora/testbench/
+projects/aurora_simulador/testbench/
+.aurora/
 *.vcd
 *.vvp
 !verification/*.vcd
