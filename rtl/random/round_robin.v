@@ -31,6 +31,7 @@ always @(posedge clk or posedge rst)
 begin
 	if (rst) begin
 		selector <= 0;
+		out <= 0;           // back to the power-up value: a reset replays the run
 	end
 	else begin
 		selector <= selector_next;

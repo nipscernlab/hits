@@ -4,18 +4,14 @@
 // approach): table 0 unless rand0 > MEM_ENG0_THRESH, then table 1 unless
 // rand1 > MEM_ENG1_THRESH, then table 2.
 //
-// Block-RAM form: each table read is registered (d* <= table[rand*_next]),
-// which is what synthesis maps to M10K. a0/a1 hold exactly what the rng
-// output registers hold (they load rand*_next under the same condition,
-// outside reset) and d* = table[rng word], so energy_out comes out on the same
-// cycle, with the same value, as when the tables were read straight from
-// rand0..rand2.
-//
-// One accepted exception (2026-09-26): before their first load d0..d2 are 0,
-// the M10K power-up value, where table[0] was read before. It shows only in
-// the first energy_out sample after power-up (table 0 entry 0 is 1, so that
-// sample is 0 instead of 1); a reset later in the run holds a*/d* like the
-// rng registers and changes nothing.
+// Block-RAM form: each table read is registered (d* <= table[word]), which is
+// what synthesis maps to M10K. a0/a1 hold exactly what the rng output
+// registers hold (they load rand*_next, and 0 in reset, as those registers
+// do) and d* = table[that word], so energy_out comes out on the same cycle,
+// with the same value, as when the tables were read straight from rand0..2.
+// In reset d* read table[0]; only at power-up, before the first clock edge,
+// they hold 0 (the M10K power-up value), which no sample shows as long as the
+// design is reset for at least one clock.
 module energy_icdf
 #(
 	parameter RAND_IN_BITS = 10,
@@ -39,7 +35,7 @@ reg [ENG_OUT_BITS-1:0] mem_eng2 [0:MEM_ENG_SIZE-1];
 
 // a0/a1 hold what the rng output registers hold, and d0..d2 hold the table
 // entry of that same rng word (d2 needs no address register of its own):
-// both load under the same condition, outside reset. Registering the READ
+// both follow them, including their reset to 0. Registering the READ
 // (d* <= table[rand*_next]) instead of the address is the form Quartus maps
 // to M10K; with only the address registered it keeps the tables in logic.
 reg [RAND_IN_BITS-1:0] a0 = 0, a1 = 0;          // only a0/a1 meet the thresholds
@@ -50,14 +46,17 @@ initial begin
 	$readmemb(MEM_ENG2, mem_eng2);
 end
 
+// In reset the rng output registers go to 0, so a* go to 0 and d* read
+// table[0]: after any reset (at power-up or later) the tables replay the run.
+wire [RAND_IN_BITS-1:0] r0 = rst ? {RAND_IN_BITS{1'b0}} : rand0_next;
+wire [RAND_IN_BITS-1:0] r1 = rst ? {RAND_IN_BITS{1'b0}} : rand1_next;
+wire [RAND_IN_BITS-1:0] r2 = rst ? {RAND_IN_BITS{1'b0}} : rand2_next;
 always @(posedge clk) begin
-	if (!rst) begin
-		a0 <= rand0_next;
-		a1 <= rand1_next;
-		d0 <= mem_eng0[rand0_next];
-		d1 <= mem_eng1[rand1_next];
-		d2 <= mem_eng2[rand2_next];
-	end
+	a0 <= r0;
+	a1 <= r1;
+	d0 <= mem_eng0[r0];
+	d1 <= mem_eng1[r1];
+	d2 <= mem_eng2[r2];
 end
 
 always @(posedge clk or posedge rst) begin
