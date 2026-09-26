@@ -71,7 +71,7 @@ BUILDS = {
 
 # where a choice can be left on by hand; the builds pass their own macros
 # with -D, so every one of these must be committed with the lines commented
-ESCOLHAS = ("projects/aurora/simulacao.v", "rtl/FPGA_Simulator_v1.v",
+ESCOLHAS = ("projects/aurora/simulacao.v", "rtl/hits_simulator.v",
             "reconstrucao/FPGA_Simulator_v1_PZC.v")
 
 # builds run serially and every artifact is deleted before and after each one

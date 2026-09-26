@@ -12,12 +12,12 @@
     "basePath": "C:\\nipscern\\hits\\projects\\aurora_simulador",
     "folders": [],
     "processors": [],
-    "topLevelFile": "..\\..\\rtl\\FPGA_Simulator_v1.v",
+    "topLevelFile": "..\\..\\rtl\\hits_simulator.v",
     "testbenchFile": "simulador_tb.v",
     "synthesizableFiles": [
       {
-        "name": "FPGA_Simulator_v1.v",
-        "path": "..\\..\\rtl\\FPGA_Simulator_v1.v",
+        "name": "hits_simulator.v",
+        "path": "..\\..\\rtl\\hits_simulator.v",
         "isTopLevel": true
       },
       {

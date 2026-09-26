@@ -22,7 +22,7 @@ Fora, Brazil).
 ## Repository layout
 
 ```
-rtl/                  THE SIMULATOR, one subfolder per stage (top: FPGA_Simulator_v1.v)
+rtl/                  THE SIMULATOR, one subfolder per stage (top: hits_simulator.v)
 rtl/random/           Pseudo-random generator (LFSR bank), used by every stage that draws
 rtl/hits/             Hit draw + LHC bunch-train mask
 rtl/energy/           Energy amplitude (inverse CDF, 3 tables)
@@ -40,7 +40,7 @@ verification/         Regression baseline: golden VCD + comparison script
 
 ## How it works
 
-The synthesizable simulator core (`rtl/FPGA_Simulator_v1.v`) chains the stages
+The synthesizable simulator core (`rtl/hits_simulator.v`) chains the stages
 below, one sample per 25 ns clock cycle, ending at the digitized ADC sample.
 Each `.mif` memory lives next to the module that reads it.
 
@@ -71,7 +71,7 @@ top level wires for them.
 
 ### Selecting the shaper
 
-Either uncomment the `` `define `` at the top of `rtl/FPGA_Simulator_v1.v`, or
+Either uncomment the `` `define `` at the top of `rtl/hits_simulator.v`, or
 define the macro externally and leave the file untouched (the `` `define ``
 lines ship commented out, so an external define always wins):
 
@@ -102,11 +102,12 @@ for the `USE_SHAPER_F34` build only: combining it with another shaper compiles
 but is silently mis-anchored (see the SHAPER COMBINATIONS warning in the
 wrapper header). Its golden is `f34_est` in the table of *Regression check*.
 
-Top-level modules: `rtl/FPGA_Simulator_v1.v` (the simulator core, no
+Top-level modules: `rtl/hits_simulator.v` (the simulator core, no
 reconstruction), `reconstrucao/FPGA_Simulator_v1_PZC.v` (core plus the technique
 under test, the top used in simulation and on the board), and
-`projects/quartus/FPGA_Simulator_v1_PZC_SOC.v` (board top, connected to the HPS
-via Qsys).
+`projects/quartus/de10_nano_soc_ghrd.v` (board top, entity `DE10_NANO_SoC_GHRD`:
+connected to the HPS via Qsys, it takes `occupancy` and `offset` from bits [6:0]
+and [19:7] of the HPS-to-FPGA register).
 
 ## Simulating without hardware
 
@@ -131,7 +132,7 @@ Aurora build from 2026-07-17 or newer (older builds ran the simulation from
 Aurora's temp dir and cannot resolve the relative paths).
 
 **Shaper** (both projects): the `` `define `` lines at the top of
-`rtl/FPGA_Simulator_v1.v`, see *Selecting the shaper*.
+`rtl/hits_simulator.v`, see *Selecting the shaper*.
 
 **Technique** (`projects/aurora/` only): `projects/aurora/simulacao.v` is the
 menu, PZC by default or `USE_BASELINE_EST`; it can also pick the shaper for

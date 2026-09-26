@@ -718,7 +718,7 @@ set_global_assignment -name VERILOG_FILE ../../rtl/hits/hit_draw.v
 set_global_assignment -name VERILOG_FILE ../../rtl/hits/hit_generator.v
 set_global_assignment -name VERILOG_FILE FPGA_Simulator_v1_PZC_SOC.v
 set_global_assignment -name VERILOG_FILE ../../reconstrucao/FPGA_Simulator_v1_PZC.v
-set_global_assignment -name VERILOG_FILE ../../rtl/FPGA_Simulator_v1.v
+set_global_assignment -name VERILOG_FILE ../../rtl/hits_simulator.v
 set_global_assignment -name VERILOG_FILE ../../rtl/energy/energy_icdf.v
 set_global_assignment -name VERILOG_FILE ../../rtl/energy/energy_generator.v
 set_global_assignment -name VERILOG_FILE ../../rtl/hits/bunch_train_mask.v

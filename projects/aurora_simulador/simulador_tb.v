@@ -1,13 +1,13 @@
 // simulador_tb.v — testbench of the HITS SIMULATOR ALONE, for Aurora (Icarus
 // Verilog + GTKWave/Surfer), with no ARM/PLL/Qsys.
 //
-// The DUT is FPGA_Simulator_v1 (rtl/) and nothing else: the chain ends at the
+// The DUT is hits_simulator (rtl/) and nothing else: the chain ends at the
 // ADC quantization, `shaper_clip`. No reconstruction technique is compiled or
 // instantiated here; those are tested by projects/aurora/ (sim_pulsos_tb.v).
 // Aurora project: simulador.spf in this folder, which lists only rtl/ files.
 //
 // Shaper: chosen where the simulator chooses it, the `define lines at the top
-// of rtl/FPGA_Simulator_v1.v (default: shaper_fenics). Commit rtl/ with them
+// of rtl/hits_simulator.v (default: shaper_fenics). Commit rtl/ with them
 // commented; the regression passes the macro with -D.
 //
 // - 40 MHz clock (25 ns period), like the LHC bunch clock;
@@ -46,7 +46,7 @@ module simulador_tb;
   `endif
 `endif
 
-    FPGA_Simulator_v1
+    hits_simulator
     #(
         .BUNCH_MEM ({RTL_DIR, "/hits/bunch_train_mask.mif"}),
         .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_a13_0.mif"}),

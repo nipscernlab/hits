@@ -53,7 +53,7 @@
 // into the PZC and exposes both the simulator probes and the PZC outputs.
 //
 // It keeps the exact port interface of the standalone top it replaced, so the
-// board top (FPGA_Simulator_v1_PZC_SOC) and the testbench are unchanged.
+// board top (de10_nano_soc_ghrd.v) and the testbench are unchanged.
 module FPGA_Simulator_v1_PZC
 #(
 	parameter RAND_BITS_HITS = 7,
@@ -127,7 +127,7 @@ module FPGA_Simulator_v1_PZC
 
 
 // HITS simulator core (rtl/) — everything up to the digitized ADC sample.
-FPGA_Simulator_v1
+hits_simulator
 #(
 	.RAND_BITS_HITS(RAND_BITS_HITS),
 	.BUNCH_MEM(BUNCH_MEM),

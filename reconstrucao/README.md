@@ -25,7 +25,7 @@ technique, its result goes out on `pzc_out` and its baseline estimate on
 techniques.
 
 The module keeps the name `FPGA_Simulator_v1_PZC` even though it no longer
-holds only the PZC: the board top (`projects/quartus/FPGA_Simulator_v1_PZC_SOC.v`)
+holds only the PZC: the board top (`projects/quartus/de10_nano_soc_ghrd.v`)
 instantiates it by that name, and the SignalTap assignments in the `.qsf` refer
 to its hierarchy (`FPGA_Simulator_v1_PZC:sim|...`).
 

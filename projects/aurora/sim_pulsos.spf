@@ -26,8 +26,8 @@
         "isTopLevel": true
       },
       {
-        "name": "FPGA_Simulator_v1.v",
-        "path": "..\\..\\rtl\\FPGA_Simulator_v1.v",
+        "name": "hits_simulator.v",
+        "path": "..\\..\\rtl\\hits_simulator.v",
         "isTopLevel": false
       },
       {
