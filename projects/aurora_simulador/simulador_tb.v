@@ -82,14 +82,19 @@ module simulador_tb;
         $dumpvars(1, simulador_tb);
 
         // reset for 4 cycles
+        // Stimulus changes on a clock edge use NONBLOCKING assignments: with
+        // `rst = 0` every always block saw rst as 0 or as 1 at that edge
+        // depending on Icarus's process order, so part of the design left
+        // reset one edge before the rest -- a state the hardware never
+        // produces, and one that any restructuring of the RTL could flip.
         repeat (4) @(posedge clk);
-        rst = 1'b0;
+        rst <= 1'b0;
 
         // 1st half: low occupancy (25/127)
         repeat (N_CICLOS/2) @(posedge clk);
 
         // 2nd half: high occupancy (80/127) — watch the hit density change
-        occupancy = 7'd80;
+        occupancy <= 7'd80;
         $display("t=%0t ns: occupancy 25 -> 80", $time);
 
         repeat (N_CICLOS/2) @(posedge clk);
