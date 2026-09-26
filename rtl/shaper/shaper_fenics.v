@@ -13,7 +13,7 @@ module shaper_fenics
 	parameter G_OUT_LOG = 10
 )
 (
-	input  clock,
+	input  clock, rst,
 	input  signed [BITS_IN-1:0] in,
 	output signed [BITS_IN+16:0] out
 );
@@ -32,6 +32,7 @@ iir_order1
 ) iir1
 (
 	.clock(clock),
+	.rst(rst),
 	.in(in),
 	.out(out1)
 );
@@ -47,6 +48,7 @@ iir_order2
 ) iir2
 (
 	.clock(clock),
+	.rst(rst),
 	.in(in),
 	.out(out2)
 );
@@ -62,6 +64,7 @@ iir_order2
 ) iir3
 (
 	.clock(clock),
+	.rst(rst),
 	.in(in),
 	.out(out3)
 );
@@ -75,6 +78,7 @@ iir_order1
 ) iir4
 (
 	.clock(clock),
+	.rst(rst),
 	.in(in),
 	.out(out4)
 );

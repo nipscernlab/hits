@@ -66,8 +66,8 @@ below):
 | `shaper_csa_cr4rc.v` | `USE_SHAPER_CSA_CR4RC` | The generic "paper" pulse: the exact readout chain of the group's papers (bi-exponential detector pulse, CSA with a 51 ns feedback pole, unbuffered CR-4RC with a 500 us CR and four 5 ns RC stages -- the Electronics 14:493 signal generator). 4-tap FIR head plus 3 first-order IIR sections; peak 60.1 ns on sample 2, FWHM 114 ns, shape error 1e-7 of peak. Generated, not written by hand: see the header of the file. |
 
 All three share the same output scale (`2**G_OUT_LOG`), so nothing downstream
-changes. The F34 and CSA+CR-4RC modules additionally take a reset, which the
-top level wires for them.
+changes. All three take a reset that clears their state, so the tail of
+earlier pulses does not cross a reset (the legacy one gained it on 2026-09-26).
 
 ### Selecting the shaper
 

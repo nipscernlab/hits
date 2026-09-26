@@ -131,7 +131,7 @@ shaper_csa_cr4rc
 // F34 shaper: 13-tap FIR head + 5 IIR sections (3 leaky, 2 coupled), derived
 // from a 14-pole transfer function of the FENICS front end. Zero DC gain is
 // imposed rather than fitted, so it cannot produce a baseline sag the real
-// front end does not have. Unlike the legacy shaper it needs a reset.
+// front end does not have. Needs a reset, like the other two.
 shaper_fenics_f34
 #(
 	.BITS_IN(ENG_OUT_BITS),
@@ -151,6 +151,7 @@ shaper_fenics
 )sf
 (
 	.clock(clk),
+	.rst(rst),
 	.in(event_bt),
 	.out(shaper_out)
 );

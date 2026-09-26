@@ -13,7 +13,7 @@ module iir_order1
 
 	
 
-	input  clock, 
+	input  clock, rst,
 	input  signed [BITS_IN-1:0] in,
 	output signed [BITS_IN+16:0] out
 	);
@@ -28,9 +28,13 @@ module iir_order1
 	assign yp = - a1*ry;
 	assign out =   yz + (yp >>> G_OUT_LOG);
 	
-	always @(posedge clock)
+	// reset clears the state: the tail of earlier pulses does not cross a reset
+	always @(posedge clock or posedge rst)
 	begin
-		ry <= out;
+		if (rst)
+			ry <= 0;
+		else
+			ry <= out;
 	end
 	
 	
