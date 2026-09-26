@@ -27,3 +27,6 @@ projects/aurora_simulador/testbench/
 *.vcd
 *.vvp
 !verification/*.vcd
+
+# --- Python ---
+__pycache__/

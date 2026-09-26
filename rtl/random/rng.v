@@ -13,7 +13,8 @@ module rng
 )
 (
 	input clk, rst,
-	output [RAND_OUT_SIZE-1:0] rand_out
+	output [RAND_OUT_SIZE-1:0] rand_out,
+	output [RAND_OUT_SIZE-1:0] rand_next   // rand_out of the next cycle (see round_robin)
 );
 	
 
@@ -120,7 +121,8 @@ round_robin
 	.clk(clk), 
 	.rst(rst),
 	.in(rand_in),
-	.out(rand_out)
+	.out(rand_out),
+	.out_next(rand_next)
 );
 
 

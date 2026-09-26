@@ -17,7 +17,7 @@ module energy_generator
 );
 
 
-wire [RAND_BITS-1:0] rand0, rand1,rand2;
+wire [RAND_BITS-1:0] rand0_next, rand1_next, rand2_next;   // next-cycle rng words: the table read addresses
 
 rng
 #(
@@ -33,7 +33,8 @@ rng
 (
 	.clk(clk), 
 	.rst(rst),
-	.rand_out(rand0)
+	.rand_out(),
+	.rand_next(rand0_next)
 );
 
 
@@ -52,7 +53,8 @@ rng
 (
 	.clk(clk), 
 	.rst(rst),
-	.rand_out(rand1)
+	.rand_out(),
+	.rand_next(rand1_next)
 );
 
 
@@ -72,7 +74,8 @@ rng
 (
 	.clk(clk), 
 	.rst(rst),
-	.rand_out(rand2)
+	.rand_out(),
+	.rand_next(rand2_next)
 );
 
 energy_icdf
@@ -89,9 +92,9 @@ energy_icdf
 (
 	.clk(clk),
 	.rst(rst),
-	.rand0(rand0),
-	.rand1(rand1),
-	.rand2(rand2),
+	.rand0_next(rand0_next),
+	.rand1_next(rand1_next),
+	.rand2_next(rand2_next),
 	.energy_out(energy_out)
 );
 
