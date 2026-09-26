@@ -22,8 +22,13 @@ Fora, Brazil).
 ## Repository layout
 
 ```
-rtl/                  Simulator source shared by all flows (.v modules + .mif memories)
-rtl/filtros/          Shaper filters: three pulse shapes, selectable at synthesis time (see below)
+rtl/                  THE SIMULATOR, one subfolder per stage (top: FPGA_Simulator_v1.v)
+rtl/random/           Pseudo-random generator (LFSR bank), used by every stage that draws
+rtl/hits/             Hit draw + LHC bunch-train mask
+rtl/energy/           Energy amplitude (inverse CDF, 3 tables)
+rtl/shaper/           Pulse shapers: three shapes, selectable at synthesis time (see below)
+rtl/noise/            Electronic noise (inverse CDF, 3 tables)
+rtl/adc/              Pedestal, quantization and saturation: the simulator output
 reconstrucao/         Reconstruction techniques under test and the core+technique wrapper (not the simulator)
 reconstrucao/pzc/                 Pole-zero cancellation + pedestal tracking
 reconstrucao/estimador_baseline/  Adaptive baseline estimator (+ its recip.mem ROM)
@@ -35,17 +40,20 @@ verification/         Regression baseline: golden VCD + comparison script
 
 ## How it works
 
-The synthesizable simulator core (`rtl/`) chains four blocks, one sample per
-25 ns clock cycle, ending at the digitized ADC sample:
+The synthesizable simulator core (`rtl/FPGA_Simulator_v1.v`) chains the stages
+below, one sample per 25 ns clock cycle, ending at the digitized ADC sample.
+Each `.mif` memory lives next to the module that reads it.
 
-| Block | Modules | Description |
+| Folder | Files | Description |
 |---|---|---|
-| Random number generation | `rand_LFSR.v`, `select_rand.v`, `random_number_generator.v` | Bank of 7 LFSRs with a selector, producing uncorrelated pseudo-random streams |
-| Hit generation | `Hits_Bunch_train.v`, `hits_positions.v`, `bunch_train_mask.v` | Bernoulli hit draw per bunch crossing, gated by the LHC bunch-train mask (`bunch_train_mask.mif`) and the programmable occupancy |
-| Amplitude and noise | `energy_*.v` + `A13_PART*.mif`, `noise_*.v` + `NOISE_PART*.mif` | Inverse-CDF lookup split across multiple memories (multi-memory approach), drawing energy amplitudes from a measured minimum-bias distribution and Gaussian electronic noise |
-| Shaping and digitization | one of the three `filtros/shaper_*.v` (see *Shaper filters* below), `clip_shaper.v` | IIR implementation of the selected pulse shape, then pedestal offset and clipping to the ADC range; the output `shaper_clip` is the simulated readout |
+| `random/` | `lfsr42.v`, `rng.v`, `round_robin.v` | 42-bit LFSR (the papers' primitive polynomial); `rng` is a bank of 7 of them read in round robin, producing uncorrelated pseudo-random streams |
+| `hits/` | `hit_generator.v`, `hit_draw.v`, `bunch_train_mask.v` + `.mif` | Bernoulli hit draw per bunch crossing (`rand < occupancy`), gated by the LHC bunch-train mask (3564 slots) |
+| `energy/` | `energy_generator.v`, `energy_icdf.v` + `energy_icdf_a13_0..2.mif` | Inverse-CDF lookup split across three memories (multi-memory approach), drawing energy amplitudes from a measured minimum-bias distribution |
+| `shaper/` | one of the three `shaper_*.v` (see *Shaper filters* below) | the analog pulse shape of the front end |
+| `noise/` | `noise_generator.v`, `noise_icdf.v` + `noise_icdf0..2.mif` | Gaussian electronic noise, same three-memory inverse CDF plus a random sign |
+| `adc/` | `adc.v` | pedestal offset, quantization to integer ADC counts and saturation to the 12-bit range; its output `shaper_clip` is the simulated readout |
 
-### Shaper filters (`rtl/filtros/`)
+### Shaper filters (`rtl/shaper/`)
 
 Which one is built is a **synthesis-time choice**, selected by the
 `USE_SHAPER_F34` / `USE_SHAPER_CSA_CR4RC` macros (see *Selecting the shaper*
@@ -139,11 +147,11 @@ With Icarus Verilog directly (`-D` to choose):
 
 ```sh
 cd projects/aurora_simulador        # the simulator alone
-iverilog -s simulador_tb -o tb.vvp ../../rtl/*.v ../../rtl/filtros/*.v simulador_tb.v
+iverilog -s simulador_tb -o tb.vvp ../../rtl/*.v ../../rtl/*/*.v simulador_tb.v
 vvp tb.vvp                          # writes simulador_tb.vcd here
 
 cd projects/aurora                  # simulator + technique
-iverilog -s sim_pulsos_tb -o tb.vvp simulacao.v ../../rtl/*.v ../../rtl/filtros/*.v \
+iverilog -s sim_pulsos_tb -o tb.vvp simulacao.v ../../rtl/*.v ../../rtl/*/*.v \
     ../../reconstrucao/*.v ../../reconstrucao/*/*.v sim_pulsos_tb.v
 vvp tb.vvp                          # writes sim_pulsos_tb.vcd here
 ```

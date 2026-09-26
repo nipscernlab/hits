@@ -21,83 +21,83 @@
         "isTopLevel": true
       },
       {
-        "name": "Hits_Bunch_train.v",
-        "path": "..\\..\\rtl\\Hits_Bunch_train.v",
+        "name": "hit_generator.v",
+        "path": "..\\..\\rtl\\hits\\hit_generator.v",
         "isTopLevel": false
       },
       {
         "name": "bunch_train_mask.v",
-        "path": "..\\..\\rtl\\bunch_train_mask.v",
+        "path": "..\\..\\rtl\\hits\\bunch_train_mask.v",
         "isTopLevel": false
       },
       {
-        "name": "clip_shaper.v",
-        "path": "..\\..\\rtl\\clip_shaper.v",
+        "name": "adc.v",
+        "path": "..\\..\\rtl\\adc\\adc.v",
         "isTopLevel": false
       },
       {
-        "name": "energy_collisions.v",
-        "path": "..\\..\\rtl\\energy_collisions.v",
+        "name": "energy_generator.v",
+        "path": "..\\..\\rtl\\energy\\energy_generator.v",
         "isTopLevel": false
       },
       {
-        "name": "energy_distribution.v",
-        "path": "..\\..\\rtl\\energy_distribution.v",
+        "name": "energy_icdf.v",
+        "path": "..\\..\\rtl\\energy\\energy_icdf.v",
         "isTopLevel": false
       },
       {
-        "name": "hits_positions.v",
-        "path": "..\\..\\rtl\\hits_positions.v",
+        "name": "hit_draw.v",
+        "path": "..\\..\\rtl\\hits\\hit_draw.v",
         "isTopLevel": false
       },
       {
-        "name": "noise_collisions.v",
-        "path": "..\\..\\rtl\\noise_collisions.v",
+        "name": "noise_generator.v",
+        "path": "..\\..\\rtl\\noise\\noise_generator.v",
         "isTopLevel": false
       },
       {
-        "name": "noise_distribution.v",
-        "path": "..\\..\\rtl\\noise_distribution.v",
+        "name": "noise_icdf.v",
+        "path": "..\\..\\rtl\\noise\\noise_icdf.v",
         "isTopLevel": false
       },
       {
-        "name": "rand_LFSR.v",
-        "path": "..\\..\\rtl\\rand_LFSR.v",
+        "name": "lfsr42.v",
+        "path": "..\\..\\rtl\\random\\lfsr42.v",
         "isTopLevel": false
       },
       {
-        "name": "random_number_generator.v",
-        "path": "..\\..\\rtl\\random_number_generator.v",
+        "name": "rng.v",
+        "path": "..\\..\\rtl\\random\\rng.v",
         "isTopLevel": false
       },
       {
-        "name": "select_rand.v",
-        "path": "..\\..\\rtl\\select_rand.v",
+        "name": "round_robin.v",
+        "path": "..\\..\\rtl\\random\\round_robin.v",
         "isTopLevel": false
       },
       {
         "name": "iir_order1.v",
-        "path": "..\\..\\rtl\\filtros\\iir_order1.v",
+        "path": "..\\..\\rtl\\shaper\\iir_order1.v",
         "isTopLevel": false
       },
       {
         "name": "iir_order2.v",
-        "path": "..\\..\\rtl\\filtros\\iir_order2.v",
+        "path": "..\\..\\rtl\\shaper\\iir_order2.v",
         "isTopLevel": false
       },
       {
         "name": "shaper_csa_cr4rc.v",
-        "path": "..\\..\\rtl\\filtros\\shaper_csa_cr4rc.v",
+        "path": "..\\..\\rtl\\shaper\\shaper_csa_cr4rc.v",
         "isTopLevel": false
       },
       {
         "name": "shaper_fenics.v",
-        "path": "..\\..\\rtl\\filtros\\shaper_fenics.v",
+        "path": "..\\..\\rtl\\shaper\\shaper_fenics.v",
         "isTopLevel": false
       },
       {
         "name": "shaper_fenics_f34.v",
-        "path": "..\\..\\rtl\\filtros\\shaper_fenics_f34.v",
+        "path": "..\\..\\rtl\\shaper\\shaper_fenics_f34.v",
         "isTopLevel": false
       }
     ],

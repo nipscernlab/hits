@@ -3,7 +3,7 @@
 // Clips the shaper output to the ADC range [0, 2**BITS_OUT-1] after adding
 // the programmable pedestal offset and dropping the fixed-point scale
 // (>>> G_OUT_LOG).
-module clip_shaper
+module adc
 #(
 	parameter BITS_IN = 34,
 	parameter BITS_OUT = 12,

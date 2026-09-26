@@ -2,7 +2,7 @@
 
 // Round-robin selector over the LFSR bank: each clock cycle outputs the next
 // of the num_rands input words, cycling 1, 2, ..., num_rands-1, 0, 1, ...
-module select_rand
+module round_robin
 #(
 	parameter num_rands = 5,
 	parameter DATA_OUT_SIZE = 7

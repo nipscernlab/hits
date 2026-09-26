@@ -47,13 +47,13 @@ module sim_pulsos_tb;
 
     FPGA_Simulator_v1_PZC
     #(
-        .BUNCH_MEM ({RTL_DIR, "/bunch_train_mask.mif"}),
-        .MEM_ENG0  ({RTL_DIR, "/A13_PART1.mif"}),
-        .MEM_ENG1  ({RTL_DIR, "/A13_PART2.mif"}),
-        .MEM_ENG2  ({RTL_DIR, "/A13_PART3.mif"}),
-        .MEM_NOISE0({RTL_DIR, "/NOISE_PART1.mif"}),
-        .MEM_NOISE1({RTL_DIR, "/NOISE_PART2.mif"}),
-        .MEM_NOISE2({RTL_DIR, "/NOISE_PART3.mif"}),
+        .BUNCH_MEM ({RTL_DIR, "/hits/bunch_train_mask.mif"}),
+        .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_a13_0.mif"}),
+        .MEM_ENG1  ({RTL_DIR, "/energy/energy_icdf_a13_1.mif"}),
+        .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_a13_2.mif"}),
+        .MEM_NOISE0({RTL_DIR, "/noise/noise_icdf0.mif"}),
+        .MEM_NOISE1({RTL_DIR, "/noise/noise_icdf1.mif"}),
+        .MEM_NOISE2({RTL_DIR, "/noise/noise_icdf2.mif"}),
         // so o build USE_BASELINE_EST le esta ROM; sem o caminho o $readmemh
         // falhava em silencio e o golden f34_est congelou saidas com X (14/09)
         .EST_RECIP_MEM({`EST_DIR, "/recip.mem"})

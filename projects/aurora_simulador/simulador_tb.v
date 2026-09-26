@@ -48,13 +48,13 @@ module simulador_tb;
 
     FPGA_Simulator_v1
     #(
-        .BUNCH_MEM ({RTL_DIR, "/bunch_train_mask.mif"}),
-        .MEM_ENG0  ({RTL_DIR, "/A13_PART1.mif"}),
-        .MEM_ENG1  ({RTL_DIR, "/A13_PART2.mif"}),
-        .MEM_ENG2  ({RTL_DIR, "/A13_PART3.mif"}),
-        .MEM_NOISE0({RTL_DIR, "/NOISE_PART1.mif"}),
-        .MEM_NOISE1({RTL_DIR, "/NOISE_PART2.mif"}),
-        .MEM_NOISE2({RTL_DIR, "/NOISE_PART3.mif"})
+        .BUNCH_MEM ({RTL_DIR, "/hits/bunch_train_mask.mif"}),
+        .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_a13_0.mif"}),
+        .MEM_ENG1  ({RTL_DIR, "/energy/energy_icdf_a13_1.mif"}),
+        .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_a13_2.mif"}),
+        .MEM_NOISE0({RTL_DIR, "/noise/noise_icdf0.mif"}),
+        .MEM_NOISE1({RTL_DIR, "/noise/noise_icdf1.mif"}),
+        .MEM_NOISE2({RTL_DIR, "/noise/noise_icdf2.mif"})
     ) dut
     (
         .clk(clk),

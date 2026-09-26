@@ -1,13 +1,13 @@
 `timescale 1ns/100ps
 
-module energy_distribution
+module energy_icdf
 #(
 	parameter RAND_IN_BITS = 10,
 	parameter ENG_OUT_BITS = 12,
 	parameter MEM_ENG_SIZE = 2**10,
-	parameter MEM_ENG0 = "A13_PART1.mif",
-	parameter MEM_ENG1 = "A13_PART2.mif",
-	parameter MEM_ENG2 = "A13_PART3.mif",
+	parameter MEM_ENG0 = "energy_icdf_a13_0.mif",
+	parameter MEM_ENG1 = "energy_icdf_a13_1.mif",
+	parameter MEM_ENG2 = "energy_icdf_a13_2.mif",
 	parameter MEM_ENG0_THRESH = 1001,
 	parameter MEM_ENG1_THRESH = 985
 )

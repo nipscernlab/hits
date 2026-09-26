@@ -15,7 +15,7 @@
 // 2^42-1, so the number written there is not the seed in effect. This is
 // frozen by the goldens: do NOT 'fix' those seeds -- every golden would
 // change.
-module rand_LFSR
+module lfsr42
 #(
 	parameter seed = 64'd12345,
 	parameter DATA_OUT_SIZE = 7

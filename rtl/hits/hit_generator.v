@@ -1,6 +1,6 @@
 `timescale 1ns/100ps
 
-module Hits_Bunch_train
+module hit_generator
 #(
 	parameter RAND_BITS = 7,
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
@@ -16,7 +16,7 @@ module Hits_Bunch_train
 
 wire [RAND_BITS-1:0] rand_hits;
 
-random_number_generator
+rng
 #(
 	.RAND_OUT_SIZE(RAND_BITS),
 	.SEED0(64'd461934351),
@@ -35,7 +35,7 @@ random_number_generator
 
 wire hits;
 
-hits_positions
+hit_draw
 #(
 	.IN_SIZE(RAND_BITS)
 ) hits_pos

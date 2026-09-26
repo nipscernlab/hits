@@ -46,10 +46,10 @@ VERIF = os.path.join(RAIZ, "verification")
 PROJETOS = {
     "simulador": (os.path.join(RAIZ, "projects", "aurora_simulador"),
                   "simulador_tb.v", "simulador_tb", "simulador_tb.vcd",
-                  ("rtl/*.v", "rtl/filtros/*.v")),
+                  ("rtl/*.v", "rtl/*/*.v")),
     "reconstrucao": (os.path.join(RAIZ, "projects", "aurora"),
                      "sim_pulsos_tb.v", "sim_pulsos_tb", "sim_pulsos_tb.vcd",
-                     ("rtl/*.v", "rtl/filtros/*.v", "reconstrucao/*.v",
+                     ("rtl/*.v", "rtl/*/*.v", "reconstrucao/*.v",
                       "reconstrucao/*/*.v")),
 }
 

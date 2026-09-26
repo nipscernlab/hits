@@ -1,13 +1,13 @@
 `timescale 1ns/100ps
 
-module energy_collisions
+module energy_generator
 #(
 	parameter RAND_BITS = 10,
 	parameter ENG_OUT_BITS = 12,
 	parameter MEM_ENG_SIZE = 2**10,
-	parameter MEM_ENG0 = "A13_PART1.mif",
-	parameter MEM_ENG1 = "A13_PART2.mif",
-	parameter MEM_ENG2 = "A13_PART3.mif",
+	parameter MEM_ENG0 = "energy_icdf_a13_0.mif",
+	parameter MEM_ENG1 = "energy_icdf_a13_1.mif",
+	parameter MEM_ENG2 = "energy_icdf_a13_2.mif",
 	parameter MEM_ENG0_THRESH = 1001,
 	parameter MEM_ENG1_THRESH = 985
 )
@@ -19,7 +19,7 @@ module energy_collisions
 
 wire [RAND_BITS-1:0] rand0, rand1,rand2;
 
-random_number_generator
+rng
 #(
 	.RAND_OUT_SIZE(RAND_BITS),
 	.SEED0(64'd3890346747),
@@ -38,7 +38,7 @@ random_number_generator
 
 
 
-random_number_generator
+rng
 #(
 	.RAND_OUT_SIZE(RAND_BITS),
 	.SEED0(64'd1674021279764),
@@ -58,7 +58,7 @@ random_number_generator
 
 
 
-random_number_generator
+rng
 #(
 	.RAND_OUT_SIZE(RAND_BITS),
 	.SEED0(64'd1639350413255),
@@ -75,7 +75,7 @@ random_number_generator
 	.rand_out(rand2)
 );
 
-energy_distribution
+energy_icdf
 #(
 	.RAND_IN_BITS(RAND_BITS),
 	.ENG_OUT_BITS(ENG_OUT_BITS),

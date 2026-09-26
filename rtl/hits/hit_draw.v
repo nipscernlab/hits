@@ -1,6 +1,6 @@
 `timescale 1ns/100ps
 
-module hits_positions
+module hit_draw
 #(
 	parameter IN_SIZE = 7
 )

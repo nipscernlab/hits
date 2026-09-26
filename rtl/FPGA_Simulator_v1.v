@@ -18,7 +18,7 @@
 //                                                (CSA + CR-4RC readout chain,
 //                                                peak 60.1 ns on sample 2)
 //
-// All live in rtl/filtros/ and share the same output scale (2**G_OUT_LOG), so
+// All live in rtl/shaper/ and share the same output scale (2**G_OUT_LOG), so
 // nothing downstream changes. They differ in the pulse they produce, which is
 // the point: WARNING, each build has its OWN golden VCD in verification/ (see
 // the README); comparing against the wrong golden reports differences.
@@ -48,17 +48,17 @@ module FPGA_Simulator_v1
 	parameter CLIP_OUT_BITS = ENG_OUT_BITS-1,
 	parameter SHAPER_OUT_BITS = ENG_OUT_BITS+16+1,
 	parameter MEM_ENG_SIZE = 2**10,
-	parameter MEM_ENG0 = "A13_PART1.mif",
-	parameter MEM_ENG1 = "A13_PART2.mif",
-	parameter MEM_ENG2 = "A13_PART3.mif",
+	parameter MEM_ENG0 = "energy_icdf_a13_0.mif",
+	parameter MEM_ENG1 = "energy_icdf_a13_1.mif",
+	parameter MEM_ENG2 = "energy_icdf_a13_2.mif",
 	parameter MEM_ENG0_THRESH = 1001,
 	parameter MEM_ENG1_THRESH = 985,
 	parameter RAND_BITS_NOISE = 10,
 	parameter NOISE_OUT_BITS = 17,
 	parameter MEM_NOISE_SIZE = 2**10,
-	parameter MEM_NOISE0 = "NOISE_PART1.mif",
-	parameter MEM_NOISE1 = "NOISE_PART2.mif",
-	parameter MEM_NOISE2 = "NOISE_PART3.mif",
+	parameter MEM_NOISE0 = "noise_icdf0.mif",
+	parameter MEM_NOISE1 = "noise_icdf1.mif",
+	parameter MEM_NOISE2 = "noise_icdf2.mif",
 	parameter MEM_NOISE0_THRESH = 1007,
 	parameter MEM_NOISE1_THRESH = 1007
 )
@@ -76,7 +76,7 @@ module FPGA_Simulator_v1
 
 wire hits_orig;   // ungated hit (before the bunch-train mask), used by event_all
 
-Hits_Bunch_train
+hit_generator
 #(
 	.RAND_BITS(RAND_BITS_HITS),
 	.BUNCH_MEM(BUNCH_MEM),
@@ -92,7 +92,7 @@ Hits_Bunch_train
 	.bt_mask_out(bt_mask_out)
 );
 
-energy_collisions
+energy_generator
 #(
 	.RAND_BITS(RAND_BITS_ENG),
 	.ENG_OUT_BITS(ENG_OUT_BITS),
@@ -166,7 +166,7 @@ assign event_all = energy_out * hits_orig;
 
 wire signed [SHAPER_OUT_BITS-1:0] offset_extended = {{(SHAPER_OUT_BITS-ENG_OUT_BITS){offset[ENG_OUT_BITS-1]}},offset};
 
-noise_collisions
+noise_generator
 #(
 	.RAND_BITS(RAND_BITS_NOISE),
 	.NOISE_OUT_BITS(NOISE_OUT_BITS),
@@ -185,7 +185,7 @@ noise_collisions
 
 assign shaper_corrupted = (shaper_out + {{(SHAPER_OUT_BITS-NOISE_OUT_BITS){noise_out[NOISE_OUT_BITS-1]}},noise_out});
 
-clip_shaper
+adc
 #(
 	.BITS_IN(SHAPER_OUT_BITS),
 	.BITS_OUT(CLIP_OUT_BITS)
