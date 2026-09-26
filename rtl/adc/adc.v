@@ -5,7 +5,7 @@
 // (>>> G_OUT_LOG).
 module adc
 #(
-	parameter BITS_IN = 34,
+	parameter BITS_IN = 30,
 	parameter BITS_OUT = 12,
 	parameter G_OUT_LOG = 10
 )

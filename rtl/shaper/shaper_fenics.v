@@ -9,7 +9,7 @@
 // to a pure combinational gain on the input, and iir6 was all-zero.
 module shaper_fenics
 #(
-	parameter BITS_IN = 34,
+	parameter BITS_IN = 13,
 	parameter G_OUT_LOG = 10
 )
 (

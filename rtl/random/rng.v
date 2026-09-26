@@ -1,129 +1,59 @@
 `timescale 1ns/100ps
 
+// Pseudo-random word generator of the group's papers (SBCCI 2025): a bank of
+// 7 lfsr42 with different seeds, read in round robin (one of the 7 per clock
+// cycle), which decorrelates consecutive words. Each stage of the simulator
+// that draws something (hits, energy, noise) has its own rng with its own
+// seeds.
 module rng
 #(
 	parameter RAND_OUT_SIZE = 7,
-	parameter SEED0 = 64'd461934351,
-	parameter SEED1 = 64'd363409739,
-	parameter SEED2 = 64'd209805534,
-	parameter SEED3 = 64'd3049884771,
-	parameter SEED4 = 64'd2859598492,
-	parameter SEED5 = 64'd352859598492,
-	parameter SEED6 = 64'd42859998594
+	parameter [41:0] SEED0 = 42'd461934351,
+	parameter [41:0] SEED1 = 42'd363409739,
+	parameter [41:0] SEED2 = 42'd209805534,
+	parameter [41:0] SEED3 = 42'd3049884771,
+	parameter [41:0] SEED4 = 42'd2859598492,
+	parameter [41:0] SEED5 = 42'd352859598492,
+	parameter [41:0] SEED6 = 42'd42859998594
 )
 (
 	input clk, rst,
 	output [RAND_OUT_SIZE-1:0] rand_out,
 	output [RAND_OUT_SIZE-1:0] rand_next   // rand_out of the next cycle (see round_robin)
 );
-	
 
+localparam N_LFSR = 7;
+localparam [N_LFSR*42-1:0] SEEDS = {SEED6, SEED5, SEED4, SEED3, SEED2, SEED1, SEED0};
 
-wire [RAND_OUT_SIZE-1:0] rand0, rand1, rand2, rand3, rand4,rand5,rand6;
+wire [N_LFSR*RAND_OUT_SIZE-1:0] rand_in;   // word i = output of LFSR i
 
-
-lfsr42
-#(
-	.seed(SEED0),
-	.DATA_OUT_SIZE(RAND_OUT_SIZE)
-)
-mod_rand0
-(
-	.clk(clk),
-	.rst(rst),
-	.rand_out(rand0)
-);
-
-lfsr42
-#(
-	.seed(SEED1),
-	.DATA_OUT_SIZE(RAND_OUT_SIZE)
-)
-mod_rand1
-(
-	.clk(clk),
-	.rst(rst),
-	.rand_out(rand1)
-);
-
-
-lfsr42
-#(
-	.seed(SEED2),
-	.DATA_OUT_SIZE(RAND_OUT_SIZE)
-)
-mod_rand2
-(
-	.clk(clk),
-	.rst(rst),
-	.rand_out(rand2)
-);
-
-lfsr42
-#(
-	.seed(SEED3),
-	.DATA_OUT_SIZE(RAND_OUT_SIZE)
-)
-mod_rand3
-(
-	.clk(clk),
-	.rst(rst),
-	.rand_out(rand3)
-);
-
-
-lfsr42
-#(
-	.seed(SEED4),
-	.DATA_OUT_SIZE(RAND_OUT_SIZE)
-)
-mod_rand4
-(
-	.clk(clk),
-	.rst(rst),
-	.rand_out(rand4)
-);
-
-lfsr42
-#(
-	.seed(SEED5),
-	.DATA_OUT_SIZE(RAND_OUT_SIZE)
-)
-mod_rand5
-(
-	.clk(clk),
-	.rst(rst),
-	.rand_out(rand5)
-);
-
-lfsr42
-#(
-	.seed(SEED6),
-	.DATA_OUT_SIZE(RAND_OUT_SIZE)
-)
-mod_rand6
-(
-	.clk(clk),
-	.rst(rst),
-	.rand_out(rand6)
-);
-
-
-wire [7*RAND_OUT_SIZE-1:0] rand_in = {rand6,rand5,rand4,rand3,rand2,rand1,rand0};
-
+genvar i;
+generate
+	for (i = 0; i < N_LFSR; i = i + 1) begin : bank
+		lfsr42
+		#(
+			.seed(SEEDS[i*42 +: 42]),
+			.DATA_OUT_SIZE(RAND_OUT_SIZE)
+		) lfsr
+		(
+			.clk(clk),
+			.rst(rst),
+			.rand_out(rand_in[i*RAND_OUT_SIZE +: RAND_OUT_SIZE])
+		);
+	end
+endgenerate
 
 round_robin
 #(
-	.num_rands(7),
+	.num_rands(N_LFSR),
 	.DATA_OUT_SIZE(RAND_OUT_SIZE)
 ) rand_final
 (
-	.clk(clk), 
+	.clk(clk),
 	.rst(rst),
 	.in(rand_in),
 	.out(rand_out),
 	.out_next(rand_next)
 );
-
 
 endmodule

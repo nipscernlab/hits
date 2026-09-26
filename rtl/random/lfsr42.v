@@ -10,14 +10,14 @@
 // is not a parameter. With any non-zero seed the sequence has maximal length,
 // period 2^42 - 1 (~1.27 days at 40 MHz).
 //
-// ⚠️ Seeds WIDER than 42 bits are silently truncated: the effective seed is
-// seed[41:0]. Several instantiated seeds (the noise ones, ~4e15) exceed
-// 2^42-1, so the number written there is not the seed in effect. This is
-// frozen by the goldens: do NOT 'fix' those seeds -- every golden would
-// change.
+// The seed is 42 bits. Until 2026-09-26 it was declared 64 bits wide and some
+// instantiated seeds did not fit, so the value written was silently truncated
+// to seed[41:0]; the instantiations now write the effective value (the original
+// literals are in the git history). A zero seed would freeze the LFSR: the
+// simulation refuses it.
 module lfsr42
 #(
-	parameter seed = 64'd12345,
+	parameter [41:0] seed = 42'd12345,
 	parameter DATA_OUT_SIZE = 7
 )
 (
@@ -41,5 +41,12 @@ always @(posedge clk or posedge rst) begin
 end
 
 assign rand_out = lfsr[DATA_OUT_SIZE-1:0];
+
+// synthesis translate_off
+initial if (seed == 0) begin
+	$display("ERROR: lfsr42 %m has a zero seed: the LFSR would never leave 0");
+	$finish;
+end
+// synthesis translate_on
 
 endmodule

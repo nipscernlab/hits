@@ -5,9 +5,9 @@
 // rand1 > MEM_ENG1_THRESH, then table 2.
 //
 // Block-RAM form: each table read is registered (d* <= table[rand*_next]),
-// which is what synthesis maps to M10K. a0..a2 hold exactly what the rng
+// which is what synthesis maps to M10K. a0/a1 hold exactly what the rng
 // output registers hold (they load rand*_next under the same condition,
-// outside reset) and d* = table[a*], so energy_out comes out on the same
+// outside reset) and d* = table[rng word], so energy_out comes out on the same
 // cycle, with the same value, as when the tables were read straight from
 // rand0..rand2.
 //
@@ -19,7 +19,7 @@
 module energy_icdf
 #(
 	parameter RAND_IN_BITS = 10,
-	parameter ENG_OUT_BITS = 12,
+	parameter ENG_OUT_BITS = 13,
 	parameter MEM_ENG_SIZE = 2**10,
 	parameter MEM_ENG0 = "energy_icdf_a13_0.mif",
 	parameter MEM_ENG1 = "energy_icdf_a13_1.mif",
@@ -37,11 +37,12 @@ reg [ENG_OUT_BITS-1:0] mem_eng0 [0:MEM_ENG_SIZE-1];
 reg [ENG_OUT_BITS-1:0] mem_eng1 [0:MEM_ENG_SIZE-1];
 reg [ENG_OUT_BITS-1:0] mem_eng2 [0:MEM_ENG_SIZE-1];
 
-// a0..a2 hold what the rng output registers hold, and d0..d2 = table[a*]:
+// a0/a1 hold what the rng output registers hold, and d0..d2 hold the table
+// entry of that same rng word (d2 needs no address register of its own):
 // both load under the same condition, outside reset. Registering the READ
 // (d* <= table[rand*_next]) instead of the address is the form Quartus maps
 // to M10K; with only the address registered it keeps the tables in logic.
-reg [RAND_IN_BITS-1:0] a0 = 0, a1 = 0, a2 = 0;
+reg [RAND_IN_BITS-1:0] a0 = 0, a1 = 0;          // only a0/a1 meet the thresholds
 reg [ENG_OUT_BITS-1:0] d0 = 0, d1 = 0, d2 = 0;   // power-up 0, as the M10K
 initial begin
 	$readmemb(MEM_ENG0, mem_eng0);
@@ -53,7 +54,6 @@ always @(posedge clk) begin
 	if (!rst) begin
 		a0 <= rand0_next;
 		a1 <= rand1_next;
-		a2 <= rand2_next;
 		d0 <= mem_eng0[rand0_next];
 		d1 <= mem_eng1[rand1_next];
 		d2 <= mem_eng2[rand2_next];

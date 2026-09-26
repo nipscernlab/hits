@@ -3,7 +3,7 @@
 module iir_order1
 
 #(
-	parameter BITS_IN = 33,
+	parameter BITS_IN = 13,
 	parameter G_OUT_LOG = 10,
 	parameter signed b0 =   785,
 	parameter signed a1 =  -1366

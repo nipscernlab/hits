@@ -4,13 +4,13 @@
 // energy_icdf: table 0 unless rand0 > MEM_NOISE0_THRESH, then table 1 unless
 // rand1 > MEM_NOISE1_THRESH, then table 2), with a random sign from rand3.
 //
-// Block-RAM form, as in energy_icdf: registered table reads d* = table[a*],
-// where a0..a2 load rand*_next under the same condition as the rng output
+// Block-RAM form, as in energy_icdf: registered table reads d* = table[word],
+// where a0/a1 load rand*_next under the same condition as the rng output
 // registers, so noise_out keeps its value and its cycle.
 module noise_icdf
 #(
 	parameter RAND_IN_BITS = 10,
-	parameter NOISE_OUT_BITS = 15,
+	parameter NOISE_OUT_BITS = 17,
 	parameter MEM_NOISE_SIZE = 2**10,
 	parameter MEM_NOISE0 = "noise_icdf0.mif",
 	parameter MEM_NOISE1 = "noise_icdf1.mif",
@@ -29,11 +29,12 @@ reg [NOISE_OUT_BITS-1-1:0] mem_noise0 [0:MEM_NOISE_SIZE-1];
 reg [NOISE_OUT_BITS-1-1:0] mem_noise1 [0:MEM_NOISE_SIZE-1];
 reg [NOISE_OUT_BITS-1-1:0] mem_noise2 [0:MEM_NOISE_SIZE-1];
 
-// a0..a2 hold what the rng output registers hold, and d0..d2 = table[a*]:
+// a0/a1 hold what the rng output registers hold, and d0..d2 hold the table
+// entry of that same rng word (d2 needs no address register of its own):
 // both load under the same condition, outside reset. Registering the READ
 // (d* <= table[rand*_next]) instead of the address is the form Quartus maps
 // to M10K; with only the address registered it keeps the tables in logic.
-reg [RAND_IN_BITS-1:0] a0 = 0, a1 = 0, a2 = 0;
+reg [RAND_IN_BITS-1:0] a0 = 0, a1 = 0;          // only a0/a1 meet the thresholds
 reg [NOISE_OUT_BITS-1-1:0] d0 = 0, d1 = 0, d2 = 0;   // power-up 0, as the M10K
 initial begin
 	$readmemb(MEM_NOISE0, mem_noise0);
@@ -45,7 +46,6 @@ always @(posedge clk) begin
 	if (!rst) begin
 		a0 <= rand0_next;
 		a1 <= rand1_next;
-		a2 <= rand2_next;
 		d0 <= mem_noise0[rand0_next];
 		d1 <= mem_noise1[rand1_next];
 		d2 <= mem_noise2[rand2_next];
