@@ -28,9 +28,9 @@ always @(posedge clk or posedge rst) begin
 		if (in_offset < 0)
 			out <= 0;
 		else if (in_offset > ADC_MAX)
-			out <= ADC_MAX;
+			out <= {BITS_OUT{1'b1}};       // ADC_MAX
 		else
-			out <= in_offset;
+			out <= in_offset[BITS_OUT-1:0]; // 0..ADC_MAX here, fits
 	end
 end
 

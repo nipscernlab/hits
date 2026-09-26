@@ -21,7 +21,8 @@ module shaper_fenics
 wire signed [BITS_IN+16:0] out1, out2, out3, out4;
 
 // former iir5 section: pure gain, no state
-wire signed [BITS_IN+16:0] out5 = -24 * in;
+localparam signed [15:0] G5 = -16'sd24;       // former iir5 gain
+wire signed [BITS_IN+16:0] out5 = G5 * in;
 
 iir_order1
 #(
