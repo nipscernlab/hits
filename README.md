@@ -60,14 +60,15 @@ Which one is built is chosen by the **`RNG_TYPE` parameter** of
 
 | Generator | `RNG_TYPE` | Simulator (ALMs) | PractRand, 10-bit words | Description |
 |---|---|---|---|---|
-| `rng_round_robin.v` | `"round_robin"` (**default**) | 1184 | FAILS at 1 MB (BCFN, DC6) | The generator of the SBCCI 2025 paper: a bank of 7 LFSRs read in round robin (implemented as a rotating bank, without a multiplexer). Each LFSR is read every 7 cycles, so two reads of it share 3 of the 10 bits: `energy_out` shows a lag-7 autocorrelation of +0.009 (7 sigma over 713k samples). |
+| `rng_round_robin.v` | `"round_robin"` (default until 2026-09-28) | 1184 | FAILS at 1 MB (BCFN, DC6) | The generator of the SBCCI 2025 paper: a bank of 7 LFSRs read in round robin (implemented as a rotating bank, without a multiplexer). Each LFSR is read every 7 cycles, so two reads of it share 3 of the 10 bits: `energy_out` shows a lag-7 autocorrelation of +0.009 (7 sigma over 713k samples). |
 | `rng_leap.v` | `"leap"` | 403 | FAILS at 1 MB (BRank) | One LFSR advanced W steps per clock (leap-forward): no bit is shared between words, and no correlation shows in the simulator outputs, but it is a linear generator (every bit is the XOR of 6 earlier ones), which the binary-rank test catches at once. The cheapest. |
-| `rng_xoshiro.v` | `"xoshiro"` | 1002 | **passes to 64 GB** | xoshiro128** (Blackman & Vigna, ACM TOMS 2021): 128-bit xor/shift/rotate engine plus a non-linear output scrambler; the words are the top bits of the result. The only one of the three that passes a full test battery. |
+| `rng_xoshiro.v` | `"xoshiro"` (**default**) | 1002 | **passes to 64 GB** | xoshiro128** (Blackman & Vigna, ACM TOMS 2021): 128-bit xor/shift/rotate engine plus a non-linear output scrambler; the words are the top bits of the result. The only one of the three that passes a full test battery. |
 
 All three were validated in the simulator itself over 200 LHC orbits (713k
 cycles): hit rates on filled slots against occupancy/128 and energy and noise
 distributions against the ones the tables define (chi2 within the expected
-range for the three). The PractRand runs use bit-exact C models of the Verilog
+range for the three). xoshiro is the default since 2026-09-28: the only one
+that passes the battery, and cheaper than the round-robin bank. The PractRand runs use bit-exact C models of the Verilog
 (checked word by word against the simulation). The 1-bit xoshiro stream (the
 noise sign) also passes to 16 GB: PractRand flagged "unusual" (its mildest
 level, p ~ 1e-5) at 2, 4 and 8 GB and nothing at 16 GB, the pattern of chance
@@ -76,7 +77,7 @@ rather than of a defect, which grows with the sample.
 Change the default in `rtl/hits_simulator.v`, or pass `.RNG_TYPE("leap")` where
 it is instantiated. ⚠️ **Each generator has its own goldens**: the sequences
 differ, only the statistics agree. The regression builds the leap kind with
-`-DUSE_RNG_LEAP` or `-DUSE_RNG_XOSHIRO`, which `simulador_tb.v` turns into the parameter.
+`-DUSE_RNG_ROUND_ROBIN` or `-DUSE_RNG_LEAP`, which `simulador_tb.v` turns into the parameter.
 
 ### Shaper filters (`rtl/shaper/`)
 
@@ -201,15 +202,15 @@ the technique changed and the simulator is intact.
 
 | Build | Group | Macros | Golden (`verification/`) |
 |---|---|---|---|
-| `sim` | simulador | (none) | `simulador_tb_golden.vcd` |
+| `sim` | simulador | (none: xoshiro) | `simulador_tb_golden.vcd` |
 | `sim_f34` | simulador | `USE_SHAPER_F34` | `simulador_tb_golden_f34.vcd` |
 | `sim_csa_cr4rc` | simulador | `USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_csa_cr4rc.vcd` |
+| `sim_round_robin` | simulador | `USE_RNG_ROUND_ROBIN` | `simulador_tb_golden_round_robin.vcd` |
+| `sim_round_robin_f34` | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_F34` | `simulador_tb_golden_round_robin_f34.vcd` |
+| `sim_round_robin_csa_cr4rc` | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_round_robin_csa_cr4rc.vcd` |
 | `sim_leap` | simulador | `USE_RNG_LEAP` | `simulador_tb_golden_leap.vcd` |
 | `sim_leap_f34` | simulador | `USE_RNG_LEAP USE_SHAPER_F34` | `simulador_tb_golden_leap_f34.vcd` |
 | `sim_leap_csa_cr4rc` | simulador | `USE_RNG_LEAP USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_leap_csa_cr4rc.vcd` |
-| `sim_xoshiro` | simulador | `USE_RNG_XOSHIRO` | `simulador_tb_golden_xoshiro.vcd` |
-| `sim_xoshiro_f34` | simulador | `USE_RNG_XOSHIRO USE_SHAPER_F34` | `simulador_tb_golden_xoshiro_f34.vcd` |
-| `sim_xoshiro_csa_cr4rc` | simulador | `USE_RNG_XOSHIRO USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_xoshiro_csa_cr4rc.vcd` |
 | `default` | reconstrucao | (none: PZC) | `sim_pulsos_tb_golden.vcd` |
 | `f34` | reconstrucao | `USE_SHAPER_F34` | `sim_pulsos_tb_golden_f34.vcd` |
 | `csa_cr4rc` | reconstrucao | `USE_SHAPER_CSA_CR4RC` | `sim_pulsos_tb_golden_csa_cr4rc.vcd` |

@@ -5,7 +5,7 @@
 // 128-bit xor/shift/rotate state (period 2^128 - 1) with a non-linear output
 // scrambler, rotl(s1 * 5, 7) * 9. The words are the RAND_OUT_SIZE top bits of
 // the 32-bit result, its strongest bits. Selected by RNG_TYPE = "xoshiro" in
-// rng.v. The multiplications are by 5 and 9, so each is one add of a shifted
+// rng.v, the default. The multiplications are by 5 and 9, so each is one add of a shifted
 // copy (x*5 = x + x<<2, x*9 = x + x<<3), no DSP.
 //
 // Validated 2026-09-28: PractRand passes the 10-bit word stream to 64 GB and

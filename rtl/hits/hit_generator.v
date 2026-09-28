@@ -2,7 +2,7 @@
 
 module hit_generator
 #(
-	parameter RNG_TYPE = "round_robin",   // rng kind, see rtl/random/rng.v
+	parameter RNG_TYPE = "xoshiro",       // rng kind, see rtl/random/rng.v
 	parameter RAND_BITS = 7,
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
 	parameter BUNCH_POS = 3564,

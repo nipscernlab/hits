@@ -2,7 +2,7 @@
 
 module noise_generator
 #(
-	parameter RNG_TYPE = "round_robin",   // rng kind, see rtl/random/rng.v
+	parameter RNG_TYPE = "xoshiro",       // rng kind, see rtl/random/rng.v
 	parameter RAND_BITS = 10,
 	parameter NOISE_OUT_BITS = 17,
 	parameter MEM_NOISE_SIZE = 2**10,

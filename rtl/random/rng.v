@@ -3,13 +3,15 @@
 // Pseudo-random word generator of the simulator: picks one implementation by
 // the RNG_TYPE parameter, the way the shaper is picked among rtl/shaper/.
 //
-//   "round_robin" (default) : rng_round_robin.v - 7 LFSRs read in round robin,
+//   "round_robin"           : rng_round_robin.v - 7 LFSRs read in round robin,
 //                             the generator of the SBCCI 2025 paper
 //   "leap"                  : rng_leap.v - one LFSR advanced RAND_OUT_SIZE
 //                             steps per clock; ~6x less logic and no lag-7
 //                             overlap between words (see both headers)
-//   "xoshiro"               : rng_xoshiro.v - xoshiro128** (Blackman & Vigna),
-//                             non-linear output scrambler
+//   "xoshiro" (default)     : rng_xoshiro.v - xoshiro128** (Blackman & Vigna),
+//                             non-linear output scrambler; the only one of the
+//                             three that passes PractRand (default since
+//                             2026-09-28)
 //
 // RNG_TYPE comes down from hits_simulator, so the whole simulator uses one
 // kind. WARNING: each kind has its OWN goldens in verification/ (README).
@@ -18,7 +20,7 @@
 // reset and takes rand_next at each clock.
 module rng
 #(
-	parameter RNG_TYPE = "round_robin",
+	parameter RNG_TYPE = "xoshiro",
 	parameter RAND_OUT_SIZE = 7,
 	parameter [41:0] SEED0 = 42'd461934351,
 	parameter [41:0] SEED1 = 42'd363409739,

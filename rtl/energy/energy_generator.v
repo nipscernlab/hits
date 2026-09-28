@@ -2,7 +2,7 @@
 
 module energy_generator
 #(
-	parameter RNG_TYPE = "round_robin",   // rng kind, see rtl/random/rng.v
+	parameter RNG_TYPE = "xoshiro",       // rng kind, see rtl/random/rng.v
 	parameter RAND_BITS = 10,
 	parameter ENG_OUT_BITS = 13,
 	parameter MEM_ENG_SIZE = 2**10,

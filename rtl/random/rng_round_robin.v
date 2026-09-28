@@ -6,7 +6,7 @@
 // that draws something (hits, energy, noise) has its own rng with its own
 // seeds.
 //
-// Selected by RNG_TYPE = "round_robin" in rng.v (the default).
+// Selected by RNG_TYPE = "round_robin" in rng.v (the default until 2026-09-28).
 //
 // MEASURED 2026-09-28: each LFSR is read every 7 cycles and advances 7 bits in
 // between, so for RAND_OUT_SIZE > 7 two reads of the same LFSR share

@@ -39,9 +39,10 @@
 // is composed with this core by the FPGA_Simulator_v1_PZC wrapper.
 module hits_simulator
 #(
-	// pseudo-random generator: "round_robin" (the SBCCI 2025 bank, default) or
-	// "leap" (one leap-forward LFSR per rng). Each kind has its own goldens.
-	parameter RNG_TYPE = "round_robin",
+	// pseudo-random generator: "xoshiro" (xoshiro128**, default since
+	// 2026-09-28), "round_robin" (the SBCCI 2025 bank) or "leap" (one
+	// leap-forward LFSR per rng); see rtl/random/rng.v. Each has its own goldens.
+	parameter RNG_TYPE = "xoshiro",
 	parameter RAND_BITS_HITS = 7,
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
 	parameter BUNCH_POS = 3564,
