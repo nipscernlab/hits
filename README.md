@@ -46,7 +46,7 @@ Each `.mif` memory lives next to the module that reads it.
 
 | Folder | Files | Description |
 |---|---|---|
-| `random/` | `lfsr42.v`, `rng.v`, `round_robin.v` | 42-bit LFSR (the papers' primitive polynomial); `rng` is a bank of 7 of them read in round robin, producing uncorrelated pseudo-random streams |
+| `random/` | `lfsr42.v`, `rng.v` | 42-bit LFSR (the papers' primitive polynomial); `rng` is a bank of 7 of them read in round robin, producing uncorrelated pseudo-random streams (implemented as a rotating bank: no multiplexer) |
 | `hits/` | `hit_generator.v`, `hit_draw.v`, `bunch_train_mask.v` + `.mif` | Bernoulli hit draw per bunch crossing (`rand < occupancy`), gated by the LHC bunch-train mask (3564 slots) |
 | `energy/` | `energy_generator.v`, `energy_icdf.v` + `energy_icdf_a13_0..2.mif` | Inverse-CDF lookup split across three memories (multi-memory approach), drawing energy amplitudes from a measured minimum-bias distribution |
 | `shaper/` | one of the three `shaper_*.v` (see *Shaper filters* below) | the analog pulse shape of the front end |

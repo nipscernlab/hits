@@ -56,11 +56,6 @@
         "isTopLevel": false
       },
       {
-        "name": "round_robin.v",
-        "path": "..\\..\\rtl\\random\\round_robin.v",
-        "isTopLevel": false
-      },
-      {
         "name": "energy_generator.v",
         "path": "..\\..\\rtl\\energy\\energy_generator.v",
         "isTopLevel": false

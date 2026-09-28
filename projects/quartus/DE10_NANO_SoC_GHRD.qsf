@@ -709,7 +709,6 @@ set_global_assignment -name VERILOG_FILE sw_converter.v
 set_global_assignment -name VERILOG_FILE ../../rtl/shaper/shaper_fenics_f34.v
 set_global_assignment -name VERILOG_FILE ../../rtl/shaper/shaper_fenics.v
 set_global_assignment -name VERILOG_FILE ../../rtl/shaper/shaper_csa_cr4rc.v
-set_global_assignment -name VERILOG_FILE ../../rtl/random/round_robin.v
 set_global_assignment -name VERILOG_FILE ../../rtl/random/rng.v
 set_global_assignment -name VERILOG_FILE ../../rtl/random/lfsr42.v
 set_global_assignment -name VERILOG_FILE ../../rtl/shaper/iir_order2.v

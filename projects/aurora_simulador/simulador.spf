@@ -71,11 +71,6 @@
         "isTopLevel": false
       },
       {
-        "name": "round_robin.v",
-        "path": "..\\..\\rtl\\random\\round_robin.v",
-        "isTopLevel": false
-      },
-      {
         "name": "iir_order1.v",
         "path": "..\\..\\rtl\\shaper\\iir_order1.v",
         "isTopLevel": false
