@@ -2,6 +2,7 @@
 
 module noise_generator
 #(
+	parameter RNG_TYPE = "round_robin",   // rng kind, see rtl/random/rng.v
 	parameter RAND_BITS = 10,
 	parameter NOISE_OUT_BITS = 17,
 	parameter MEM_NOISE_SIZE = 2**10,
@@ -25,6 +26,7 @@ wire rand3;
 
 rng
 #(
+	.RNG_TYPE(RNG_TYPE),
 	.RAND_OUT_SIZE(RAND_BITS),
 	.SEED0(42'd3420406547570),
 	.SEED1(42'd3123678789287),
@@ -45,6 +47,7 @@ rng
 
 rng
 #(
+	.RNG_TYPE(RNG_TYPE),
 	.RAND_OUT_SIZE(RAND_BITS),
 	.SEED0(42'd1356695292781),
 	.SEED1(42'd451306440457),
@@ -66,6 +69,7 @@ rng
 
 rng
 #(
+	.RNG_TYPE(RNG_TYPE),
 	.RAND_OUT_SIZE(RAND_BITS),
 	.SEED0(42'd3401087663520),
 	.SEED1(42'd4124465861473),
@@ -84,6 +88,7 @@ rng
 
 rng
 #(
+	.RNG_TYPE(RNG_TYPE),
 	.RAND_OUT_SIZE(1),
 	.SEED0(42'd2187609743142),
 	.SEED1(42'd163682045230),

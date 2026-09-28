@@ -2,6 +2,7 @@
 
 module energy_generator
 #(
+	parameter RNG_TYPE = "round_robin",   // rng kind, see rtl/random/rng.v
 	parameter RAND_BITS = 10,
 	parameter ENG_OUT_BITS = 13,
 	parameter MEM_ENG_SIZE = 2**10,
@@ -21,6 +22,7 @@ wire [RAND_BITS-1:0] rand0_next, rand1_next, rand2_next;   // next-cycle rng wor
 
 rng
 #(
+	.RNG_TYPE(RNG_TYPE),
 	.RAND_OUT_SIZE(RAND_BITS),
 	.SEED0(42'd3890346747),
 	.SEED1(42'd545404224),
@@ -41,6 +43,7 @@ rng
 
 rng
 #(
+	.RNG_TYPE(RNG_TYPE),
 	.RAND_OUT_SIZE(RAND_BITS),
 	.SEED0(42'd1674021279764),
 	.SEED1(42'd454835899247),
@@ -62,6 +65,7 @@ rng
 
 rng
 #(
+	.RNG_TYPE(RNG_TYPE),
 	.RAND_OUT_SIZE(RAND_BITS),
 	.SEED0(42'd1639350413255),
 	.SEED1(42'd2244364659078),

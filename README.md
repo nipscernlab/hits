@@ -23,7 +23,7 @@ Fora, Brazil).
 
 ```
 rtl/                  THE SIMULATOR, one subfolder per stage (top: hits_simulator.v)
-rtl/random/           Pseudo-random generator (LFSR bank), used by every stage that draws
+rtl/random/           Pseudo-random generators (two kinds, chosen by RNG_TYPE), used by every stage that draws
 rtl/hits/             Hit draw + LHC bunch-train mask
 rtl/energy/           Energy amplitude (inverse CDF, 3 tables)
 rtl/shaper/           Pulse shapers: three shapes, selectable at synthesis time (see below)
@@ -46,12 +46,27 @@ Each `.mif` memory lives next to the module that reads it.
 
 | Folder | Files | Description |
 |---|---|---|
-| `random/` | `lfsr42.v`, `rng.v` | 42-bit LFSR (the papers' primitive polynomial); `rng` is a bank of 7 of them read in round robin, producing uncorrelated pseudo-random streams (implemented as a rotating bank: no multiplexer) |
+| `random/` | `lfsr42.v`, `rng.v`, `rng_round_robin.v`, `rng_leap.v` | 42-bit LFSR step (the papers' primitive polynomial); `rng` picks the generator by `RNG_TYPE` (see *Random generators* below) |
 | `hits/` | `hit_generator.v`, `hit_draw.v`, `bunch_train_mask.v` + `.mif` | Bernoulli hit draw per bunch crossing (`rand < occupancy`), gated by the LHC bunch-train mask (3564 slots) |
 | `energy/` | `energy_generator.v`, `energy_icdf.v` + `energy_icdf_a13_0..2.mif` | Inverse-CDF lookup split across three memories (multi-memory approach), drawing energy amplitudes from a measured minimum-bias distribution |
 | `shaper/` | one of the three `shaper_*.v` (see *Shaper filters* below) | the analog pulse shape of the front end |
 | `noise/` | `noise_generator.v`, `noise_icdf.v` + `noise_icdf0..2.mif` | Gaussian electronic noise, same three-memory inverse CDF plus a random sign |
 | `adc/` | `adc.v` | pedestal offset, quantization to integer ADC counts and saturation to the 12-bit range; its output `shaper_clip` is the simulated readout |
+
+### Random generators (`rtl/random/`)
+
+Which one is built is chosen by the **`RNG_TYPE` parameter** of
+`rtl/hits_simulator.v`, which comes down to every generator of the simulator:
+
+| Generator | `RNG_TYPE` | Description |
+|---|---|---|
+| `rng_round_robin.v` | `"round_robin"` (**default**) | The generator of the SBCCI 2025 paper: a bank of 7 LFSRs read in round robin (implemented as a rotating bank, without a multiplexer). ~150 ALUTs and ~250 registers per generator. Measured (2026-09-28): each LFSR is read every 7 cycles, so two reads of it share 3 of the 10 bits of the energy and noise words; `energy_out` shows a lag-7 autocorrelation of +0.009 (7 sigma over 713k samples). The distributions are right. |
+| `rng_leap.v` | `"leap"` | One LFSR per generator advanced W steps per clock (leap-forward): every word is a fresh block of the sequence. Validated over 200 orbits against the round-robin bank: hit rates, energy and noise distributions right, no autocorrelation above noise. ~25 ALUTs and 42 + W registers per generator; the whole simulator goes from 1184 to 403 ALMs. |
+
+Change the default in `rtl/hits_simulator.v`, or pass `.RNG_TYPE("leap")` where
+it is instantiated. ⚠️ **Each generator has its own goldens**: the sequences
+differ, only the statistics agree. The regression builds the leap kind with
+`-DUSE_RNG_LEAP`, which `simulador_tb.v` turns into the parameter.
 
 ### Shaper filters (`rtl/shaper/`)
 
@@ -179,6 +194,9 @@ the technique changed and the simulator is intact.
 | `sim` | simulador | (none) | `simulador_tb_golden.vcd` |
 | `sim_f34` | simulador | `USE_SHAPER_F34` | `simulador_tb_golden_f34.vcd` |
 | `sim_csa_cr4rc` | simulador | `USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_csa_cr4rc.vcd` |
+| `sim_leap` | simulador | `USE_RNG_LEAP` | `simulador_tb_golden_leap.vcd` |
+| `sim_leap_f34` | simulador | `USE_RNG_LEAP USE_SHAPER_F34` | `simulador_tb_golden_leap_f34.vcd` |
+| `sim_leap_csa_cr4rc` | simulador | `USE_RNG_LEAP USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_leap_csa_cr4rc.vcd` |
 | `default` | reconstrucao | (none: PZC) | `sim_pulsos_tb_golden.vcd` |
 | `f34` | reconstrucao | `USE_SHAPER_F34` | `sim_pulsos_tb_golden_f34.vcd` |
 | `csa_cr4rc` | reconstrucao | `USE_SHAPER_CSA_CR4RC` | `sim_pulsos_tb_golden_csa_cr4rc.vcd` |

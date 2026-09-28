@@ -39,6 +39,9 @@
 // is composed with this core by the FPGA_Simulator_v1_PZC wrapper.
 module hits_simulator
 #(
+	// pseudo-random generator: "round_robin" (the SBCCI 2025 bank, default) or
+	// "leap" (one leap-forward LFSR per rng). Each kind has its own goldens.
+	parameter RNG_TYPE = "round_robin",
 	parameter RAND_BITS_HITS = 7,
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
 	parameter BUNCH_POS = 3564,
@@ -78,6 +81,7 @@ wire hits_orig;   // ungated hit (before the bunch-train mask), used by event_al
 
 hit_generator
 #(
+	.RNG_TYPE(RNG_TYPE),
 	.RAND_BITS(RAND_BITS_HITS),
 	.BUNCH_MEM(BUNCH_MEM),
 	.BUNCH_POS(BUNCH_POS),
@@ -94,6 +98,7 @@ hit_generator
 
 energy_generator
 #(
+	.RNG_TYPE(RNG_TYPE),
 	.RAND_BITS(RAND_BITS_ENG),
 	.ENG_OUT_BITS(ENG_OUT_BITS),
 	.MEM_ENG_SIZE(MEM_ENG_SIZE),
@@ -169,6 +174,7 @@ wire signed [SHAPER_OUT_BITS-1:0] offset_extended = {{(SHAPER_OUT_BITS-ENG_OUT_B
 
 noise_generator
 #(
+	.RNG_TYPE(RNG_TYPE),
 	.RAND_BITS(RAND_BITS_NOISE),
 	.NOISE_OUT_BITS(NOISE_OUT_BITS),
 	.MEM_NOISE_SIZE(MEM_NOISE_SIZE),

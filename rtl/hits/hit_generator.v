@@ -2,6 +2,7 @@
 
 module hit_generator
 #(
+	parameter RNG_TYPE = "round_robin",   // rng kind, see rtl/random/rng.v
 	parameter RAND_BITS = 7,
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
 	parameter BUNCH_POS = 3564,
@@ -18,6 +19,7 @@ wire [RAND_BITS-1:0] rand_hits;
 
 rng
 #(
+	.RNG_TYPE(RNG_TYPE),
 	.RAND_OUT_SIZE(RAND_BITS),
 	.SEED0(42'd461934351),
 	.SEED1(42'd363409739),

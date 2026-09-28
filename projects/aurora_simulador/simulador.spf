@@ -71,6 +71,16 @@
         "isTopLevel": false
       },
       {
+        "name": "rng_round_robin.v",
+        "path": "..\\..\\rtl\\random\\rng_round_robin.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "rng_leap.v",
+        "path": "..\\..\\rtl\\random\\rng_leap.v",
+        "isTopLevel": false
+      },
+      {
         "name": "iir_order1.v",
         "path": "..\\..\\rtl\\shaper\\iir_order1.v",
         "isTopLevel": false

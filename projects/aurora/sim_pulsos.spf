@@ -51,6 +51,16 @@
         "isTopLevel": false
       },
       {
+        "name": "rng_round_robin.v",
+        "path": "..\\..\\rtl\\random\\rng_round_robin.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "rng_leap.v",
+        "path": "..\\..\\rtl\\random\\rng_leap.v",
+        "isTopLevel": false
+      },
+      {
         "name": "lfsr42.v",
         "path": "..\\..\\rtl\\random\\lfsr42.v",
         "isTopLevel": false
