@@ -11,9 +11,10 @@
 // commented; the regression passes the macro with -D.
 //
 // Random generator: the RNG_TYPE parameter of rtl/hits_simulator.v
-// ("round_robin" by default, or "leap"). The regression builds the leap kind
-// with -DUSE_RNG_LEAP, which this testbench turns into .RNG_TYPE("leap"); a
-// macro, not a parameter of the testbench, so it stays out of the VCD.
+// ("round_robin" by default, "leap" or "xoshiro"). The regression builds the
+// others with -DUSE_RNG_LEAP / -DUSE_RNG_XOSHIRO, which this testbench turns
+// into the parameter: a macro, not a parameter of the testbench, so it stays
+// out of the VCD.
 //
 // - 40 MHz clock (25 ns period), like the LHC bunch clock;
 // - short reset at the start;
@@ -54,7 +55,12 @@ module simulador_tb;
     hits_simulator
     #(
 `ifdef USE_RNG_LEAP
+  `ifdef USE_RNG_XOSHIRO
+        .ERROR_USE_RNG_LEAP_and_USE_RNG_XOSHIRO_together_pick_one(1),
+  `endif
         .RNG_TYPE("leap"),        // regression builds sim_leap*; see rtl/random/rng.v
+`elsif USE_RNG_XOSHIRO
+        .RNG_TYPE("xoshiro"),     // regression builds sim_xoshiro*
 `endif
         .BUNCH_MEM ({RTL_DIR, "/hits/bunch_train_mask.mif"}),
         .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_a13_0.mif"}),

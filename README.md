@@ -23,7 +23,7 @@ Fora, Brazil).
 
 ```
 rtl/                  THE SIMULATOR, one subfolder per stage (top: hits_simulator.v)
-rtl/random/           Pseudo-random generators (two kinds, chosen by RNG_TYPE), used by every stage that draws
+rtl/random/           Pseudo-random generators (three kinds, chosen by RNG_TYPE), used by every stage that draws
 rtl/hits/             Hit draw + LHC bunch-train mask
 rtl/energy/           Energy amplitude (inverse CDF, 3 tables)
 rtl/shaper/           Pulse shapers: three shapes, selectable at synthesis time (see below)
@@ -46,7 +46,7 @@ Each `.mif` memory lives next to the module that reads it.
 
 | Folder | Files | Description |
 |---|---|---|
-| `random/` | `lfsr42.v`, `rng.v`, `rng_round_robin.v`, `rng_leap.v` | 42-bit LFSR step (the papers' primitive polynomial); `rng` picks the generator by `RNG_TYPE` (see *Random generators* below) |
+| `random/` | `lfsr42.v`, `rng.v`, `rng_round_robin.v`, `rng_leap.v`, `rng_xoshiro.v` | 42-bit LFSR step (the papers' primitive polynomial); `rng` picks the generator by `RNG_TYPE` (see *Random generators* below) |
 | `hits/` | `hit_generator.v`, `hit_draw.v`, `bunch_train_mask.v` + `.mif` | Bernoulli hit draw per bunch crossing (`rand < occupancy`), gated by the LHC bunch-train mask (3564 slots) |
 | `energy/` | `energy_generator.v`, `energy_icdf.v` + `energy_icdf_a13_0..2.mif` | Inverse-CDF lookup split across three memories (multi-memory approach), drawing energy amplitudes from a measured minimum-bias distribution |
 | `shaper/` | one of the three `shaper_*.v` (see *Shaper filters* below) | the analog pulse shape of the front end |
@@ -58,15 +58,25 @@ Each `.mif` memory lives next to the module that reads it.
 Which one is built is chosen by the **`RNG_TYPE` parameter** of
 `rtl/hits_simulator.v`, which comes down to every generator of the simulator:
 
-| Generator | `RNG_TYPE` | Description |
-|---|---|---|
-| `rng_round_robin.v` | `"round_robin"` (**default**) | The generator of the SBCCI 2025 paper: a bank of 7 LFSRs read in round robin (implemented as a rotating bank, without a multiplexer). ~150 ALUTs and ~250 registers per generator. Measured (2026-09-28): each LFSR is read every 7 cycles, so two reads of it share 3 of the 10 bits of the energy and noise words; `energy_out` shows a lag-7 autocorrelation of +0.009 (7 sigma over 713k samples). The distributions are right. |
-| `rng_leap.v` | `"leap"` | One LFSR per generator advanced W steps per clock (leap-forward): every word is a fresh block of the sequence. Validated over 200 orbits against the round-robin bank: hit rates, energy and noise distributions right, no autocorrelation above noise. ~25 ALUTs and 42 + W registers per generator; the whole simulator goes from 1184 to 403 ALMs. |
+| Generator | `RNG_TYPE` | Simulator (ALMs) | PractRand, 10-bit words | Description |
+|---|---|---|---|---|
+| `rng_round_robin.v` | `"round_robin"` (**default**) | 1184 | FAILS at 1 MB (BCFN, DC6) | The generator of the SBCCI 2025 paper: a bank of 7 LFSRs read in round robin (implemented as a rotating bank, without a multiplexer). Each LFSR is read every 7 cycles, so two reads of it share 3 of the 10 bits: `energy_out` shows a lag-7 autocorrelation of +0.009 (7 sigma over 713k samples). |
+| `rng_leap.v` | `"leap"` | 403 | FAILS at 1 MB (BRank) | One LFSR advanced W steps per clock (leap-forward): no bit is shared between words, and no correlation shows in the simulator outputs, but it is a linear generator (every bit is the XOR of 6 earlier ones), which the binary-rank test catches at once. The cheapest. |
+| `rng_xoshiro.v` | `"xoshiro"` | 1002 | **passes to 64 GB** | xoshiro128** (Blackman & Vigna, ACM TOMS 2021): 128-bit xor/shift/rotate engine plus a non-linear output scrambler; the words are the top bits of the result. The only one of the three that passes a full test battery. |
+
+All three were validated in the simulator itself over 200 LHC orbits (713k
+cycles): hit rates on filled slots against occupancy/128 and energy and noise
+distributions against the ones the tables define (chi2 within the expected
+range for the three). The PractRand runs use bit-exact C models of the Verilog
+(checked word by word against the simulation). The 1-bit xoshiro stream (the
+noise sign) also passes to 16 GB: PractRand flagged "unusual" (its mildest
+level, p ~ 1e-5) at 2, 4 and 8 GB and nothing at 16 GB, the pattern of chance
+rather than of a defect, which grows with the sample.
 
 Change the default in `rtl/hits_simulator.v`, or pass `.RNG_TYPE("leap")` where
 it is instantiated. ⚠️ **Each generator has its own goldens**: the sequences
 differ, only the statistics agree. The regression builds the leap kind with
-`-DUSE_RNG_LEAP`, which `simulador_tb.v` turns into the parameter.
+`-DUSE_RNG_LEAP` or `-DUSE_RNG_XOSHIRO`, which `simulador_tb.v` turns into the parameter.
 
 ### Shaper filters (`rtl/shaper/`)
 
@@ -197,6 +207,9 @@ the technique changed and the simulator is intact.
 | `sim_leap` | simulador | `USE_RNG_LEAP` | `simulador_tb_golden_leap.vcd` |
 | `sim_leap_f34` | simulador | `USE_RNG_LEAP USE_SHAPER_F34` | `simulador_tb_golden_leap_f34.vcd` |
 | `sim_leap_csa_cr4rc` | simulador | `USE_RNG_LEAP USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_leap_csa_cr4rc.vcd` |
+| `sim_xoshiro` | simulador | `USE_RNG_XOSHIRO` | `simulador_tb_golden_xoshiro.vcd` |
+| `sim_xoshiro_f34` | simulador | `USE_RNG_XOSHIRO USE_SHAPER_F34` | `simulador_tb_golden_xoshiro_f34.vcd` |
+| `sim_xoshiro_csa_cr4rc` | simulador | `USE_RNG_XOSHIRO USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_xoshiro_csa_cr4rc.vcd` |
 | `default` | reconstrucao | (none: PZC) | `sim_pulsos_tb_golden.vcd` |
 | `f34` | reconstrucao | `USE_SHAPER_F34` | `sim_pulsos_tb_golden_f34.vcd` |
 | `csa_cr4rc` | reconstrucao | `USE_SHAPER_CSA_CR4RC` | `sim_pulsos_tb_golden_csa_cr4rc.vcd` |

@@ -61,6 +61,11 @@
         "isTopLevel": false
       },
       {
+        "name": "rng_xoshiro.v",
+        "path": "..\\..\\rtl\\random\\rng_xoshiro.v",
+        "isTopLevel": false
+      },
+      {
         "name": "lfsr42.v",
         "path": "..\\..\\rtl\\random\\lfsr42.v",
         "isTopLevel": false

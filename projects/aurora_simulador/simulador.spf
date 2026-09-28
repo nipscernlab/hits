@@ -81,6 +81,11 @@
         "isTopLevel": false
       },
       {
+        "name": "rng_xoshiro.v",
+        "path": "..\\..\\rtl\\random\\rng_xoshiro.v",
+        "isTopLevel": false
+      },
+      {
         "name": "iir_order1.v",
         "path": "..\\..\\rtl\\shaper\\iir_order1.v",
         "isTopLevel": false

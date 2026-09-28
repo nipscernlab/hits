@@ -8,6 +8,8 @@
 //   "leap"                  : rng_leap.v - one LFSR advanced RAND_OUT_SIZE
 //                             steps per clock; ~6x less logic and no lag-7
 //                             overlap between words (see both headers)
+//   "xoshiro"               : rng_xoshiro.v - xoshiro128** (Blackman & Vigna),
+//                             non-linear output scrambler
 //
 // RNG_TYPE comes down from hits_simulator, so the whole simulator uses one
 // kind. WARNING: each kind has its OWN goldens in verification/ (README).
@@ -45,6 +47,18 @@ generate
 			.rand_out(rand_out),
 			.rand_next(rand_next)
 		);
+	end else if (RNG_TYPE == "xoshiro") begin : kind
+		rng_xoshiro
+		#(
+			.RAND_OUT_SIZE(RAND_OUT_SIZE),
+			.SEED0(SEED0), .SEED1(SEED1), .SEED2(SEED2), .SEED3(SEED3)
+		) gen
+		(
+			.clk(clk),
+			.rst(rst),
+			.rand_out(rand_out),
+			.rand_next(rand_next)
+		);
 	end else if (RNG_TYPE == "round_robin") begin : kind
 		rng_round_robin
 		#(
@@ -60,7 +74,7 @@ generate
 		);
 	end else begin : kind
 		// unknown kind: stops the elaboration with a name that says why
-		ERROR_rng_RNG_TYPE_must_be_round_robin_or_leap gen ();
+		ERROR_rng_RNG_TYPE_must_be_round_robin_leap_or_xoshiro gen ();
 	end
 endgenerate
 

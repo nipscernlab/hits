@@ -66,6 +66,12 @@ BUILDS = {
                       "simulador_tb_golden_leap_f34.vcd"),
     "sim_leap_csa_cr4rc": ("simulador", ["USE_RNG_LEAP", "USE_SHAPER_CSA_CR4RC"],
                       "simulador_tb_golden_leap_csa_cr4rc.vcd"),
+    # xoshiro128** (RNG_TYPE = "xoshiro")
+    "sim_xoshiro":   ("simulador", ["USE_RNG_XOSHIRO"], "simulador_tb_golden_xoshiro.vcd"),
+    "sim_xoshiro_f34": ("simulador", ["USE_RNG_XOSHIRO", "USE_SHAPER_F34"],
+                      "simulador_tb_golden_xoshiro_f34.vcd"),
+    "sim_xoshiro_csa_cr4rc": ("simulador", ["USE_RNG_XOSHIRO", "USE_SHAPER_CSA_CR4RC"],
+                      "simulador_tb_golden_xoshiro_csa_cr4rc.vcd"),
     "default":       ("reconstrucao", [], "sim_pulsos_tb_golden.vcd"),
     "f34":           ("reconstrucao", ["USE_SHAPER_F34"],
                       "sim_pulsos_tb_golden_f34.vcd"),
