@@ -51,9 +51,9 @@ module sim_pulsos_tb;
         .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_a13_0.mif"}),
         .MEM_ENG1  ({RTL_DIR, "/energy/energy_icdf_a13_1.mif"}),
         .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_a13_2.mif"}),
-        .MEM_NOISE0({RTL_DIR, "/noise/noise_icdf0.mif"}),
-        .MEM_NOISE1({RTL_DIR, "/noise/noise_icdf1.mif"}),
-        .MEM_NOISE2({RTL_DIR, "/noise/noise_icdf2.mif"}),
+        .MEM_NOISE0({RTL_DIR, "/noise/noise_s4_icdf0.mif"}),
+        .MEM_NOISE1({RTL_DIR, "/noise/noise_s4_icdf1.mif"}),
+        .MEM_NOISE2({RTL_DIR, "/noise/noise_s4_icdf2.mif"}),
         // so o build USE_BASELINE_EST le esta ROM; sem o caminho o $readmemh
         // falhava em silencio e o golden f34_est congelou saidas com X (14/09)
         .EST_RECIP_MEM({`EST_DIR, "/recip.mem"})

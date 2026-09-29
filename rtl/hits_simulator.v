@@ -26,6 +26,11 @@
 //`define USE_SHAPER_F34
 //`define USE_SHAPER_CSA_CR4RC
 
+// NOISE LEVEL: sigma = 4 ADC counts at 12 bits by default (the Phase-II scale,
+// rtl/noise/README.md). USE_NOISE_SIGMA8 selects the sigma = 8 tables used
+// until 2026-09-29, which the paper build needs. Same rule as the shaper macros.
+//`define USE_NOISE_SIGMA8
+
 // HITS simulator core (no PZC).
 //
 // The full front-end signal chain of the calorimeter readout, one sample per
@@ -60,9 +65,15 @@ module hits_simulator
 	parameter RAND_BITS_NOISE = 10,
 	parameter NOISE_OUT_BITS = 17,
 	parameter MEM_NOISE_SIZE = 2**10,
-	parameter MEM_NOISE0 = "noise_icdf0.mif",
-	parameter MEM_NOISE1 = "noise_icdf1.mif",
-	parameter MEM_NOISE2 = "noise_icdf2.mif",
+`ifdef USE_NOISE_SIGMA8
+	parameter MEM_NOISE0 = "noise_s8_icdf0.mif",
+	parameter MEM_NOISE1 = "noise_s8_icdf1.mif",
+	parameter MEM_NOISE2 = "noise_s8_icdf2.mif",
+`else
+	parameter MEM_NOISE0 = "noise_s4_icdf0.mif",
+	parameter MEM_NOISE1 = "noise_s4_icdf1.mif",
+	parameter MEM_NOISE2 = "noise_s4_icdf2.mif",
+`endif
 	parameter MEM_NOISE0_THRESH = 1007,
 	parameter MEM_NOISE1_THRESH = 1007
 )

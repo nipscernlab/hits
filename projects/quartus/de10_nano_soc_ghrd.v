@@ -298,7 +298,7 @@ assign LED[0] = led_level;
 	// Random generator of the simulator (rtl/random/rng.v): "xoshiro" (default),
 	// "round_robin" (the 7-LFSR bank of the SBCCI 2025 paper) or "leap".
 	// The HITS of Fabio's Sensors Journal paper (tag paper-jsen-2026) is
-	// "round_robin" + the USE_SHAPER_CSA_CR4RC macro (see the .qsf).
+	// "round_robin" + the USE_SHAPER_CSA_CR4RC and USE_NOISE_SIGMA8 macros (see the .qsf).
 	parameter RNG_TYPE = "xoshiro";
   
   FPGA_Simulator_v1_PZC 

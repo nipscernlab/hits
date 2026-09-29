@@ -50,7 +50,7 @@ Each `.mif` memory lives next to the module that reads it.
 | `hits/` | `hit_generator.v`, `hit_draw.v`, `bunch_train_mask.v` + `.mif` | Bernoulli hit draw per bunch crossing (`rand < occupancy`), gated by the LHC bunch-train mask (3564 slots) |
 | `energy/` | `energy_generator.v`, `energy_icdf.v` + `energy_icdf_a13_0..2.mif` | Inverse-CDF lookup split across three memories (multi-memory approach), drawing energy amplitudes from a measured minimum-bias distribution |
 | `shaper/` | one of the three `shaper_*.v` (see *Shaper filters* below) | the analog pulse shape of the front end |
-| `noise/` | `noise_generator.v`, `noise_icdf.v` + `noise_icdf0..2.mif` | Gaussian electronic noise (sigma = 8 ADC at 12 bits), same three-memory inverse CDF plus a random sign; why that level, how the tables deviate from a Gaussian in the tail, and where the double-Gaussian noise of the real TileCal came from: [`rtl/noise/README.md`](rtl/noise/README.md) |
+| `noise/` | `noise_generator.v`, `noise_icdf.v` + `noise_s4_icdf0..2.mif` (`noise_s8_*` with `USE_NOISE_SIGMA8`) | Gaussian electronic noise (sigma = 4 ADC at 12 bits, the Phase-II scale; 8 before 2026-09-29), same three-memory inverse CDF plus a random sign; why that level, how the tables deviate from a Gaussian in the tail, and where the double-Gaussian noise of the real TileCal came from: [`rtl/noise/README.md`](rtl/noise/README.md) |
 | `adc/` | `adc.v` | pedestal offset, quantization to integer ADC counts and saturation to the 12-bit range; its output `shaper_clip` is the simulated readout |
 
 ### Random generators (`rtl/random/`)
@@ -207,7 +207,7 @@ the technique changed and the simulator is intact.
 | `sim_csa_cr4rc` | simulador | `USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_csa_cr4rc.vcd` |
 | `sim_round_robin` | simulador | `USE_RNG_ROUND_ROBIN` | `simulador_tb_golden_round_robin.vcd` |
 | `sim_round_robin_f34` | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_F34` | `simulador_tb_golden_round_robin_f34.vcd` |
-| **`paper`** | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_paper.vcd` (**frozen**, see below) |
+| **`paper`** | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC USE_NOISE_SIGMA8` | `simulador_tb_golden_paper.vcd` (**frozen**, see below) |
 | `sim_leap` | simulador | `USE_RNG_LEAP` | `simulador_tb_golden_leap.vcd` |
 | `sim_leap_f34` | simulador | `USE_RNG_LEAP USE_SHAPER_F34` | `simulador_tb_golden_leap_f34.vcd` |
 | `sim_leap_csa_cr4rc` | simulador | `USE_RNG_LEAP USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_leap_csa_cr4rc.vcd` |
@@ -240,10 +240,11 @@ once.
 
 Fabio's paper (*Real-Time FPGA-Based Pulse Simulator for Calorimeter Readout
 Electronics in Nuclear Instrumentation*, IEEE Sensors Journal,
-Sensors-114519-2026) used the CSA + CR-4RC shaper and the round-robin generator.
+Sensors-114519-2026) used the CSA + CR-4RC shaper, the round-robin generator and
+the sigma = 8 ADC noise.
 
 - **Its behaviour, on the current code:** `RNG_TYPE = "round_robin"` plus the
-  `USE_SHAPER_CSA_CR4RC` macro, in simulation (`regress.py paper`) or on the
+  `USE_SHAPER_CSA_CR4RC` and `USE_NOISE_SIGMA8` macros, in simulation (`regress.py paper`) or on the
   board (`de10_nano_soc_ghrd.v` and the `.qsf`). The `paper` build is the
   simulator outputs of the paper's code delayed exactly one cycle (the
   testbench releases reset one edge later since 9dc32b2), checked signal by

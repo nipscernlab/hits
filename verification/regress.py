@@ -67,8 +67,10 @@ BUILDS = {
     "sim_round_robin_f34": ("simulador", ["USE_RNG_ROUND_ROBIN", "USE_SHAPER_F34"],
                       "simulador_tb_golden_round_robin_f34.vcd"),
     # THE HITS OF FABIO'S SENSORS JOURNAL PAPER (tag paper-jsen-2026): round-robin
-    # generator + CSA/CR-4RC shaper. Its golden is FROZEN (see CONGELADOS).
-    "paper":         ("simulador", ["USE_RNG_ROUND_ROBIN", "USE_SHAPER_CSA_CR4RC"],
+    # generator + CSA/CR-4RC shaper + the sigma = 8 noise tables. Its golden is
+    # FROZEN (see CONGELADOS).
+    "paper":         ("simulador", ["USE_RNG_ROUND_ROBIN", "USE_SHAPER_CSA_CR4RC",
+                                    "USE_NOISE_SIGMA8"],
                       "simulador_tb_golden_paper.vcd"),
     # the leap-forward generator (RNG_TYPE = "leap")
     "sim_leap":      ("simulador", ["USE_RNG_LEAP"], "simulador_tb_golden_leap.vcd"),

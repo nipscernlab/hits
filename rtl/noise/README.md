@@ -2,13 +2,25 @@
 
 `noise_generator.v` draws one noise sample per 25 ns clock and the simulator
 adds it to the shaper output, before the ADC (`shaper_corrupted`). The draw is
-an inverse CDF over three tables (`noise_icdf.v` + `noise_icdf0..2.mif`, the
+an inverse CDF over three tables (`noise_icdf.v` + `noise_s4_icdf0..2.mif`, the
 multi-memory approach): 10-bit uniform words pick a magnitude, one more bit
-picks the sign.
+picks the sign. The tables hold magnitudes in units of 2^-10 ADC count.
 
-## The level: sigma = 8 ADC counts at 12 bits
+| tables | sigma (12 bits) | selected by |
+|---|---|---|
+| `noise_s4_icdf0..2.mif` | **4 ADC** | default since 2026-09-29 |
+| `noise_s8_icdf0..2.mif` | 8 ADC | macro `USE_NOISE_SIGMA8`: the paper build, and every result before 2026-09-29 |
 
-A design choice, not the value of any given channel:
+`noise_s4` is `noise_s8` halved entry by entry (rounded half up, a change of
+at most 2^-11 ADC), with the same thresholds (1007/1007): same shape, same
+tail, half the level.
+
+## The level: sigma = 4 ADC counts at 12 bits (8 until 2026-09-29)
+
+A design choice, not the value of any given channel. The generic pedestal
+noise of the legacy 10-bit readout, 2 counts, is brought to the Phase-II 12-bit
+high gain with the charge scale of the public sources below (x2, not x4): 4 ADC
+counts. The first rule, kept for the record, was:
 
 - the TileCal pedestal runs are taken with a 10-bit ADC range, while the
   Phase-II demonstrator already uses 12 bits, which is the standard of HITS;
@@ -39,8 +51,8 @@ pC by 4, because the high-gain range doubles at the same time:
 So a charge noise that gives 2 counts in the legacy 10-bit high gain (~25 fC)
 gives **~4 counts** in the Phase-II 12-bit high gain, not 8, if the noise in
 charge stays the same (the Phase-II demonstrator measured lower noise than a
-legacy drawer). The sigma of HITS is still 8: changing it is a decision to be
-taken, recorded here so that it is taken knowingly.
+legacy drawer). On 2026-09-29 HITS moved to this value: sigma = 4 ADC
+(`noise_s4`); the 8 ADC tables stay as `noise_s8` for the paper build.
 
 Caveats: the Phase-II range comes from the 2013 FEB design and a 2019 paper that
 calls it "under tuning" (HV active dividers raise the PMT gain by up to 20%);
@@ -66,9 +78,11 @@ Sources:
   dynamic range, against legacy 1:64, 16-bit; its high-gain values read at half
   in the legacy software because of the gain ratio).
 
-## What the tables generate (measured 2026-09-28)
+## What the tables generate (measured 2026-09-28 on noise_s8)
 
-The exact distribution the three tables define with uniform words:
+The exact distribution the three tables define with uniform words (for
+`noise_s4` every magnitude is half, so sigma = 4.00 ADC and the same tail in
+units of sigma):
 
 | | tables | Gaussian |
 |---|---|---|
@@ -84,7 +98,7 @@ single value, 6.48 sigma (the last entry of table 2, probability 2.4e-7), and
 nothing goes beyond it. At 40 MHz that is about 10 samples per second at
 6.5 sigma, where a Gaussian gives one every ~12 s. It matters only for studies
 of noise at high thresholds, but it is there. The level is fixed by the table
-contents: a different sigma needs new tables.
+contents: a different sigma needs new tables (or a scaled set, as `noise_s4`).
 
 The noise is white: consecutive samples are independent.
 

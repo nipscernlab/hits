@@ -75,9 +75,15 @@ module FPGA_Simulator_v1_PZC
 	parameter RAND_BITS_NOISE = 10,
 	parameter NOISE_OUT_BITS = 17,
 	parameter MEM_NOISE_SIZE = 2**10,
-	parameter MEM_NOISE0 = "noise_icdf0.mif",
-	parameter MEM_NOISE1 = "noise_icdf1.mif",
-	parameter MEM_NOISE2 = "noise_icdf2.mif",
+`ifdef USE_NOISE_SIGMA8                  // see rtl/hits_simulator.v
+	parameter MEM_NOISE0 = "noise_s8_icdf0.mif",
+	parameter MEM_NOISE1 = "noise_s8_icdf1.mif",
+	parameter MEM_NOISE2 = "noise_s8_icdf2.mif",
+`else
+	parameter MEM_NOISE0 = "noise_s4_icdf0.mif",
+	parameter MEM_NOISE1 = "noise_s4_icdf1.mif",
+	parameter MEM_NOISE2 = "noise_s4_icdf2.mif",
+`endif
 	parameter MEM_NOISE0_THRESH = 1007,
 	parameter MEM_NOISE1_THRESH = 1007,
 	parameter PZC_M_FACTOR = 454,

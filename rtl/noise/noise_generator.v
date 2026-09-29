@@ -6,11 +6,11 @@ module noise_generator
 	parameter RAND_BITS = 10,
 	parameter NOISE_OUT_BITS = 17,
 	parameter MEM_NOISE_SIZE = 2**10,
-	parameter MEM_NOISE0 = "noise_icdf0.mif",
-	parameter MEM_NOISE1 = "noise_icdf1.mif",
-	parameter MEM_NOISE2 = "noise_icdf2.mif",
-	parameter MEM_NOISE0_THRESH = 1007,    // 8 ADC (the earlier 2 ADC setting used 1014/1018)
-	parameter MEM_NOISE1_THRESH = 1007     // 8 ADC
+	parameter MEM_NOISE0 = "noise_s4_icdf0.mif",
+	parameter MEM_NOISE1 = "noise_s4_icdf1.mif",
+	parameter MEM_NOISE2 = "noise_s4_icdf2.mif",
+	parameter MEM_NOISE0_THRESH = 1007,    // noise_s4 and noise_s8 alike (an earlier 2 ADC set used 1014/1018)
+	parameter MEM_NOISE1_THRESH = 1007
 )
 (
 	input clk, rst,
