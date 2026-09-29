@@ -207,7 +207,7 @@ the technique changed and the simulator is intact.
 | `sim_csa_cr4rc` | simulador | `USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_csa_cr4rc.vcd` |
 | `sim_round_robin` | simulador | `USE_RNG_ROUND_ROBIN` | `simulador_tb_golden_round_robin.vcd` |
 | `sim_round_robin_f34` | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_F34` | `simulador_tb_golden_round_robin_f34.vcd` |
-| `sim_round_robin_csa_cr4rc` | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_round_robin_csa_cr4rc.vcd` |
+| **`paper`** | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_paper.vcd` (**frozen**, see below) |
 | `sim_leap` | simulador | `USE_RNG_LEAP` | `simulador_tb_golden_leap.vcd` |
 | `sim_leap_f34` | simulador | `USE_RNG_LEAP USE_SHAPER_F34` | `simulador_tb_golden_leap_f34.vcd` |
 | `sim_leap_csa_cr4rc` | simulador | `USE_RNG_LEAP USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_leap_csa_cr4rc.vcd` |
@@ -235,6 +235,25 @@ goldens that do not exist yet.
 A `vvp` that dies with no message (the machine short of memory) is re-run up to
 twice and listed at the end of the run; a complete but wrong waveform fails at
 once.
+
+## Reproducing the HITS of the Sensors Journal paper
+
+Fabio's paper (*Real-Time FPGA-Based Pulse Simulator for Calorimeter Readout
+Electronics in Nuclear Instrumentation*, IEEE Sensors Journal,
+Sensors-114519-2026) used the CSA + CR-4RC shaper and the round-robin generator.
+
+- **Its behaviour, on the current code:** `RNG_TYPE = "round_robin"` plus the
+  `USE_SHAPER_CSA_CR4RC` macro, in simulation (`regress.py paper`) or on the
+  board (`de10_nano_soc_ghrd.v` and the `.qsf`). The `paper` build is the
+  simulator outputs of the paper's code delayed exactly one cycle (the
+  testbench releases reset one edge later since 9dc32b2), checked signal by
+  signal. Its golden is **frozen**: `regress.py` keeps its hash and fails if the
+  file changes, so no later change can alter this configuration.
+- **Its exact code, and its resource numbers** (section V: Vivado, KCU116,
+  1987 LUTs, 2696 registers, 27 DSPs, 0 BRAM): the tag `paper-jsen-2026`. The
+  circuit changed since (tables in block RAM, rotating LFSR bank), so the same
+  parameters give another netlist. To work on it without touching `main`:
+  `git worktree add ../hits-paper paper-jsen-2026`.
 
 ## Running on the DE10-Nano board
 

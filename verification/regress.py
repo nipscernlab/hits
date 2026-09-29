@@ -66,8 +66,10 @@ BUILDS = {
                       "simulador_tb_golden_round_robin.vcd"),
     "sim_round_robin_f34": ("simulador", ["USE_RNG_ROUND_ROBIN", "USE_SHAPER_F34"],
                       "simulador_tb_golden_round_robin_f34.vcd"),
-    "sim_round_robin_csa_cr4rc": ("simulador", ["USE_RNG_ROUND_ROBIN", "USE_SHAPER_CSA_CR4RC"],
-                      "simulador_tb_golden_round_robin_csa_cr4rc.vcd"),
+    # THE HITS OF FABIO'S SENSORS JOURNAL PAPER (tag paper-jsen-2026): round-robin
+    # generator + CSA/CR-4RC shaper. Its golden is FROZEN (see CONGELADOS).
+    "paper":         ("simulador", ["USE_RNG_ROUND_ROBIN", "USE_SHAPER_CSA_CR4RC"],
+                      "simulador_tb_golden_paper.vcd"),
     # the leap-forward generator (RNG_TYPE = "leap")
     "sim_leap":      ("simulador", ["USE_RNG_LEAP"], "simulador_tb_golden_leap.vcd"),
     "sim_leap_f34":  ("simulador", ["USE_RNG_LEAP", "USE_SHAPER_F34"],
@@ -83,6 +85,17 @@ BUILDS = {
                       "sim_pulsos_tb_golden_f34_est.vcd"),
 }
 
+# Goldens that must NEVER change: sha256 of the file with LF line endings.
+# The paper build is the simulator outputs of tag paper-jsen-2026 delayed
+# exactly one cycle (the testbench reset fix of 9dc32b2), checked signal by
+# signal on 2026-09-28. A
+# change of the RTL that alters it fails here even if someone regenerated the
+# golden; changing this hash is a decision about the paper, not a fix.
+CONGELADOS = {
+    "simulador_tb_golden_paper.vcd":
+        "c0a386473acc19e4ff11e164b9ff19d99006db1f95fa42923734e84ba654956d",
+}
+
 # where a choice can be left on by hand; the builds pass their own macros
 # with -D, so every one of these must be committed with the lines commented
 ESCOLHAS = ("projects/aurora/simulacao.v", "rtl/hits_simulator.v",
@@ -95,6 +108,17 @@ VVP_NOME = "tb_regress.vvp"
 ERRO_RE = re.compile(r"(?i)\berror\b|unable to open|vvp: can't", re.M)
 DEFINE_ATIVO_RE = re.compile(r"^\s*`define\b", re.M)
 TENTATIVAS_VVP = 3          # the run plus two retries
+
+
+def confere_congelados():
+    import hashlib
+    for nome, h in CONGELADOS.items():
+        with open(os.path.join(VERIF, nome), "rb") as f:
+            # line endings normalized: a Windows checkout (autocrlf) gives CRLF,
+            # the CI (Linux) gives LF, and the golden is the same
+            if hashlib.sha256(f.read().replace(b"\r\n", b"\n")).hexdigest() != h:
+                sys.exit("regress: o golden CONGELADO %s foi alterado (o HITS do paper). "
+                         "Restaure-o do git; ele nao se regera." % nome)
 
 
 def confere_selecao():
@@ -206,6 +230,7 @@ def main():
         sys.exit("regress: builds desconhecidos %s (validos: %s)"
                  % (invalidos, ", ".join(BUILDS)))
     confere_selecao()
+    confere_congelados()
     if modo_gera:
         gera(pedidos)
         return
