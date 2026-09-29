@@ -706,6 +706,12 @@ set_global_assignment -name VERILOG_FILE sw_converter.v
 # Shaper selection: uncomment to synthesize the F34 shaper instead of the
 # legacy one. Each choice has its own golden VCD (see README).
 #set_global_assignment -name VERILOG_MACRO "USE_SHAPER_F34=1"
+#set_global_assignment -name VERILOG_MACRO "USE_SHAPER_CSA_CR4RC=1"
+# The random generator is the RNG_TYPE parameter in de10_nano_soc_ghrd.v.
+# HITS of the Sensors Journal paper (tag paper-jsen-2026): the CSA_CR4RC
+# macro above + RNG_TYPE = "round_robin". Same behaviour; the circuit differs
+# from the tag (tables in M10K, rotating LFSR bank), so the paper's resource
+# numbers come only from checking out the tag.
 set_global_assignment -name VERILOG_FILE ../../rtl/shaper/shaper_fenics_f34.v
 set_global_assignment -name VERILOG_FILE ../../rtl/shaper/shaper_fenics.v
 set_global_assignment -name VERILOG_FILE ../../rtl/shaper/shaper_csa_cr4rc.v

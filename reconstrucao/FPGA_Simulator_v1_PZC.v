@@ -56,6 +56,7 @@
 // board top (de10_nano_soc_ghrd.v) and the testbench are unchanged.
 module FPGA_Simulator_v1_PZC
 #(
+	parameter RNG_TYPE = "xoshiro",   // random generator of the simulator (rtl/random/rng.v)
 	parameter RAND_BITS_HITS = 7,
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
 	parameter BUNCH_POS = 3564,
@@ -129,6 +130,7 @@ module FPGA_Simulator_v1_PZC
 // HITS simulator core (rtl/) — everything up to the digitized ADC sample.
 hits_simulator
 #(
+	.RNG_TYPE(RNG_TYPE),
 	.RAND_BITS_HITS(RAND_BITS_HITS),
 	.BUNCH_MEM(BUNCH_MEM),
 	.BUNCH_POS(BUNCH_POS),
