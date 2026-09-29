@@ -11,8 +11,11 @@
 // Validated 2026-09-28: PractRand passes the 10-bit word stream to 64 GB and
 // the 1-bit stream to 16 GB (bit-exact C model, checked word by word against
 // this module); in the simulator, 200 orbits, hit rates and energy and noise
-// distributions right. Simulator with this kind: 1002 ALMs (round robin 1184,
-// leap 403). The LFSR kinds both fail PractRand at 1 MB.
+// distributions right. The LFSR kinds both fail PractRand at 1 MB.
+//
+// The stage generators (energy, noise) use ONE xoshiro each and cut its result
+// into their words (30 and 31 bits; both pass PractRand to 16 GB): 3 instances
+// instead of 8, simulator 1002 -> 534 ALMs (round robin 1184, leap 403).
 //
 // Seeding: the state is {SEED3, SEED2, SEED1, SEED0}, 32 low bits of each (the
 // other bits of the 42-bit seeds are ignored). An all-zero state would freeze
@@ -65,9 +68,15 @@ always @(posedge clk or posedge rst) begin
 end
 
 // synthesis translate_off
-initial if ({S3_INIT, S2_INIT, S1_INIT, S0_INIT} == 0) begin
-	$display("ERROR: rng_xoshiro %m has an all-zero state: it would never leave 0");
-	$finish;
+initial begin
+	if ({S3_INIT, S2_INIT, S1_INIT, S0_INIT} == 0) begin
+		$display("ERROR: rng_xoshiro %m has an all-zero state: it would never leave 0");
+		$finish;
+	end
+	if (RAND_OUT_SIZE > 32) begin
+		$display("ERROR: rng_xoshiro %m: RAND_OUT_SIZE %0d > 32, the result has 32 bits", RAND_OUT_SIZE);
+		$finish;
+	end
 end
 // synthesis translate_on
 

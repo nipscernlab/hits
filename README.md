@@ -62,13 +62,13 @@ Which one is built is chosen by the **`RNG_TYPE` parameter** of
 |---|---|---|---|---|
 | `rng_round_robin.v` | `"round_robin"` (default until 2026-09-28) | 1184 | FAILS at 1 MB (BCFN, DC6) | The generator of the SBCCI 2025 paper: a bank of 7 LFSRs read in round robin (implemented as a rotating bank, without a multiplexer). Each LFSR is read every 7 cycles, so two reads of it share 3 of the 10 bits: `energy_out` shows a lag-7 autocorrelation of +0.009 (7 sigma over 713k samples). |
 | `rng_leap.v` | `"leap"` | 403 | FAILS at 1 MB (BRank) | One LFSR advanced W steps per clock (leap-forward): no bit is shared between words, and no correlation shows in the simulator outputs, but it is a linear generator (every bit is the XOR of 6 earlier ones), which the binary-rank test catches at once. The cheapest. |
-| `rng_xoshiro.v` | `"xoshiro"` (**default**) | 1002 | **passes to 64 GB** | xoshiro128** (Blackman & Vigna, ACM TOMS 2021): 128-bit xor/shift/rotate engine plus a non-linear output scrambler; the words are the top bits of the result. The only one of the three that passes a full test battery. |
+| `rng_xoshiro.v` | `"xoshiro"` (**default**) | 534 | **passes to 64 GB** | xoshiro128** (Blackman & Vigna, ACM TOMS 2021): 128-bit xor/shift/rotate engine plus a non-linear output scrambler; the words are the top bits of the result. The only one of the three that passes a full test battery. One generator per stage (hits, energy, noise: 3 instead of 8), its 32-bit result cut into the words of the stage (30 bits for energy, 31 for noise); the 30- and 31-bit words pass PractRand to 16 GB. |
 
 All three were validated in the simulator itself over 200 LHC orbits (713k
 cycles): hit rates on filled slots against occupancy/128 and energy and noise
 distributions against the ones the tables define (chi2 within the expected
 range for the three). xoshiro is the default since 2026-09-28: the only one
-that passes the battery, and cheaper than the round-robin bank. The PractRand runs use bit-exact C models of the Verilog
+that passes the battery, and the second cheapest. The PractRand runs use bit-exact C models of the Verilog
 (checked word by word against the simulation). The 1-bit xoshiro stream (the
 noise sign) also passes to 16 GB: PractRand flagged "unusual" (its mildest
 level, p ~ 1e-5) at 2, 4 and 8 GB and nothing at 16 GB, the pattern of chance
