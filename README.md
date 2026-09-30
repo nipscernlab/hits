@@ -19,6 +19,123 @@ simulator and live in `reconstrucao/`.
 Developed by [NIPS-CERN](https://nipscern.com) (Federal University of Juiz de
 Fora, Brazil).
 
+## The signal chain
+
+One sample per 25 ns clock. Every box is a folder of `rtl/`; the top that wires
+them is `rtl/hits_simulator.v`.
+
+```
+             occupancy (7 bits, from the HPS)
+                   |
+ random/ --> hits/ (Bernoulli draw x bunch-train mask) --- hit ---+
+                                                                  |
+ random/ --> energy/ (inverse CDF, 3 tables) ------- energy ---> [x] event_bt
+                                                                  |
+                                                     shaper/ (one of three pulse shapes)
+                                                                  |  shaper_out
+ random/ --> noise/ (inverse CDF, 3 tables + sign) ---- noise --> [+] shaper_corrupted
+                                                                  |
+             offset (pedestal, from the HPS) ---------------> adc/ (offset, >> scale, clip 0..4095)
+                                                                  |
+                                                             shaper_clip  = THE SIMULATOR OUTPUT
+                                                                  |
+                                   (optional, not the simulator) reconstrucao/<technique> --> pzc_out
+```
+
+Outputs of `hits_simulator`, all on the same clock:
+
+| Signal | What it is |
+|---|---|
+| `hits_out` | 1 when a hit happens in this bunch crossing (after the bunch-train mask) |
+| `bt_mask_out` | the bunch-train mask itself (1 = filled slot) |
+| `energy_out` | the energy amplitude drawn this cycle (drawn every cycle, used only on a hit) |
+| `event_bt` / `event_all` | `energy_out` times the hit, with / without the bunch-train mask |
+| `shaper_out` | the shaped pulse train, noiseless, at the fixed-point scale 2**10 |
+| `noise_out` | the electronic noise sample |
+| `shaper_corrupted` | `shaper_out + noise_out` |
+| `shaper_clip` | the 12-bit ADC sample: what the readout electronics would see |
+
+## Quick start
+
+**Simulate, no hardware.** From the repo root, with Icarus Verilog:
+
+```sh
+cd projects/aurora_simulador
+iverilog -s simulador_tb -o tb.vvp ../../rtl/*.v ../../rtl/*/*.v simulador_tb.v
+vvp tb.vvp                  # writes simulador_tb.vcd: open it in GTKWave or Surfer
+```
+
+Or open `projects/aurora_simulador/simulador.spf` in Aurora and press the wave
+button. That is the simulator alone; `projects/aurora/` is the simulator plus a
+reconstruction technique (see *Simulating without hardware*).
+
+**Check that nothing broke** after any change to the RTL:
+
+```sh
+python verification/regress.py      # exit 0 = every build bit-identical to its golden
+```
+
+**Run on the board:** see *Running on the DE10-Nano board*.
+
+## Build options at a glance
+
+Everything that changes what is built. With nothing set you get the default
+build: xoshiro generator, legacy FENICS shaper, noise sigma = 4 ADC, PZC as the
+technique.
+
+| Choice | Options | How to choose | Default |
+|---|---|---|---|
+| Random generator | `"xoshiro"`, `"round_robin"`, `"leap"` | `RNG_TYPE` parameter of `hits_simulator` (on the board: `de10_nano_soc_ghrd.v`); in `simulador_tb.v`, `-DUSE_RNG_ROUND_ROBIN` or `-DUSE_RNG_LEAP` | `"xoshiro"` |
+| Pulse shape | legacy FENICS, F34, CSA + CR-4RC | macro `USE_SHAPER_F34` or `USE_SHAPER_CSA_CR4RC` | legacy FENICS |
+| Noise level | sigma = 4 or 8 ADC counts | macro `USE_NOISE_SIGMA8` | 4 |
+| Reconstruction technique | PZC, adaptive baseline estimator | macro `USE_BASELINE_EST` (only in `reconstrucao/` builds) | PZC |
+| Occupancy, pedestal | 0..127 (hit probability occupancy/128), 13-bit offset | runtime inputs `occupancy`, `offset`; on the board, from the HPS (`./change_occupancy`) | set by the testbench / HPS |
+
+A macro is passed with `-D` (Icarus) or `VERILOG_MACRO` (Quartus `.qsf`), or by
+uncommenting its `` `define `` line; details in the sections below. Each
+combination that the regression knows has its own golden VCD.
+
+## Coming from the paper version (before 2026-09-14)
+
+The code of Fabio's Sensors Journal paper is the tag `paper-jsen-2026`. Since
+then the files were reorganized, and a few things changed behaviour. If you
+knew the repo then, this is where things went:
+
+| At `paper-jsen-2026` | Now |
+|---|---|
+| `rtl/FPGA_Simulator_v1.v` | `rtl/hits_simulator.v` (module `hits_simulator`) |
+| `rtl/Hits_Bunch_train.v`, `rtl/hits_positions.v` | `rtl/hits/hit_generator.v`, `rtl/hits/hit_draw.v` |
+| `rtl/bunch_train_mask.v` + `.mif` | `rtl/hits/` |
+| `rtl/energy_collisions.v`, `rtl/energy_distribution.v` | `rtl/energy/energy_generator.v`, `rtl/energy/energy_icdf.v` |
+| `rtl/A13_PART1..3.mif` | `rtl/energy/energy_icdf_a13_0..2.mif` (same content) |
+| `rtl/noise_collisions.v`, `rtl/noise_distribution.v` | `rtl/noise/noise_generator.v`, `rtl/noise/noise_icdf.v` |
+| `rtl/NOISE_PART1..3.mif` | `rtl/noise/noise_s8_icdf0..2.mif` (same content; no longer the default) |
+| `rtl/random_number_generator.v`, `rtl/select_rand.v`, `rtl/rand_LFSR.v` | `rtl/random/rng_round_robin.v` + `lfsr42.v`, chosen through `rtl/random/rng.v` |
+| `rtl/filtros/` | `rtl/shaper/` |
+| `rtl/clip_shaper.v` | `rtl/adc/adc.v` |
+| `rtl_test/` | `reconstrucao/pzc/`, `reconstrucao/estimador_baseline/` and the wrapper `reconstrucao/FPGA_Simulator_v1_PZC.v` |
+| `projects/aurora/` (simulator + PZC) | still there; the simulator alone is now `projects/aurora_simulador/` |
+| comparing VCDs by hand | `python verification/regress.py`, also run by CI and by the pre-commit hook |
+
+What changed behaviour (the rest is renaming and cheaper circuits with the same
+outputs):
+
+- **Default generator is now xoshiro128\*\*** (2026-09-28), not the round robin
+  of the paper: the round robin fails the PractRand battery. Same statistics,
+  different sequences.
+- **Default noise is now sigma = 4 ADC** (2026-09-29), not 8: the Phase-II ADC
+  scale doubles the full range. Why, in [`rtl/noise/README.md`](rtl/noise/README.md).
+- **The testbenches release reset one clock later** (2026-09-26), so every
+  waveform is the old one delayed by one cycle; all goldens were regenerated.
+- **The legacy shaper and the round-robin generator are now cleared by reset**
+  (2026-09-26), so a reset in the middle of a run repeats the run.
+- Energy and noise tables are now in block RAM (M10K) and the round robin is a
+  rotating bank without a multiplexer: same outputs, less logic, so the resource
+  numbers of the paper come only from the tag.
+
+To get the paper's behaviour on today's code, use the `paper` build (see
+*Reproducing the HITS of the Sensors Journal paper*).
+
 ## Repository layout
 
 ```
