@@ -78,10 +78,14 @@ module FPGA_Simulator_v1_PZC
 	parameter MEM_NOISE0 = "noise_s8_icdf0.mif",
 	parameter MEM_NOISE1 = "noise_s8_icdf1.mif",
 	parameter MEM_NOISE2 = "noise_s8_icdf2.mif",
+	parameter MEM_NOISE_BITS = 16,      // 16-bit entries, 2^-10 ADC
+	parameter MEM_NOISE_FRAC = 10,
 `else
 	parameter MEM_NOISE0 = "noise_s4_icdf0.mif",
 	parameter MEM_NOISE1 = "noise_s4_icdf1.mif",
 	parameter MEM_NOISE2 = "noise_s4_icdf2.mif",
+	parameter MEM_NOISE_BITS = 10,      // 10-bit entries, 2^-5 ADC (one M10K each)
+	parameter MEM_NOISE_FRAC = 5,
 `endif
 	parameter MEM_NOISE0_THRESH = 1007,
 	parameter MEM_NOISE1_THRESH = 1007,
@@ -156,6 +160,8 @@ hits_simulator
 	.MEM_NOISE0(MEM_NOISE0),
 	.MEM_NOISE1(MEM_NOISE1),
 	.MEM_NOISE2(MEM_NOISE2),
+	.MEM_NOISE_BITS(MEM_NOISE_BITS),
+	.MEM_NOISE_FRAC(MEM_NOISE_FRAC),
 	.MEM_NOISE0_THRESH(MEM_NOISE0_THRESH),
 	.MEM_NOISE1_THRESH(MEM_NOISE1_THRESH)
 ) core

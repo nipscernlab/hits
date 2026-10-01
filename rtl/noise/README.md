@@ -4,16 +4,28 @@
 adds it to the shaper output, before the ADC (`shaper_corrupted`). The draw is
 an inverse CDF over three tables (`noise_icdf.v` + `noise_s4_icdf0..2.mif`, the
 multi-memory approach): 10-bit uniform words pick a magnitude, one more bit
-picks the sign. The tables hold magnitudes in units of 2^-10 ADC count.
+picks the sign. `noise_out` is in units of 2^-10 ADC count, whatever the table
+format.
 
-| tables | sigma (12 bits) | selected by |
-|---|---|---|
-| `noise_s4_icdf0..2.mif` | **4 ADC** | default since 2026-09-29 |
-| `noise_s8_icdf0..2.mif` | 8 ADC | macro `USE_NOISE_SIGMA8`: the paper build, and every result before 2026-09-29 |
+| tables | sigma (12 bits) | entries | memory | selected by |
+|---|---|---|---|---|
+| `noise_s4_icdf0..2.mif` | **4 ADC** | 10 bits, unit 2^-5 ADC | 3 M10K (one per table) | default since 2026-09-29 (10-bit since 2026-10-01) |
+| `noise_s8_icdf0..2.mif` | 8 ADC | 16 bits, unit 2^-10 ADC | 6 M10K | macro `USE_NOISE_SIGMA8`: the paper build, and every result before 2026-09-29 |
 
-`noise_s4` is `noise_s8` halved entry by entry (rounded half up, a change of
-at most 2^-11 ADC), with the same thresholds (1007/1007): same shape, same
-tail, half the level.
+`noise_s4` is `noise_s8` divided by 64 entry by entry and rounded half up: half
+the level, in units of 2^-5 ADC. The largest entry, 25.9 ADC, fits in 5 integer
+bits, so 10 bits per entry is exactly one M10K in its 1K x 10 mode. Same
+thresholds (1007/1007), same shape, same tail: computed over the three tables,
+sigma 3.9959 against 3.9958 for `noise_s8`/2, kurtosis 2.9849 against 2.9848,
+and the same P(|x| > 3, 4, 5, 6 sigma). The format is the `MEM_NOISE_BITS` /
+`MEM_NOISE_FRAC` parameters of `noise_icdf.v`, set next to the table names in
+`hits_simulator.v`. `noise_s8` keeps its 16 bits because the paper build is
+frozen bit for bit.
+
+Until 2026-10-01 `noise_s4` had 16-bit entries at 2^-10 ADC (6 M10K). The
+10-bit tables change each noise sample by at most 0.013 ADC; in the 3-orbit
+testbench 65 of ~10 700 ADC samples moved by one count (32 down, 33 up) and the
+rest are identical, so the goldens of every sigma = 4 build were regenerated.
 
 ## The level: sigma = 4 ADC counts at 12 bits (8 until 2026-09-29)
 

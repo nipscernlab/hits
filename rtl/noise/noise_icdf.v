@@ -15,6 +15,11 @@ module noise_icdf
 	parameter MEM_NOISE0 = "noise_s4_icdf0.mif",
 	parameter MEM_NOISE1 = "noise_s4_icdf1.mif",
 	parameter MEM_NOISE2 = "noise_s4_icdf2.mif",
+	// Table format: MEM_NOISE_BITS-bit magnitudes with MEM_NOISE_FRAC
+	// fractional bits. noise_s4: 10 bits, 2^-5 ADC (one M10K per table);
+	// noise_s8: 16 bits, 2^-10 ADC. noise_out is always in 2^-10 ADC.
+	parameter MEM_NOISE_BITS = 10,
+	parameter MEM_NOISE_FRAC = 5,
 	parameter MEM_NOISE0_THRESH = 1007,    // noise_s4 and noise_s8 alike (an earlier 2 ADC set used 1014/1018)
 	parameter MEM_NOISE1_THRESH = 1007
 )
@@ -25,9 +30,9 @@ module noise_icdf
 	output reg [NOISE_OUT_BITS-1:0] noise_out = 0
 );
 
-reg [NOISE_OUT_BITS-1-1:0] mem_noise0 [0:MEM_NOISE_SIZE-1];
-reg [NOISE_OUT_BITS-1-1:0] mem_noise1 [0:MEM_NOISE_SIZE-1];
-reg [NOISE_OUT_BITS-1-1:0] mem_noise2 [0:MEM_NOISE_SIZE-1];
+reg [MEM_NOISE_BITS-1:0] mem_noise0 [0:MEM_NOISE_SIZE-1];
+reg [MEM_NOISE_BITS-1:0] mem_noise1 [0:MEM_NOISE_SIZE-1];
+reg [MEM_NOISE_BITS-1:0] mem_noise2 [0:MEM_NOISE_SIZE-1];
 
 // a0/a1 hold what the rng output registers hold, and d0..d2 hold the table
 // entry of that same rng word (d2 needs no address register of its own):
@@ -35,7 +40,7 @@ reg [NOISE_OUT_BITS-1-1:0] mem_noise2 [0:MEM_NOISE_SIZE-1];
 // (d* <= table[rand*_next]) instead of the address is the form Quartus maps
 // to M10K; with only the address registered it keeps the tables in logic.
 reg [RAND_IN_BITS-1:0] a0 = 0, a1 = 0;          // only a0/a1 meet the thresholds
-reg [NOISE_OUT_BITS-1-1:0] d0 = 0, d1 = 0, d2 = 0;   // power-up 0, as the M10K
+reg [MEM_NOISE_BITS-1:0] d0 = 0, d1 = 0, d2 = 0;   // power-up 0, as the M10K
 initial begin
 	$readmemb(MEM_NOISE0, mem_noise0);
 	$readmemb(MEM_NOISE1, mem_noise1);
@@ -55,8 +60,10 @@ always @(posedge clk) begin
 	d2 <= mem_noise2[r2];
 end
 
-wire [NOISE_OUT_BITS-1-1:0] magnitude =
+wire [MEM_NOISE_BITS-1:0] entry =
 	(a0 > MEM_NOISE0_THRESH) ? ((a1 > MEM_NOISE1_THRESH) ? d2 : d1) : d0;
+// to 2^-10 ADC: zero-extended to the magnitude width, then shifted
+wire [NOISE_OUT_BITS-1-1:0] magnitude = entry << (10 - MEM_NOISE_FRAC);
 
 always @(posedge clk or posedge rst) begin
 	if (rst)

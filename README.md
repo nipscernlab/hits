@@ -88,7 +88,7 @@ macro is set, the wrapper in `reconstrucao/` instantiates the PZC.
 |---|---|---|---|
 | Random generator | `"xoshiro"`, `"round_robin"`, `"leap"` | `RNG_TYPE` parameter of `hits_simulator` (on the board: `de10_nano_soc_ghrd.v`); in `simulador_tb.v`, `-DUSE_RNG_ROUND_ROBIN` or `-DUSE_RNG_LEAP` | `"xoshiro"` |
 | Pulse shape | F34 (FENICS Phase II), legacy, CSA + CR-4RC | macro `USE_SHAPER_LEGACY` or `USE_SHAPER_CSA_CR4RC` | F34 (since 2026-10-01) |
-| Noise level | sigma = 4 or 8 ADC counts | macro `USE_NOISE_SIGMA8` | 4 |
+| Noise level | sigma = 4 or 8 ADC counts | macro `USE_NOISE_SIGMA8` | 4 (10-bit tables, 3 M10K) |
 | Reconstruction technique | PZC, adaptive baseline estimator | macro `USE_BASELINE_EST` (only in `reconstrucao/` builds) | none yet (no macro builds the PZC) |
 | Occupancy, pedestal | 0..127 (hit probability occupancy/128), 13-bit offset | runtime inputs `occupancy`, `offset`; on the board, from the HPS (`./change_occupancy`) | set by the testbench / HPS |
 
@@ -130,6 +130,8 @@ outputs):
   different sequences.
 - **Default noise is now sigma = 4 ADC** (2026-09-29), not 8: the Phase-II ADC
   scale doubles the full range. Why, in [`rtl/noise/README.md`](rtl/noise/README.md).
+  Since 2026-10-01 its tables have 10-bit entries (3 M10K instead of 6), with
+  the same statistics; one ADC sample in ~160 moves by one count.
 - **The testbenches release reset one clock later** (2026-09-26), so every
   waveform is the old one delayed by one cycle; all goldens were regenerated.
 - **The legacy shaper and the round-robin generator are now cleared by reset**
@@ -185,6 +187,9 @@ Which one is built is chosen by the **`RNG_TYPE` parameter** of
 | `rng_round_robin.v` | `"round_robin"` (default until 2026-09-28) | 1184 | FAILS at 1 MB (BCFN, DC6) | The generator of the SBCCI 2025 paper: a bank of 7 LFSRs read in round robin (implemented as a rotating bank, without a multiplexer). Each LFSR is read every 7 cycles, so two reads of it share 3 of the 10 bits: `energy_out` shows a lag-7 autocorrelation of +0.009 (7 sigma over 713k samples). |
 | `rng_leap.v` | `"leap"` | 403 | FAILS at 1 MB (BRank) | One LFSR advanced W steps per clock (leap-forward): no bit is shared between words, and no correlation shows in the simulator outputs, but it is a linear generator (every bit is the XOR of 6 earlier ones), which the binary-rank test catches at once. The cheapest. |
 | `rng_xoshiro.v` | `"xoshiro"` (**default**) | 534 | **passes to 64 GB** | xoshiro128** (Blackman & Vigna, ACM TOMS 2021): 128-bit xor/shift/rotate engine plus a non-linear output scrambler; the words are the top bits of the result. The only one of the three that passes a full test battery. One generator per stage (hits, energy, noise: 3 instead of 8), its 32-bit result cut into the words of the stage (30 bits for energy, 31 for noise); the 30- and 31-bit words pass PractRand to 16 GB. |
+
+The ALM column is the whole simulator as it stood on 2026-09-29 (legacy
+shaper, 16-bit noise tables): it compares the generators, not today's total.
 
 All three were validated in the simulator itself over 200 LHC orbits (713k
 cycles): hit rates on filled slots against occupancy/128 and energy and noise
