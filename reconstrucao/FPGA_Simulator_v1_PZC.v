@@ -98,11 +98,13 @@ module FPGA_Simulator_v1_PZC
 	parameter EST_N_ANC      = 654,           // anchors per orbit (from the MASK)
 	parameter EST_WS         = 14,            // shape word width
 	parameter EST_K_VAZIO    = 13,            // empty slots before a sample is an anchor
-	// ⚠️ Tracks the SHAPER latency: it was 2, and became 3 when the F34 shaper
-	// gained an output pipeline stage (01_Timing_40MHz, 2026-07-21). Re-measure
+	// ⚠️ Tracks the SHAPER latency (F34 latency minus 1): it was 2, became 3
+	// when the F34 shaper gained an output pipeline stage (01_Timing_40MHz,
+	// 2026-07-21), and 5 when it gained an input and a final-sum stage
+	// (2026-10-01, F34 latency 6). Re-measure
 	// if the shaper latency changes again (F15 recipe: correlate event_bt with
 	// shaper_out, and check the ADC mean vs distance-since-last-filled-slot).
-	parameter EST_LATENCIA   = 3,             // shaper pipeline delay, in samples
+	parameter EST_LATENCIA   = 5,             // shaper pipeline delay, in samples
 	parameter EST_RECIP_MEM  = "recip.mem",   // reciprocal ROM (depends on the MASK)
 	parameter EST_S_INIT_MEM = "",            // preloaded shape ("" = start from zero)
 	parameter signed [31:0] EST_L_INIT = 0,   // preloaded level, in the FRAC grid
@@ -118,8 +120,12 @@ module FPGA_Simulator_v1_PZC
 	// ⚠️ The error is INVISIBLE AT THE ANCHORS — `acc` is reloaded there — so a
 	// metric that only samples anchors cannot see it. Do not sweep this
 	// parameter against such a metric; check recip[ia] against the measured gap
-	// instead (diagnostico8.py in the F15 vault, 100% match at +12).
-	parameter integer EST_IA_INIT = 12        // anchor-index phase (MEASURED)
+	// instead (verificar_fase.py in the F15 vault). It was 12, measured while
+	// the testbench released reset in a race with the clock edge, so the
+	// estimator left reset one cycle after the simulator. Since 2026-09-26 both
+	// leave it together, and 12 gave 0 of 230 long gaps; re-measured on
+	// 2026-10-01: 11 gives 6539 of 6539 anchors and 230 of 230 long gaps.
+	parameter integer EST_IA_INIT = 11        // anchor-index phase (MEASURED)
 )
 (
 	input clk, rst,
