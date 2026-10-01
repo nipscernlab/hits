@@ -7,8 +7,9 @@
 // Aurora project: simulador.spf in this folder, which lists only rtl/ files.
 //
 // Shaper: chosen where the simulator chooses it, the `define lines at the top
-// of rtl/hits_simulator.v (default: shaper_fenics). Commit rtl/ with them
-// commented; the regression passes the macro with -D.
+// of rtl/hits_simulator.v (default: shaper_fenics_f34, the FENICS Phase-II
+// pulse). Commit rtl/ with them commented; the regression passes the macro
+// with -D. Two shapers at once stop the compilation in hits_simulator.v.
 //
 // Random generator: the RNG_TYPE parameter of rtl/hits_simulator.v
 // ("xoshiro" by default, "round_robin" or "leap"). The regression builds the
@@ -48,12 +49,6 @@ module simulador_tb;
     wire signed [29:0] shaper_out, shaper_corrupted;
     wire [11:0] shaper_clip;                 // THE simulator output (ADC sample)
     wire signed [16:0] noise_out;
-
-`ifdef USE_SHAPER_F34
-  `ifdef USE_SHAPER_CSA_CR4RC
-    ERROR_two_shapers_USE_SHAPER_F34_and_USE_SHAPER_CSA_CR4RC_pick_one e0();
-  `endif
-`endif
 
     hits_simulator
     #(

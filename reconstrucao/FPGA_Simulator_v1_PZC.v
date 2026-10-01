@@ -26,19 +26,18 @@
 // comparing the two. Plotting them together without this makes the PZC look
 // 455x noisier, which is an artifact.
 //
-// ⚠️ The golden VCD in verification/ covers the DEFAULT build. Selecting the
-// estimator changes pzc_out and the regression will report differences — there
-// is a separate golden for it, exactly as for USE_SHAPER_F34.
+// ⚠️ Each technique has its own golden VCD in verification/ (builds pzc* and
+// est of verification/regress.py).
 //
 // ⚠️⚠️ SHAPER COMBINATIONS: every estimator parameter below that is marked
 // MEASURED (EST_LATENCIA, EST_K_VAZIO, EST_N_ANC/recip.mem, EST_IA_INIT) was
-// measured for the USE_SHAPER_F34 build. Combining USE_BASELINE_EST with the
+// measured for the F34 shaper (the simulator default). Combining USE_BASELINE_EST with the
 // CSA+CR-4RC shaper (or the legacy one) compiles and runs, but is silently
 // MIS-ANCHORED: the CSA pulse has a different latency (1 cycle vs 4) and does
 // not vanish at gap+13 (about 1.5% of the peak remains, since it decays
 // geometrically instead of ending with a FIR head), so anchors carry pulse
 // residue and bias the baseline. No error is raised anywhere, and only the
-// F34+estimator build has a golden (sim_pulsos_tb_golden_f34_est.vcd).
+// F34+estimator build has a golden (sim_pulsos_tb_golden_est.vcd).
 // Re-calibrating for another shaper is a measurement campaign, not a
 // parameter tweak (F15 recipe): changing K_VAZIO changes the anchor count,
 // which regenerates recip.mem / EST_N_ANC and re-measures EST_IA_INIT.

@@ -3,27 +3,36 @@
 // ---------------------------------------------------------------------------
 // SHAPER SELECTION (synthesis-time)
 //
-// Uncomment ONE of the lines below to select a shaper other than the legacy
-// one, or define the macro externally without touching this file:
+// The default is the F34 shaper, the FENICS Phase-II front end. Uncomment ONE
+// of the lines below to select another one, or define the macro externally
+// without touching this file:
 //
-//   Icarus / Verilator : iverilog -DUSE_SHAPER_F34 ...
-//   Quartus            : set_global_assignment -name VERILOG_MACRO "USE_SHAPER_F34=1"
+//   Icarus / Verilator : iverilog -DUSE_SHAPER_LEGACY ...
+//   Quartus            : set_global_assignment -name VERILOG_MACRO "USE_SHAPER_LEGACY=1"
 //
 // The `define lines below ship commented out, so an external define always wins.
 //
-//   default (undefined)  : shaper_fenics       - legacy parallel IIR sections
-//   USE_SHAPER_F34       : shaper_fenics_f34   - 13-tap FIR head + 5 IIR
-//                                                sections, zero DC gain imposed
+//   default (undefined)  : shaper_fenics_f34   - the FENICS Phase-II pulse: the
+//                                                40 MHz filter of the H(s) fitted
+//                                                to the FENICS testbeam pulse
+//                                                (13-tap FIR head + 5 IIR
+//                                                sections, zero DC gain imposed)
+//   USE_SHAPER_LEGACY    : shaper_fenics       - the shaper HITS was born with
+//                                                (parallel IIR sections), the
+//                                                default until 2026-10-01
 //   USE_SHAPER_CSA_CR4RC : shaper_csa_cr4rc    - the generic "paper" pulse
 //                                                (CSA + CR-4RC readout chain,
 //                                                peak 60.1 ns on sample 2)
+//
+// USE_SHAPER_F34 is still accepted and selects the default, so older commands
+// keep building the same circuit; combining it with another shaper is an error.
 //
 // All live in rtl/shaper/ and share the same output scale (2**G_OUT_LOG), so
 // nothing downstream changes. They differ in the pulse they produce, which is
 // the point: WARNING, each build has its OWN golden VCD in verification/ (see
 // the README); comparing against the wrong golden reports differences.
 // ---------------------------------------------------------------------------
-//`define USE_SHAPER_F34
+//`define USE_SHAPER_LEGACY
 //`define USE_SHAPER_CSA_CR4RC
 
 // NOISE LEVEL: sigma = 4 ADC counts at 12 bits by default (the Phase-II scale,
@@ -36,7 +45,7 @@
 // The full front-end signal chain of the calorimeter readout, one sample per
 // 25 ns clock cycle: pseudo-random hit generation gated by the LHC bunch-train
 // mask, energy amplitudes from the measured distribution, analog pulse shaping
-// (the selected shaper), electronic noise, and digitization (pedestal offset + clip to the
+// (the selected shaper, F34 by default), electronic noise, and digitization (pedestal offset + clip to the
 // ADC range). The digitized sample `shaper_clip` IS the simulator output.
 //
 // The pole-zero cancellation (PZC) is NOT part of the simulator: it is a
@@ -127,6 +136,22 @@ energy_generator
 );
 
 
+// Two shapers at once is a mistake, not a choice: stop the compilation
+// with a module name that says so.
+`ifdef USE_SHAPER_CSA_CR4RC
+  `ifdef USE_SHAPER_LEGACY
+	ERROR_two_shapers_USE_SHAPER_CSA_CR4RC_and_USE_SHAPER_LEGACY_pick_one e_sh0 ();
+  `endif
+  `ifdef USE_SHAPER_F34
+	ERROR_two_shapers_USE_SHAPER_CSA_CR4RC_and_USE_SHAPER_F34_pick_one e_sh1 ();
+  `endif
+`endif
+`ifdef USE_SHAPER_LEGACY
+  `ifdef USE_SHAPER_F34
+	ERROR_two_shapers_USE_SHAPER_LEGACY_and_USE_SHAPER_F34_pick_one e_sh2 ();
+  `endif
+`endif
+
 `ifdef USE_SHAPER_CSA_CR4RC
 // CSA + CR-4RC shaper: the generic "paper simulator" pulse -- the exact
 // readout chain of the group's papers (bi-exponential detector pulse, CSA
@@ -144,12 +169,10 @@ shaper_csa_cr4rc
 	.in(event_bt),
 	.out(shaper_out)
 );
-`elsif USE_SHAPER_F34
-// F34 shaper: 13-tap FIR head + 5 IIR sections (3 leaky, 2 coupled), derived
-// from a 14-pole transfer function of the FENICS front end. Zero DC gain is
-// imposed rather than fitted, so it cannot produce a baseline sag the real
-// front end does not have. Needs a reset, like the other two.
-shaper_fenics_f34
+`elsif USE_SHAPER_LEGACY
+// Legacy shaper: the parallel IIR sections HITS was born with (the default
+// until 2026-10-01). Selected by USE_SHAPER_LEGACY.
+shaper_fenics
 #(
 	.BITS_IN(ENG_OUT_BITS),
 	.G_OUT_LOG(10)
@@ -161,7 +184,11 @@ shaper_fenics_f34
 	.out(shaper_out)
 );
 `else
-shaper_fenics
+// F34 shaper (DEFAULT): 13-tap FIR head + 5 IIR sections (3 leaky, 2 coupled), derived
+// from a 14-pole transfer function of the FENICS front end. Zero DC gain is
+// imposed rather than fitted, so it cannot produce a baseline sag the real
+// front end does not have. Needs a reset, like the other two.
+shaper_fenics_f34
 #(
 	.BITS_IN(ENG_OUT_BITS),
 	.G_OUT_LOG(10)

@@ -8,7 +8,7 @@ technique under test.
 
 ```
 FPGA_Simulator_v1_PZC.v    wrapper: simulator core (rtl/) + ONE technique, chosen by macro
-pzc/                       pole-zero cancellation + pedestal tracking (default)
+pzc/                       pole-zero cancellation + pedestal tracking (built when no macro is set)
   pzc_ped_track.v
 estimador_baseline/        adaptive baseline estimator (USE_BASELINE_EST)
   estimador_baseline.v
@@ -46,8 +46,9 @@ comparing them.
    the `` `ifdef USE_BASELINE_EST `` / `` `else `` chain (`` `elsif USE_<TECHNIQUE> ``).
    Drive `pzc_out` (sign-extend to `PZC_OUT_BITS` if narrower) and
    `pedestal_out`, add its parameters with a prefix of their own (as `EST_*`
-   for the estimator), and state its output scale in the header. The default
-   build (no macro) must stay the PZC.
+   for the estimator), and state its output scale in the header. The build
+   with no macro must stay the PZC (its golden is `pzc`); which technique, if
+   any, becomes the default is still to be decided.
 
 3. **Icarus** needs nothing: the README commands compile
    `../../reconstrucao/*.v ../../reconstrucao/*/*.v`.

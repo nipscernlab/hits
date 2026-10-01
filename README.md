@@ -80,15 +80,16 @@ python verification/regress.py      # exit 0 = every build bit-identical to its 
 ## Build options at a glance
 
 Everything that changes what is built. With nothing set you get the default
-build: xoshiro generator, legacy FENICS shaper, noise sigma = 4 ADC, PZC as the
-technique.
+simulator: xoshiro generator, F34 shaper (the FENICS Phase-II pulse), noise
+sigma = 4 ADC. The reconstruction side has no default technique yet: when no
+macro is set, the wrapper in `reconstrucao/` instantiates the PZC.
 
 | Choice | Options | How to choose | Default |
 |---|---|---|---|
 | Random generator | `"xoshiro"`, `"round_robin"`, `"leap"` | `RNG_TYPE` parameter of `hits_simulator` (on the board: `de10_nano_soc_ghrd.v`); in `simulador_tb.v`, `-DUSE_RNG_ROUND_ROBIN` or `-DUSE_RNG_LEAP` | `"xoshiro"` |
-| Pulse shape | legacy FENICS, F34, CSA + CR-4RC | macro `USE_SHAPER_F34` or `USE_SHAPER_CSA_CR4RC` | legacy FENICS |
+| Pulse shape | F34 (FENICS Phase II), legacy, CSA + CR-4RC | macro `USE_SHAPER_LEGACY` or `USE_SHAPER_CSA_CR4RC` | F34 (since 2026-10-01) |
 | Noise level | sigma = 4 or 8 ADC counts | macro `USE_NOISE_SIGMA8` | 4 |
-| Reconstruction technique | PZC, adaptive baseline estimator | macro `USE_BASELINE_EST` (only in `reconstrucao/` builds) | PZC |
+| Reconstruction technique | PZC, adaptive baseline estimator | macro `USE_BASELINE_EST` (only in `reconstrucao/` builds) | none yet (no macro builds the PZC) |
 | Occupancy, pedestal | 0..127 (hit probability occupancy/128), 13-bit offset | runtime inputs `occupancy`, `offset`; on the board, from the HPS (`./change_occupancy`) | set by the testbench / HPS |
 
 A macro is passed with `-D` (Icarus) or `VERILOG_MACRO` (Quartus `.qsf`), or by
@@ -119,6 +120,10 @@ knew the repo then, this is where things went:
 
 What changed behaviour (the rest is renaming and cheaper circuits with the same
 outputs):
+
+- **Default shaper is now F34** (2026-10-01), the 40 MHz filter of the FENICS
+  testbeam pulse, not the legacy `shaper_fenics.v`; the legacy one is
+  `USE_SHAPER_LEGACY`.
 
 - **Default generator is now xoshiro128\*\*** (2026-09-28), not the round robin
   of the paper: the round robin fails the PractRand battery. Same statistics,
@@ -198,14 +203,14 @@ differ, only the statistics agree. The regression builds the leap kind with
 
 ### Shaper filters (`rtl/shaper/`)
 
-Which one is built is a **synthesis-time choice**, selected by the
-`USE_SHAPER_F34` / `USE_SHAPER_CSA_CR4RC` macros (see *Selecting the shaper*
-below):
+Which one is built is a **synthesis-time choice**: F34 unless the
+`USE_SHAPER_LEGACY` or `USE_SHAPER_CSA_CR4RC` macro is set (see *Selecting the
+shaper* below):
 
 | Filter | Selected by | Description |
 |---|---|---|
-| `shaper_fenics.v` + `iir_order1.v` + `iir_order2.v` | **default** | Parallel IIR sections, coefficients at a 2**10 scale. |
-| `shaper_fenics_f34.v` | `USE_SHAPER_F34` | 13-tap FIR head plus 5 IIR sections (3 leaky, 2 coupled), derived from a 14-pole transfer function of the FENICS front end. Zero DC gain is **imposed** rather than fitted, so it cannot produce a baseline sag the real front end does not have. Shape error 0.026% of peak. Generated from the design study, not written by hand: see the header of the file. |
+| `shaper_fenics_f34.v` | **default** (since 2026-10-01) | The FENICS Phase-II pulse. The FENICS testbeam pulse was fitted with a 14-pole transfer function, and this is its 40 MHz digital filter: a 13-tap FIR head plus 5 IIR sections (3 leaky, 2 coupled), derived from a 14-pole transfer function of the FENICS front end. Zero DC gain is **imposed** rather than fitted, so it cannot produce a baseline sag the real front end does not have. Shape error 0.026% of peak. Generated from the design study, not written by hand: see the header of the file. Latency 4 samples. |
+| `shaper_fenics.v` + `iir_order1.v` + `iir_order2.v` | `USE_SHAPER_LEGACY` | The shaper HITS was born with (the default until 2026-10-01): parallel IIR sections, coefficients at a 2**10 scale. An older approximation of the FENICS response; over a long run with the bunch-train mask its baseline settles about 5 ADC below the pedestal, where F34 converges to it (research phase F36). |
 | `shaper_csa_cr4rc.v` | `USE_SHAPER_CSA_CR4RC` | The generic "paper" pulse: the exact readout chain of the group's papers (bi-exponential detector pulse, CSA with a 51 ns feedback pole, unbuffered CR-4RC with a 500 us CR and four 5 ns RC stages -- the Electronics 14:493 signal generator). 4-tap FIR head plus 3 first-order IIR sections; peak 60.1 ns on sample 2, FWHM 114 ns, shape error 1e-7 of peak. Generated, not written by hand: see the header of the file. |
 
 All three share the same output scale (`2**G_OUT_LOG`), so nothing downstream
@@ -219,11 +224,15 @@ define the macro externally and leave the file untouched (the `` `define ``
 lines ship commented out, so an external define always wins):
 
 ```sh
-iverilog -DUSE_SHAPER_F34 ...                                     # Icarus
+iverilog -DUSE_SHAPER_LEGACY ...                                  # Icarus
 ```
 ```tcl
-set_global_assignment -name VERILOG_MACRO "USE_SHAPER_F34=1"      # Quartus
+set_global_assignment -name VERILOG_MACRO "USE_SHAPER_LEGACY=1"   # Quartus
 ```
+
+`USE_SHAPER_F34` is still accepted and builds the default, so older commands
+keep working. Two shapers at once stop the compilation with an
+`Unknown module type: ERROR_two_shapers_...` that names them.
 
 ⚠️ **Each choice has its own golden VCD** (table in *Regression check*): the
 builds produce different pulses, which is the whole point.
@@ -232,18 +241,20 @@ builds produce different pulses, which is the whole point.
 
 The reconstruction techniques are **not part of the simulator**: they are
 downstream stages validated with the synthesized pulse train, one subfolder
-each. Today there are two, `pzc/` (pole-zero cancellation, `pzc_ped_track.v`,
-the default) and `estimador_baseline/` (adaptive baseline estimator, selected by
-the `USE_BASELINE_EST` macro). The `reconstrucao/FPGA_Simulator_v1_PZC.v` wrapper
+each. Today there are two, `pzc/` (pole-zero cancellation, `pzc_ped_track.v`)
+and `estimador_baseline/` (adaptive baseline estimator, selected by the
+`USE_BASELINE_EST` macro). There is no default technique yet; with no macro the
+wrapper builds the PZC. The `reconstrucao/FPGA_Simulator_v1_PZC.v` wrapper
 composes the core with the technique under test. How to add a new technique:
 [`reconstrucao/README.md`](reconstrucao/README.md).
 
 The two techniques drive the same `pzc_out` port, but **not on the same
 scale**: the PZC output carries a gain of (M+1) = 455, while the estimator
 outputs plain ADC counts. ⚠️ The estimator's anchor parameters are calibrated
-for the `USE_SHAPER_F34` build only: combining it with another shaper compiles
-but is silently mis-anchored (see the SHAPER COMBINATIONS warning in the
-wrapper header). Its golden is `f34_est` in the table of *Regression check*.
+for the F34 shaper only (the simulator default): combining it with another
+shaper compiles but is silently mis-anchored (see the SHAPER COMBINATIONS
+warning in the wrapper header). Its golden is `est` in the table of
+*Regression check*.
 
 Top-level modules: `rtl/hits_simulator.v` (the simulator core, no
 reconstruction), `reconstrucao/FPGA_Simulator_v1_PZC.v` (core plus the technique
@@ -278,7 +289,7 @@ Aurora's temp dir and cannot resolve the relative paths).
 `rtl/hits_simulator.v`, see *Selecting the shaper*.
 
 **Technique** (`projects/aurora/` only): `projects/aurora/simulacao.v` is the
-menu, PZC by default or `USE_BASELINE_EST`; it can also pick the shaper for
+menu, `USE_BASELINE_EST` or (no line) the PZC; it can also pick the shaper for
 that project. It is a file of its own, the first entry of the `.spf`, because
 Icarus applies a `` `define `` only to the files compiled after it and Aurora
 compiles the testbench last. Two shapers at once stop the compilation with an
@@ -309,7 +320,7 @@ bless it forever):
 
 ```sh
 python verification/regress.py            # exit 0 = every build bit-identical
-python verification/regress.py sim f34    # a subset
+python verification/regress.py sim est    # a subset
 ```
 
 The builds come in two groups, one per Aurora project, so a failure says what
@@ -319,19 +330,19 @@ the technique changed and the simulator is intact.
 
 | Build | Group | Macros | Golden (`verification/`) |
 |---|---|---|---|
-| `sim` | simulador | (none: xoshiro) | `simulador_tb_golden.vcd` |
-| `sim_f34` | simulador | `USE_SHAPER_F34` | `simulador_tb_golden_f34.vcd` |
+| `sim` | simulador | (none: xoshiro, F34, sigma = 4) | `simulador_tb_golden.vcd` |
+| `sim_legacy` | simulador | `USE_SHAPER_LEGACY` | `simulador_tb_golden_legacy.vcd` |
 | `sim_csa_cr4rc` | simulador | `USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_csa_cr4rc.vcd` |
 | `sim_round_robin` | simulador | `USE_RNG_ROUND_ROBIN` | `simulador_tb_golden_round_robin.vcd` |
-| `sim_round_robin_f34` | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_F34` | `simulador_tb_golden_round_robin_f34.vcd` |
+| `sim_round_robin_legacy` | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_LEGACY` | `simulador_tb_golden_round_robin_legacy.vcd` |
 | **`paper`** | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC USE_NOISE_SIGMA8` | `simulador_tb_golden_paper.vcd` (**frozen**, see below) |
 | `sim_leap` | simulador | `USE_RNG_LEAP` | `simulador_tb_golden_leap.vcd` |
-| `sim_leap_f34` | simulador | `USE_RNG_LEAP USE_SHAPER_F34` | `simulador_tb_golden_leap_f34.vcd` |
+| `sim_leap_legacy` | simulador | `USE_RNG_LEAP USE_SHAPER_LEGACY` | `simulador_tb_golden_leap_legacy.vcd` |
 | `sim_leap_csa_cr4rc` | simulador | `USE_RNG_LEAP USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_leap_csa_cr4rc.vcd` |
-| `default` | reconstrucao | (none: PZC) | `sim_pulsos_tb_golden.vcd` |
-| `f34` | reconstrucao | `USE_SHAPER_F34` | `sim_pulsos_tb_golden_f34.vcd` |
-| `csa_cr4rc` | reconstrucao | `USE_SHAPER_CSA_CR4RC` | `sim_pulsos_tb_golden_csa_cr4rc.vcd` |
-| `f34_est` | reconstrucao | `USE_SHAPER_F34 USE_BASELINE_EST` | `sim_pulsos_tb_golden_f34_est.vcd` |
+| `pzc` | reconstrucao | (none: PZC, F34) | `sim_pulsos_tb_golden_pzc.vcd` |
+| `pzc_legacy` | reconstrucao | `USE_SHAPER_LEGACY` | `sim_pulsos_tb_golden_pzc_legacy.vcd` |
+| `pzc_csa_cr4rc` | reconstrucao | `USE_SHAPER_CSA_CR4RC` | `sim_pulsos_tb_golden_pzc_csa_cr4rc.vcd` |
+| `est` | reconstrucao | `USE_BASELINE_EST` (F34) | `sim_pulsos_tb_golden_est.vcd` |
 
 The comparator ignores only run metadata (`$date`, `$version` and the testbench
 `RTL_DIR` path parameter). Intentional behavior changes require regenerating the

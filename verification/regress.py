@@ -3,7 +3,7 @@
 each one bit-for-bit against its frozen baseline.
 
     python verification/regress.py                  # every build
-    python verification/regress.py sim f34_est      # a subset
+    python verification/regress.py sim est          # a subset
     python verification/regress.py --gera <build>   # CREATE a missing golden
 
 Two groups of builds, so a failure says WHAT broke:
@@ -54,18 +54,21 @@ PROJETOS = {
 }
 
 # name: (project, macros, golden)
+# The default simulator is xoshiro + F34 shaper + sigma = 4 noise (no macro).
+# The reconstrucao group has no default technique: every build names the one
+# it runs (pzc, est).
 BUILDS = {
     # the simulator alone, default generator (RNG_TYPE = "xoshiro")
     "sim":           ("simulador", [], "simulador_tb_golden.vcd"),
-    "sim_f34":       ("simulador", ["USE_SHAPER_F34"],
-                      "simulador_tb_golden_f34.vcd"),
+    "sim_legacy":    ("simulador", ["USE_SHAPER_LEGACY"],
+                      "simulador_tb_golden_legacy.vcd"),
     "sim_csa_cr4rc": ("simulador", ["USE_SHAPER_CSA_CR4RC"],
                       "simulador_tb_golden_csa_cr4rc.vcd"),
     # the SBCCI 2025 generator (RNG_TYPE = "round_robin", default until 2026-09-28)
     "sim_round_robin": ("simulador", ["USE_RNG_ROUND_ROBIN"],
                       "simulador_tb_golden_round_robin.vcd"),
-    "sim_round_robin_f34": ("simulador", ["USE_RNG_ROUND_ROBIN", "USE_SHAPER_F34"],
-                      "simulador_tb_golden_round_robin_f34.vcd"),
+    "sim_round_robin_legacy": ("simulador", ["USE_RNG_ROUND_ROBIN", "USE_SHAPER_LEGACY"],
+                      "simulador_tb_golden_round_robin_legacy.vcd"),
     # THE HITS OF FABIO'S SENSORS JOURNAL PAPER (tag paper-jsen-2026): round-robin
     # generator + CSA/CR-4RC shaper + the sigma = 8 noise tables. Its golden is
     # FROZEN (see CONGELADOS).
@@ -74,17 +77,19 @@ BUILDS = {
                       "simulador_tb_golden_paper.vcd"),
     # the leap-forward generator (RNG_TYPE = "leap")
     "sim_leap":      ("simulador", ["USE_RNG_LEAP"], "simulador_tb_golden_leap.vcd"),
-    "sim_leap_f34":  ("simulador", ["USE_RNG_LEAP", "USE_SHAPER_F34"],
-                      "simulador_tb_golden_leap_f34.vcd"),
+    "sim_leap_legacy": ("simulador", ["USE_RNG_LEAP", "USE_SHAPER_LEGACY"],
+                      "simulador_tb_golden_leap_legacy.vcd"),
     "sim_leap_csa_cr4rc": ("simulador", ["USE_RNG_LEAP", "USE_SHAPER_CSA_CR4RC"],
                       "simulador_tb_golden_leap_csa_cr4rc.vcd"),
-    "default":       ("reconstrucao", [], "sim_pulsos_tb_golden.vcd"),
-    "f34":           ("reconstrucao", ["USE_SHAPER_F34"],
-                      "sim_pulsos_tb_golden_f34.vcd"),
-    "csa_cr4rc":     ("reconstrucao", ["USE_SHAPER_CSA_CR4RC"],
-                      "sim_pulsos_tb_golden_csa_cr4rc.vcd"),
-    "f34_est":       ("reconstrucao", ["USE_SHAPER_F34", "USE_BASELINE_EST"],
-                      "sim_pulsos_tb_golden_f34_est.vcd"),
+    # simulator + technique; the wrapper instantiates the PZC when
+    # USE_BASELINE_EST is not set
+    "pzc":           ("reconstrucao", [], "sim_pulsos_tb_golden_pzc.vcd"),
+    "pzc_legacy":    ("reconstrucao", ["USE_SHAPER_LEGACY"],
+                      "sim_pulsos_tb_golden_pzc_legacy.vcd"),
+    "pzc_csa_cr4rc": ("reconstrucao", ["USE_SHAPER_CSA_CR4RC"],
+                      "sim_pulsos_tb_golden_pzc_csa_cr4rc.vcd"),
+    "est":           ("reconstrucao", ["USE_BASELINE_EST"],
+                      "sim_pulsos_tb_golden_est.vcd"),
 }
 
 # Goldens that must NEVER change: sha256 of the file with LF line endings.
