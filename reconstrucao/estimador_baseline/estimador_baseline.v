@@ -37,7 +37,7 @@ module estimador_baseline #(
     parameter integer K_FORMA = 8,    // memoria da forma: 2^K orbitas
     parameter integer N_ANC   = 654,  // ancoras por orbita (da mascara)
     parameter integer R       = 16,   // bits do reciproco
-    parameter integer WS      = 14,   // largura de s[i] (cabe 1 bloco M9K)
+    parameter integer WS      = 14,   // largura de s[i] (654 x 14 = 9156 bits: cabe 1 bloco M10K)
     parameter RECIP_MEM       = "recip.mem",
     // ⭐ ARRANQUE CARREGADO: na operacao real a forma e o nivel vem de uma
     // tabela (banco de dados / run de calibracao), nao de zero. S_INIT_MEM = ""
