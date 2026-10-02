@@ -17,8 +17,10 @@
 // into the parameter: a macro, not a parameter of the testbench, so it stays
 // out of the VCD.
 //
-// Noise: sigma = 4 ADC tables (noise_s4_*); -DUSE_NOISE_SIGMA8 loads the
-// sigma = 8 ones (noise_s8_*), as the paper build does.
+// Noise: sigma = 4 ADC; with xoshiro the Gaussian of noise_gauss.v (ROM
+// noise_gauss_s4.mif), with the other generators the tables noise_s4_*.
+// -DUSE_NOISE_TABLES forces the tables; -DUSE_NOISE_SIGMA8 loads the sigma = 8
+// tables (noise_s8_*), as the paper build does.
 //
 // - 40 MHz clock (25 ns period), like the LHC bunch clock;
 // - short reset at the start;
@@ -64,6 +66,7 @@ module simulador_tb;
         .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_a13_0.mif"}),
         .MEM_ENG1  ({RTL_DIR, "/energy/energy_icdf_a13_1.mif"}),
         .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_a13_2.mif"}),
+        .MEM_GAUSS ({RTL_DIR, "/noise/noise_gauss_s4.mif"}),
 `ifdef USE_NOISE_SIGMA8          // regression build paper
         .MEM_NOISE0({RTL_DIR, "/noise/noise_s8_icdf0.mif"}),
         .MEM_NOISE1({RTL_DIR, "/noise/noise_s8_icdf1.mif"}),

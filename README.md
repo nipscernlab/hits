@@ -33,7 +33,7 @@ them is `rtl/hits_simulator.v`.
                                                                   |
                                                      shaper/ (one of three pulse shapes)
                                                                   |  shaper_out
- random/ --> noise/ (inverse CDF, 3 tables + sign) ---- noise --> [+] shaper_corrupted
+ random/ --> noise/ (Gaussian, segmented inverse CDF) - noise --> [+] shaper_corrupted
                                                                   |
              offset (pedestal, from the HPS) ---------------> adc/ (offset, >> scale, clip 0..4095)
                                                                   |
@@ -80,15 +80,15 @@ python verification/regress.py      # exit 0 = every build bit-identical to its 
 ## Build options at a glance
 
 Everything that changes what is built. With nothing set you get the default
-simulator: xoshiro generator, F34 shaper (the FENICS Phase-II pulse), noise
-sigma = 4 ADC. The reconstruction side has no default technique yet: when no
+simulator: xoshiro generator, F34 shaper (the FENICS Phase-II pulse), Gaussian
+noise with sigma = 4 ADC. The reconstruction side has no default technique yet: when no
 macro is set, the wrapper in `reconstrucao/` instantiates the PZC.
 
 | Choice | Options | How to choose | Default |
 |---|---|---|---|
 | Random generator | `"xoshiro"`, `"round_robin"`, `"leap"` | `RNG_TYPE` parameter of `hits_simulator` (on the board: `de10_nano_soc_ghrd.v`); in `simulador_tb.v`, `-DUSE_RNG_ROUND_ROBIN` or `-DUSE_RNG_LEAP` | `"xoshiro"` |
 | Pulse shape | F34 (FENICS Phase II), legacy, CSA + CR-4RC | macro `USE_SHAPER_LEGACY` or `USE_SHAPER_CSA_CR4RC` | F34 (since 2026-10-01) |
-| Noise level | sigma = 4 or 8 ADC counts | macro `USE_NOISE_SIGMA8` | 4 (10-bit tables, 3 M10K) |
+| Noise | Gaussian (segmented inverse CDF), the sigma = 4 tables, the sigma = 8 tables | macro `USE_NOISE_TABLES` or `USE_NOISE_SIGMA8`; the round_robin and leap generators always use the tables | Gaussian, sigma = 4 (since 2026-10-02) |
 | Reconstruction technique | PZC, adaptive baseline estimator | macro `USE_BASELINE_EST` (only in `reconstrucao/` builds) | none yet (no macro builds the PZC) |
 | Occupancy, pedestal | 0..127 (hit probability occupancy/128), 13-bit offset | runtime inputs `occupancy`, `offset`; on the board, from the HPS (`./change_occupancy`) | set by the testbench / HPS |
 
@@ -130,6 +130,9 @@ outputs):
   different sequences.
 - **Default noise is now sigma = 4 ADC** (2026-09-29), not 8: the Phase-II ADC
   scale doubles the full range. Why, in [`rtl/noise/README.md`](rtl/noise/README.md).
+- **Default noise is now a true Gaussian** (2026-10-02, `noise_gauss.v`): the three
+  tables stopped at 6.48 sigma with 120x too much probability above 6 sigma; the
+  Gaussian is correct up to 6.34 sigma. The tables remain (`USE_NOISE_TABLES`).
   Since 2026-10-01 its tables have 10-bit entries (3 M10K instead of 6), with
   the same statistics; one ADC sample in ~160 moves by one count.
 - **The testbenches release reset one clock later** (2026-09-26), so every
@@ -151,7 +154,7 @@ rtl/random/           Pseudo-random generators (three kinds, chosen by RNG_TYPE)
 rtl/hits/             Hit draw + LHC bunch-train mask
 rtl/energy/           Energy amplitude (inverse CDF, 3 tables)
 rtl/shaper/           Pulse shapers: three shapes, selectable at synthesis time (see below)
-rtl/noise/            Electronic noise (inverse CDF, 3 tables)
+rtl/noise/            Electronic noise (Gaussian by segmented inverse CDF, or 3 inverse-CDF tables)
 rtl/adc/              Pedestal, quantization and saturation: the simulator output
 reconstrucao/         Reconstruction techniques under test and the core+technique wrapper (not the simulator)
 reconstrucao/pzc/                 Pole-zero cancellation + pedestal tracking
@@ -174,7 +177,7 @@ Each `.mif` memory lives next to the module that reads it.
 | `hits/` | `hit_generator.v`, `hit_draw.v`, `bunch_train_mask.v` + `.mif` | Bernoulli hit draw per bunch crossing (`rand < occupancy`), gated by the LHC bunch-train mask (3564 slots) |
 | `energy/` | `energy_generator.v`, `energy_icdf.v` + `energy_icdf_a13_0..2.mif` | Inverse-CDF lookup split across three memories (multi-memory approach), drawing energy amplitudes from a measured minimum-bias distribution |
 | `shaper/` | one of the three `shaper_*.v` (see *Shaper filters* below) | the analog pulse shape of the front end |
-| `noise/` | `noise_generator.v`, `noise_icdf.v` + `noise_s4_icdf0..2.mif` (`noise_s8_*` with `USE_NOISE_SIGMA8`) | Gaussian electronic noise (sigma = 4 ADC at 12 bits, the Phase-II scale; 8 before 2026-09-29), same three-memory inverse CDF plus a random sign; why that level, how the tables deviate from a Gaussian in the tail, and where the double-Gaussian noise of the real TileCal came from: [`rtl/noise/README.md`](rtl/noise/README.md) |
+| `noise/` | `noise_generator.v`, `noise_gauss.v` + `noise_gauss_s4.mif` (default); `noise_icdf.v` + `noise_s4_icdf0..2.mif` / `noise_s8_*` (the tables) | Gaussian electronic noise, sigma = 4 ADC at 12 bits (the Phase-II scale; 8 before 2026-09-29). By default a segmented inverse CDF of one 32-bit xoshiro word (polynomial per segment, correct tail up to 6.34 sigma); the three-table inverse CDF stays for the other generators and the paper build. Why that level, how the tables deviate in the tail, and where the double-Gaussian noise of the real TileCal came from: [`rtl/noise/README.md`](rtl/noise/README.md) |
 | `adc/` | `adc.v` | pedestal offset, quantization to integer ADC counts and saturation to the 12-bit range; its output `shaper_clip` is the simulated readout |
 
 ### Random generators (`rtl/random/`)
@@ -335,9 +338,10 @@ the technique changed and the simulator is intact.
 
 | Build | Group | Macros | Golden (`verification/`) |
 |---|---|---|---|
-| `sim` | simulador | (none: xoshiro, F34, sigma = 4) | `simulador_tb_golden.vcd` |
+| `sim` | simulador | (none: xoshiro, F34, Gaussian sigma = 4) | `simulador_tb_golden.vcd` |
 | `sim_legacy` | simulador | `USE_SHAPER_LEGACY` | `simulador_tb_golden_legacy.vcd` |
 | `sim_csa_cr4rc` | simulador | `USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_csa_cr4rc.vcd` |
+| `sim_noise_tables` | simulador | `USE_NOISE_TABLES` | `simulador_tb_golden_noise_tables.vcd` |
 | `sim_round_robin` | simulador | `USE_RNG_ROUND_ROBIN` | `simulador_tb_golden_round_robin.vcd` |
 | `sim_round_robin_legacy` | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_LEGACY` | `simulador_tb_golden_round_robin_legacy.vcd` |
 | **`paper`** | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC USE_NOISE_SIGMA8` | `simulador_tb_golden_paper.vcd` (**frozen**, see below) |

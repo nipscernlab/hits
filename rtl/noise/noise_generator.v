@@ -1,8 +1,17 @@
 `timescale 1ns/100ps
 
+// Electronic noise of the simulator, one sample per clock, in 2^-10 ADC.
+//   NOISE_TYPE = "gauss" : noise_gauss.v, a Gaussian by segmented inverse CDF
+//                          from one 32-bit xoshiro word (sigma = 4 ADC, correct
+//                          tail up to 6.34 sigma). Needs RNG_TYPE = "xoshiro".
+//   NOISE_TYPE = "tables": noise_icdf.v, the three inverse-CDF tables used until
+//                          2026-10-02 (noise_s4 or noise_s8); the round_robin and
+//                          leap generators and the paper build use these.
 module noise_generator
 #(
 	parameter RNG_TYPE = "xoshiro",       // rng kind, see rtl/random/rng.v
+	parameter NOISE_TYPE = "gauss",       // "gauss" or "tables", see above
+	parameter MEM_GAUSS = "noise_gauss_s4.mif",
 	parameter RAND_BITS = 10,
 	parameter NOISE_OUT_BITS = 17,
 	parameter MEM_NOISE_SIZE = 2**10,
@@ -20,6 +29,42 @@ module noise_generator
 );
 
 
+generate
+if (NOISE_TYPE == "gauss") begin : gauss
+	if (RNG_TYPE != "xoshiro") begin : erro
+		ERROR_noise_generator_NOISE_TYPE_gauss_needs_RNG_TYPE_xoshiro e ();
+	end
+	// the same generator and seeds as the xoshiro table path; the word is the
+	// 32 top bits of its result (the tables used the top 31)
+	wire [31:0] w_out;
+	rng
+	#(
+		.RNG_TYPE(RNG_TYPE),
+		.RAND_OUT_SIZE(32),
+		.SEED0(42'd3420406547570),
+		.SEED1(42'd3123678789287),
+		.SEED2(42'd2011482725666),
+		.SEED3(42'd424074183325)
+	) rng_all
+	(
+		.clk(clk),
+		.rst(rst),
+		.rand_out(w_out),
+		.rand_next()
+	);
+	noise_gauss
+	#(
+		.NOISE_OUT_BITS(NOISE_OUT_BITS),
+		.MEM_GAUSS(MEM_GAUSS)
+	) noise_dist
+	(
+		.clk(clk),
+		.rst(rst),
+		.rnd(w_out),
+		.noise_out(noise_out)
+	);
+end else begin : tables
+
 // Seeds below are the EFFECTIVE 42-bit values. Until 2026-09-26 they were
 // written as wider 64-bit literals that lfsr42 truncated to seed[41:0]; same
 // values, same sequences (the originals are in the git history).
@@ -31,7 +76,6 @@ wire rand3;
 //            words and the sign (checked with PractRand on the 31-bit words).
 //            1 generator instead of 4.
 //   others : one generator per word, as always, so their sequences do not change.
-generate
 if (RNG_TYPE == "xoshiro") begin : per_stage
 	wire [3*RAND_BITS:0] w_next, w_out;
 	rng
@@ -134,7 +178,6 @@ end else begin : per_word
 		.rand_out(rand3)
 	);
 end
-endgenerate
 
 noise_icdf
 #(
@@ -158,5 +201,7 @@ noise_icdf
 	.rand3(rand3),
 	.noise_out(noise_out)
 );
+end
+endgenerate
 
 endmodule

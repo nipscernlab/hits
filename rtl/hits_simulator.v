@@ -35,9 +35,16 @@
 //`define USE_SHAPER_LEGACY
 //`define USE_SHAPER_CSA_CR4RC
 
-// NOISE LEVEL: sigma = 4 ADC counts at 12 bits by default (the Phase-II scale,
-// rtl/noise/README.md). USE_NOISE_SIGMA8 selects the sigma = 8 tables used
-// until 2026-09-29, which the paper build needs. Same rule as the shaper macros.
+// NOISE: sigma = 4 ADC counts at 12 bits by default (the Phase-II scale,
+// rtl/noise/README.md). With the xoshiro generator the default is a Gaussian
+// by segmented inverse CDF (noise_gauss.v, correct tail up to 6.34 sigma);
+// the round_robin and leap generators keep the three inverse-CDF tables.
+//   USE_NOISE_TABLES : the sigma = 4 tables also with xoshiro (the default
+//                      until 2026-10-02)
+//   USE_NOISE_SIGMA8 : the sigma = 8 tables used until 2026-09-29, which the
+//                      paper build needs (implies tables)
+// Same rule as the shaper macros.
+//`define USE_NOISE_TABLES
 //`define USE_NOISE_SIGMA8
 
 // HITS simulator core (no PZC).
@@ -88,7 +95,15 @@ module hits_simulator
 	parameter MEM_NOISE_FRAC = 5,
 `endif
 	parameter MEM_NOISE0_THRESH = 1007,
-	parameter MEM_NOISE1_THRESH = 1007
+	parameter MEM_NOISE1_THRESH = 1007,
+`ifdef USE_NOISE_SIGMA8
+	parameter NOISE_TYPE = "tables",
+`elsif USE_NOISE_TABLES
+	parameter NOISE_TYPE = "tables",
+`else
+	parameter NOISE_TYPE = (RNG_TYPE == "xoshiro") ? "gauss" : "tables",
+`endif
+	parameter MEM_GAUSS = "noise_gauss_s4.mif"
 )
 (
 	input clk, rst,
@@ -218,6 +233,8 @@ wire signed [SHAPER_OUT_BITS-1:0] offset_extended = {{(SHAPER_OUT_BITS-ENG_OUT_B
 noise_generator
 #(
 	.RNG_TYPE(RNG_TYPE),
+	.NOISE_TYPE(NOISE_TYPE),
+	.MEM_GAUSS(MEM_GAUSS),
 	.RAND_BITS(RAND_BITS_NOISE),
 	.NOISE_OUT_BITS(NOISE_OUT_BITS),
 	.MEM_NOISE_SIZE(MEM_NOISE_SIZE),

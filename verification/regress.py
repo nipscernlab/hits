@@ -54,7 +54,7 @@ PROJETOS = {
 }
 
 # name: (project, macros, golden)
-# The default simulator is xoshiro + F34 shaper + sigma = 4 noise (no macro).
+# The default simulator is xoshiro + F34 shaper + Gaussian noise, sigma = 4 (no macro).
 # The reconstrucao group has no default technique: every build names the one
 # it runs (pzc, est).
 BUILDS = {
@@ -64,6 +64,9 @@ BUILDS = {
                       "simulador_tb_golden_legacy.vcd"),
     "sim_csa_cr4rc": ("simulador", ["USE_SHAPER_CSA_CR4RC"],
                       "simulador_tb_golden_csa_cr4rc.vcd"),
+    # the three inverse-CDF noise tables with xoshiro (the default until 2026-10-02)
+    "sim_noise_tables": ("simulador", ["USE_NOISE_TABLES"],
+                      "simulador_tb_golden_noise_tables.vcd"),
     # the SBCCI 2025 generator (RNG_TYPE = "round_robin", default until 2026-09-28)
     "sim_round_robin": ("simulador", ["USE_RNG_ROUND_ROBIN"],
                       "simulador_tb_golden_round_robin.vcd"),

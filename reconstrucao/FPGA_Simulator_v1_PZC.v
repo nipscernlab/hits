@@ -89,6 +89,14 @@ module FPGA_Simulator_v1_PZC
 `endif
 	parameter MEM_NOISE0_THRESH = 1007,
 	parameter MEM_NOISE1_THRESH = 1007,
+`ifdef USE_NOISE_SIGMA8                  // see rtl/hits_simulator.v
+	parameter NOISE_TYPE = "tables",
+`elsif USE_NOISE_TABLES
+	parameter NOISE_TYPE = "tables",
+`else
+	parameter NOISE_TYPE = (RNG_TYPE == "xoshiro") ? "gauss" : "tables",
+`endif
+	parameter MEM_GAUSS = "noise_gauss_s4.mif",
 	parameter PZC_M_FACTOR = 454,
 	// --- adaptive baseline estimator (USE_BASELINE_EST) ---
 	parameter EST_FRAC       = 6,             // fractional bits of level and shape
@@ -169,7 +177,9 @@ hits_simulator
 	.MEM_NOISE_BITS(MEM_NOISE_BITS),
 	.MEM_NOISE_FRAC(MEM_NOISE_FRAC),
 	.MEM_NOISE0_THRESH(MEM_NOISE0_THRESH),
-	.MEM_NOISE1_THRESH(MEM_NOISE1_THRESH)
+	.MEM_NOISE1_THRESH(MEM_NOISE1_THRESH),
+	.NOISE_TYPE(NOISE_TYPE),
+	.MEM_GAUSS(MEM_GAUSS)
 ) core
 (
 	.clk(clk),

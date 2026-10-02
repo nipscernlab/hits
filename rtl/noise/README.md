@@ -1,11 +1,45 @@
 # Electronic noise of the simulator (`rtl/noise/`)
 
 `noise_generator.v` draws one noise sample per 25 ns clock and the simulator
-adds it to the shaper output, before the ADC (`shaper_corrupted`). The draw is
-an inverse CDF over three tables (`noise_icdf.v` + `noise_s4_icdf0..2.mif`, the
-multi-memory approach): 10-bit uniform words pick a magnitude, one more bit
-picks the sign. `noise_out` is in units of 2^-10 ADC count, whatever the table
-format.
+adds it to the shaper output, before the ADC (`shaper_corrupted`). `noise_out`
+is in units of 2^-10 ADC count. There are two ways to draw it, chosen by the
+`NOISE_TYPE` parameter (set in `hits_simulator.v` from the generator and the
+macros):
+
+| `NOISE_TYPE` | how | used by |
+|---|---|---|
+| `"gauss"` | `noise_gauss.v` + `noise_gauss_s4.mif`: Gaussian by segmented inverse CDF | **default with xoshiro, since 2026-10-02** |
+| `"tables"` | `noise_icdf.v` + three inverse-CDF tables (below) | the round_robin and leap generators, `USE_NOISE_TABLES`, `USE_NOISE_SIGMA8` (the paper build) |
+
+## The Gaussian (`noise_gauss.v`)
+
+One 32-bit xoshiro word per sample: bit 31 is the sign, bits 30:0 are u, and
+the tail probability of the magnitude is (u + 1/2) / 2^31. The segment is
+chosen by the number of leading zeros of u (one octave of probability per
+count, so the segments narrow toward the tail) and the 3 bits after the
+leading one; inside it the magnitude is a degree-2 polynomial of the next 16
+bits, evaluated in integers. 232 segments, coefficients in one 256 x 46-bit ROM
+(2 M10K), sigma = 4 ADC built into the coefficients, output in 2^-5 ADC steps
+as the tables. Two multiplications (2 DSP); five pipeline stages.
+
+Measured on the integer model (exact counts over the 2^31 values of u): error of
+each magnitude below half an output step, the Gaussian tail up to the largest
+value, **6.34 sigma**. Above it nothing: a true Gaussian goes beyond 6.34 sigma
+once every ~2 minutes at 40 MHz. The tables (next section) stop at 6.48 sigma
+with 120x too much probability above 6 sigma.
+
+The coefficients are generated, not written by hand: research vault
+`Simulador_Pulsos_FPGA/05_Ruido_Eletronico/gerar_rom_gauss.py`, from the model
+in `icdf_segmentado.py`. The RTL matches that model on 408 354 vectors (every
+segment edge, both signs, 0 differences). 2 million samples from the RTL itself
+(xoshiro + `noise_gauss.v`): sigma 3.998 ADC, kurtosis 2.997, chi-square of the
+magnitude against the exact distribution the ROM defines p = 0.76, sign balanced
+(0.5001 +- 0.0004), autocorrelation at lags 1 to 10 within 1.3 sigma of zero.
+
+## The tables (`noise_icdf.v`)
+
+Inverse CDF over three tables (the multi-memory approach): 10-bit uniform words
+pick a magnitude, one more bit picks the sign.
 
 | tables | sigma (12 bits) | entries | memory | selected by |
 |---|---|---|---|---|
