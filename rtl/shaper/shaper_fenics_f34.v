@@ -225,12 +225,14 @@ reg  signed [WP_A0-1:0] fa_A0_r = 0, fb_A0_r = 0;   // pipeline stage 1
 always @(posedge clock or posedge rst)
 	if (rst) begin fa_A0_r <= 0; fb_A0_r <= 0; end
 	else     begin fa_A0_r <= fa_A0; fb_A0_r <= fb_A0; end
-wire signed [WP_A0-1:0] un_A0 = u_A0
-	- ((C_A0*u_A0 + MEIO) >>> W_COEF) - ((S_A0*v_A0 + MEIO) >>> W_COEF)
-	+ fa_A0_r;
-wire signed [WP_A0-1:0] vn_A0 = v_A0
-	- ((C_A0*v_A0 + MEIO) >>> W_COEF) + ((S_A0*u_A0 + MEIO) >>> W_COEF)
-	+ fb_A0_r;
+// Feedback sum as a 2-level tree (2026-10-02): (u - C*u) + (fa - S*v).
+// Same integer result as the serial chain; shorter loop path.
+wire signed [WP_A0-1:0] cu_A0 = (C_A0*u_A0 + MEIO) >>> W_COEF;
+wire signed [WP_A0-1:0] cv_A0 = (C_A0*v_A0 + MEIO) >>> W_COEF;
+wire signed [WP_A0-1:0] su_A0 = (S_A0*u_A0 + MEIO) >>> W_COEF;
+wire signed [WP_A0-1:0] sv_A0 = (S_A0*v_A0 + MEIO) >>> W_COEF;
+wire signed [WP_A0-1:0] un_A0 = (u_A0 - cu_A0) + (fa_A0_r - sv_A0);
+wire signed [WP_A0-1:0] vn_A0 = (v_A0 - cv_A0) + (fb_A0_r + su_A0);
 always @(posedge clock or posedge rst) begin
 	if (rst) begin u_A0 <= 0; v_A0 <= 0; end
 	else     begin u_A0 <= un_A0; v_A0 <= vn_A0; end
@@ -255,12 +257,14 @@ reg  signed [WP_A1-1:0] fa_A1_r = 0, fb_A1_r = 0;   // pipeline stage 1
 always @(posedge clock or posedge rst)
 	if (rst) begin fa_A1_r <= 0; fb_A1_r <= 0; end
 	else     begin fa_A1_r <= fa_A1; fb_A1_r <= fb_A1; end
-wire signed [WP_A1-1:0] un_A1 = u_A1
-	- ((C_A1*u_A1 + MEIO) >>> W_COEF) - ((S_A1*v_A1 + MEIO) >>> W_COEF)
-	+ fa_A1_r;
-wire signed [WP_A1-1:0] vn_A1 = v_A1
-	- ((C_A1*v_A1 + MEIO) >>> W_COEF) + ((S_A1*u_A1 + MEIO) >>> W_COEF)
-	+ fb_A1_r;
+// Feedback sum as a 2-level tree (2026-10-02): (u - C*u) + (fa - S*v).
+// Same integer result as the serial chain; shorter loop path.
+wire signed [WP_A1-1:0] cu_A1 = (C_A1*u_A1 + MEIO) >>> W_COEF;
+wire signed [WP_A1-1:0] cv_A1 = (C_A1*v_A1 + MEIO) >>> W_COEF;
+wire signed [WP_A1-1:0] su_A1 = (S_A1*u_A1 + MEIO) >>> W_COEF;
+wire signed [WP_A1-1:0] sv_A1 = (S_A1*v_A1 + MEIO) >>> W_COEF;
+wire signed [WP_A1-1:0] un_A1 = (u_A1 - cu_A1) + (fa_A1_r - sv_A1);
+wire signed [WP_A1-1:0] vn_A1 = (v_A1 - cv_A1) + (fb_A1_r + su_A1);
 always @(posedge clock or posedge rst) begin
 	if (rst) begin u_A1 <= 0; v_A1 <= 0; end
 	else     begin u_A1 <= un_A1; v_A1 <= vn_A1; end
