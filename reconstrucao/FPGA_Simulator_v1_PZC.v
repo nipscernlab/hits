@@ -100,11 +100,11 @@ module FPGA_Simulator_v1_PZC
 	parameter EST_K_VAZIO    = 13,            // empty slots before a sample is an anchor
 	// ⚠️ Tracks the SHAPER latency (F34 latency minus 1): it was 2, became 3
 	// when the F34 shaper gained an output pipeline stage (01_Timing_40MHz,
-	// 2026-07-21), and 5 when it gained an input and a final-sum stage
-	// (2026-10-01, F34 latency 6). Re-measure
+	// 2026-07-21), and 6 when it gained three more stages on 2026-10-01
+	// (F34 latency 7). Re-measure
 	// if the shaper latency changes again (F15 recipe: correlate event_bt with
 	// shaper_out, and check the ADC mean vs distance-since-last-filled-slot).
-	parameter EST_LATENCIA   = 5,             // shaper pipeline delay, in samples
+	parameter EST_LATENCIA   = 6,             // shaper pipeline delay, in samples
 	parameter EST_RECIP_MEM  = "recip.mem",   // reciprocal ROM (depends on the MASK)
 	parameter EST_S_INIT_MEM = "",            // preloaded shape ("" = start from zero)
 	parameter signed [31:0] EST_L_INIT = 0,   // preloaded level, in the FRAC grid

@@ -114,7 +114,11 @@ reg  signed [BITS_IN+B_C+4:0] fir_p0_r = 0, fir_p1_r = 0;
 always @(posedge clock or posedge rst)
 	if (rst) begin fir_p0_r <= 0; fir_p1_r <= 0; end
 	else     begin fir_p0_r <= fir_p0; fir_p1_r <= fir_p1; end
-wire signed [BITS_IN+B_C+4:0] fir_acc = fir_p0_r + fir_p1_r;
+// PIPELINE STAGE 0 (2026-10-01): the two halves are summed and registered once
+// more, the same extra sample the slow sections take below.
+reg  signed [BITS_IN+B_C+4:0] fir_acc = 0;
+always @(posedge clock or posedge rst)
+	if (rst) fir_acc <= 0; else fir_acc <= fir_p0_r + fir_p1_r;
 // FIR taps are Q(B_C); bring them down to the Q(G_OUT_LOG) output scale.
 wire signed [BITS_IN+16:0] fir_out =
 	(fir_acc + (1 <<< (B_C-G_OUT_LOG-1))) >>> (B_C-G_OUT_LOG);
@@ -133,6 +137,13 @@ always @(posedge clock or posedge rst) begin
 	end
 end
 wire signed [BITS_IN-1:0] xs = xd[2];
+// PIPELINE STAGE 0 (2026-10-01): the closing section's G is not a 2-term CSD
+// constant (it is computed last, to impose zero DC gain), so its product is
+// split in two registered halves; every other section reads xs one sample
+// later (xs_r), so all of them stay aligned. TOTAL LATENCY 7 SAMPLES.
+reg  signed [BITS_IN-1:0] xs_r = 0;
+always @(posedge clock or posedge rst)
+	if (rst) xs_r <= 0; else xs_r <= xs;
 
 // ---- leaky section 0: tau=16.6us
 //      k = 1.464844e-03 (+2^-9 -2^-11)   G = -0.253906250
@@ -142,7 +153,7 @@ localparam signed [W_COEF+1:0] G_L0 = -272629760;
 localparam integer WS_L0 = BITS_IN + EX_L0 + 4;
 localparam integer WP_L0 = WS_L0 + W_COEF + 2;
 reg  signed [WS_L0-1:0] acc_L0 = 0;
-wire signed [WP_L0-1:0] tgt_L0 = (G_L0 * (xs <<< EX_L0) + MEIO) >>> W_COEF;
+wire signed [WP_L0-1:0] tgt_L0 = (G_L0 * (xs_r <<< EX_L0) + MEIO) >>> W_COEF;
 reg  signed [WP_L0-1:0] tgt_L0_r = 0;   // pipeline stage 1
 always @(posedge clock or posedge rst)
 	if (rst) tgt_L0_r <= 0; else tgt_L0_r <= tgt_L0;
@@ -160,7 +171,7 @@ localparam signed [W_COEF+1:0] G_L1 = -2139095040;
 localparam integer WS_L1 = BITS_IN + EX_L1 + 4;
 localparam integer WP_L1 = WS_L1 + W_COEF + 2;
 reg  signed [WS_L1-1:0] acc_L1 = 0;
-wire signed [WP_L1-1:0] tgt_L1 = (G_L1 * (xs <<< EX_L1) + MEIO) >>> W_COEF;
+wire signed [WP_L1-1:0] tgt_L1 = (G_L1 * (xs_r <<< EX_L1) + MEIO) >>> W_COEF;
 reg  signed [WP_L1-1:0] tgt_L1_r = 0;   // pipeline stage 1
 always @(posedge clock or posedge rst)
 	if (rst) tgt_L1_r <= 0; else tgt_L1_r <= tgt_L1;
@@ -178,7 +189,16 @@ localparam signed [W_COEF+1:0] G_L2 = 287168285;
 localparam integer WS_L2 = BITS_IN + EX_L2 + 4;
 localparam integer WP_L2 = WS_L2 + W_COEF + 2;
 reg  signed [WS_L2-1:0] acc_L2 = 0;
-wire signed [WP_L2-1:0] tgt_L2 = (G_L2 * (xs <<< EX_L2) + MEIO) >>> W_COEF;
+// G_L2 = GH_L2 + GL_L2, half of its CSD terms each (pipeline stage 0)
+localparam signed [W_COEF+1:0] GH_L2 = 287170560;
+localparam signed [W_COEF+1:0] GL_L2 = -2275;
+wire signed [WP_L2-1:0] ph_L2 = GH_L2 * (xs <<< EX_L2);
+wire signed [WP_L2-1:0] pl_L2 = GL_L2 * (xs <<< EX_L2);
+reg  signed [WP_L2-1:0] ph_L2_r = 0, pl_L2_r = 0;
+always @(posedge clock or posedge rst)
+	if (rst) begin ph_L2_r <= 0; pl_L2_r <= 0; end
+	else     begin ph_L2_r <= ph_L2; pl_L2_r <= pl_L2; end
+wire signed [WP_L2-1:0] tgt_L2 = (ph_L2_r + pl_L2_r + MEIO) >>> W_COEF;
 reg  signed [WP_L2-1:0] tgt_L2_r = 0;   // pipeline stage 1
 always @(posedge clock or posedge rst)
 	if (rst) tgt_L2_r <= 0; else tgt_L2_r <= tgt_L2;
@@ -198,7 +218,7 @@ localparam signed [W_COEF+1:0] RB_A0 = -40;
 localparam integer WS_A0 = BITS_IN + EX_A0 + 4;
 localparam integer WP_A0 = WS_A0 + W_COEF + 2;
 reg  signed [WS_A0-1:0] u_A0 = 0, v_A0 = 0;
-wire signed [WP_A0-1:0] xn_A0 = xs <<< EX_A0;
+wire signed [WP_A0-1:0] xn_A0 = xs_r <<< EX_A0;
 wire signed [WP_A0-1:0] fa_A0 = (RA_A0*xn_A0 + MEIO) >>> W_COEF;
 wire signed [WP_A0-1:0] fb_A0 = (RB_A0*xn_A0 + MEIO) >>> W_COEF;
 reg  signed [WP_A0-1:0] fa_A0_r = 0, fb_A0_r = 0;   // pipeline stage 1
@@ -228,7 +248,7 @@ localparam signed [W_COEF+1:0] RB_A1 = 49152;
 localparam integer WS_A1 = BITS_IN + EX_A1 + 4;
 localparam integer WP_A1 = WS_A1 + W_COEF + 2;
 reg  signed [WS_A1-1:0] u_A1 = 0, v_A1 = 0;
-wire signed [WP_A1-1:0] xn_A1 = xs <<< EX_A1;
+wire signed [WP_A1-1:0] xn_A1 = xs_r <<< EX_A1;
 wire signed [WP_A1-1:0] fa_A1 = (RA_A1*xn_A1 + MEIO) >>> W_COEF;
 wire signed [WP_A1-1:0] fb_A1 = (RB_A1*xn_A1 + MEIO) >>> W_COEF;
 reg  signed [WP_A1-1:0] fa_A1_r = 0, fb_A1_r = 0;   // pipeline stage 1
@@ -280,7 +300,7 @@ end
 
 // PIPELINE STAGE 3 (2026-10-01): the final sum is registered too, so the
 // path 'components -> sum -> noise -> ADC clip' is split. +1 sample:
-// TOTAL LATENCY 6 SAMPLES. Shape unchanged, as for the other two stages.
+// Shape unchanged, as for the other stages (total latency: see stage 0).
 wire signed [BITS_IN+16:0] soma = fir_out_r
 	+ out_L0_r
 	+ out_L1_r
