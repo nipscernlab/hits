@@ -90,6 +90,7 @@ macro is set, the wrapper in `reconstrucao/` instantiates the PZC.
 | Pulse shape | F34 (FENICS Phase II), legacy, CSA + CR-4RC | macro `USE_SHAPER_LEGACY` or `USE_SHAPER_CSA_CR4RC` | F34 (since 2026-10-01) |
 | Noise | Gaussian (segmented inverse CDF), the sigma = 4 tables, the sigma = 8 tables | macro `USE_NOISE_TABLES` or `USE_NOISE_SIGMA8`; the round_robin and leap generators always use the tables | Gaussian, sigma = 4 (since 2026-10-02) |
 | ADC quantization | round to nearest, truncate | macro `USE_ADC_FLOOR` (truncate) | round (since 2026-10-03) |
+| CSA + CR-4RC input register | on, off | macro `USE_SHAPER_NO_PIPE` (off) | on (since 2026-10-03) |
 | Reconstruction technique | PZC, adaptive baseline estimator | macro `USE_BASELINE_EST` (only in `reconstrucao/` builds) | none yet (no macro builds the PZC) |
 | Occupancy, pedestal | 0..127 (hit probability occupancy/128), 13-bit offset | runtime inputs `occupancy`, `offset`; on the board, from the HPS (`./change_occupancy`) | set by the testbench / HPS |
 
@@ -221,8 +222,8 @@ shaper* below):
 | Filter | Selected by | Description |
 |---|---|---|
 | `shaper_fenics_f34.v` | **default** (since 2026-10-01) | The FENICS Phase-II pulse. The FENICS testbeam pulse was fitted with a 14-pole transfer function, and this is its 40 MHz digital filter: a 13-tap FIR head plus 5 IIR sections (3 leaky, 2 coupled), derived from a 14-pole transfer function of the FENICS front end. Zero DC gain is **imposed** rather than fitted, so it cannot produce a baseline sag the real front end does not have. Shape error 0.026% of peak. Generated from the design study, not written by hand: see the header of the file. Latency 7 samples: four pipeline stages (the long product of the closing section split in two, the input of every component, its output, and the final sum; all but the output stage added on 2026-10-01), which keep the shape bit for bit and only delay it. |
-| `shaper_fenics.v` + `iir_order1.v` + `iir_order2.v` | `USE_SHAPER_LEGACY` | The shaper HITS was born with (the default until 2026-10-01): parallel IIR sections, coefficients at a 2**10 scale. An older approximation of the FENICS response; over a long run with the bunch-train mask its baseline settles about 5 ADC below the pedestal, where F34 converges to it (research phase F36). |
-| `shaper_csa_cr4rc.v` | `USE_SHAPER_CSA_CR4RC` | The generic "paper" pulse: the exact readout chain of the group's papers (bi-exponential detector pulse, CSA with a 51 ns feedback pole, unbuffered CR-4RC with a 500 us CR and four 5 ns RC stages -- the Electronics 14:493 signal generator). 4-tap FIR head plus 3 first-order IIR sections; peak 60.1 ns on sample 2, FWHM 114 ns, shape error 1e-7 of peak. Generated, not written by hand: see the header of the file. |
+| `shaper_fenics.v` + `iir_order1.v` + `iir_order2.v` | `USE_SHAPER_LEGACY` | The shaper HITS was born with (the default until 2026-10-01): parallel IIR sections, coefficients at a 2**10 scale. An older approximation of the FENICS response; over a long run with the bunch-train mask its baseline settles about 5 ADC below the pedestal, where F34 converges to it (research phase F36). Input and final sum registered since 2026-10-03 (latency 2; HITS closed at 33.9 MHz with it before). |
+| `shaper_csa_cr4rc.v` | `USE_SHAPER_CSA_CR4RC` | The generic "paper" pulse: the exact readout chain of the group's papers (bi-exponential detector pulse, CSA with a 51 ns feedback pole, unbuffered CR-4RC with a 500 us CR and four 5 ns RC stages -- the Electronics 14:493 signal generator). 4-tap FIR head plus 3 first-order IIR sections; peak 60.1 ns on sample 2, FWHM 114 ns, shape error 1e-7 of peak. Generated, not written by hand: see the header of the file. Input registered since 2026-10-03 (latency 2; 37.6 MHz without it); `USE_SHAPER_NO_PIPE` removes that register, as the paper build does. |
 
 All three share the same output scale (`2**G_OUT_LOG`), so nothing downstream
 changes. All three take a reset that clears their state, so the tail of
@@ -347,7 +348,7 @@ the technique changed and the simulator is intact.
 | `sim_noise_tables` | simulador | `USE_NOISE_TABLES` | `simulador_tb_golden_noise_tables.vcd` |
 | `sim_round_robin` | simulador | `USE_RNG_ROUND_ROBIN` | `simulador_tb_golden_round_robin.vcd` |
 | `sim_round_robin_legacy` | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_LEGACY` | `simulador_tb_golden_round_robin_legacy.vcd` |
-| **`paper`** | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC USE_NOISE_SIGMA8 USE_ADC_FLOOR` | `simulador_tb_golden_paper.vcd` (**frozen**, see below) |
+| **`paper`** | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC USE_NOISE_SIGMA8 USE_ADC_FLOOR USE_SHAPER_NO_PIPE` | `simulador_tb_golden_paper.vcd` (**frozen**, see below) |
 | `sim_leap` | simulador | `USE_RNG_LEAP` | `simulador_tb_golden_leap.vcd` |
 | `sim_leap_legacy` | simulador | `USE_RNG_LEAP USE_SHAPER_LEGACY` | `simulador_tb_golden_leap_legacy.vcd` |
 | `sim_leap_csa_cr4rc` | simulador | `USE_RNG_LEAP USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_leap_csa_cr4rc.vcd` |
@@ -381,10 +382,11 @@ once.
 Fabio's paper (*Real-Time FPGA-Based Pulse Simulator for Calorimeter Readout
 Electronics in Nuclear Instrumentation*, IEEE Sensors Journal,
 Sensors-114519-2026) used the CSA + CR-4RC shaper, the round-robin generator,
-the sigma = 8 ADC noise tables and a truncating ADC.
+the sigma = 8 ADC noise tables, a truncating ADC and no input register in the
+shaper.
 
 - **Its behaviour, on the current code:** `RNG_TYPE = "round_robin"` plus the
-  `USE_SHAPER_CSA_CR4RC`, `USE_NOISE_SIGMA8` and `USE_ADC_FLOOR` macros, in simulation (`regress.py paper`) or on the
+  `USE_SHAPER_CSA_CR4RC`, `USE_NOISE_SIGMA8`, `USE_ADC_FLOOR` and `USE_SHAPER_NO_PIPE` macros, in simulation (`regress.py paper`) or on the
   board (`de10_nano_soc_ghrd.v` and the `.qsf`). The `paper` build is the
   simulator outputs of the paper's code delayed exactly one cycle (the
   testbench releases reset one edge later since 9dc32b2), checked signal by

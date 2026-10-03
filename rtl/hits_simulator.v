@@ -52,6 +52,11 @@
 // the paper build needs it. Same rule as the shaper macros.
 //`define USE_ADC_FLOOR
 
+// CSA + CR-4RC SHAPER: its input is registered by default (since 2026-10-03,
+// latency 2). USE_SHAPER_NO_PIPE removes that register (latency 1, as until
+// then); the paper build needs it. No effect on the other shapers.
+//`define USE_SHAPER_NO_PIPE
+
 // HITS simulator core (no PZC).
 //
 // The full front-end signal chain of the calorimeter readout, one sample per
@@ -185,7 +190,12 @@ energy_generator
 shaper_csa_cr4rc
 #(
 	.BITS_IN(ENG_OUT_BITS),
-	.G_OUT_LOG(10)
+	.G_OUT_LOG(10),
+`ifdef USE_SHAPER_NO_PIPE
+	.PIPE_IN(0)                // the paper build: latency 1, as until 2026-10-03
+`else
+	.PIPE_IN(1)                // input registered: latency 2
+`endif
 )sf
 (
 	.clock(clk),

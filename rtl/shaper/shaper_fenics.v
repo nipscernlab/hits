@@ -7,6 +7,12 @@
 // The original design had six sections. Two of them were collapsed here with
 // bit-identical output: iir5 (b0=-24, every other coefficient zero) reduces
 // to a pure combinational gain on the input, and iir6 was all-zero.
+//
+// PIPELINE (2026-10-03): the input and the final sum are registered. Without
+// them the path bunch-train mask -> hit -> energy x hit -> sections -> sum ->
+// noise -> ADC clip ran in one cycle and HITS closed at 33.9 MHz with this
+// shaper. Every section sees the same delayed input, so the shape is the same,
+// delayed by 2 samples.
 module shaper_fenics
 #(
 	parameter BITS_IN = 13,
@@ -20,9 +26,13 @@ module shaper_fenics
 
 wire signed [BITS_IN+16:0] out1, out2, out3, out4;
 
+reg signed [BITS_IN-1:0] in_r = 0;               // input register (pipeline)
+always @(posedge clock or posedge rst)
+	if (rst) in_r <= 0; else in_r <= in;
+
 // former iir5 section: pure gain, no state
 localparam signed [15:0] G5 = -16'sd24;       // former iir5 gain
-wire signed [BITS_IN+16:0] out5 = G5 * in;
+wire signed [BITS_IN+16:0] out5 = G5 * in_r;
 
 iir_order1
 #(
@@ -34,7 +44,7 @@ iir_order1
 (
 	.clock(clock),
 	.rst(rst),
-	.in(in),
+	.in(in_r),
 	.out(out1)
 );
 
@@ -50,7 +60,7 @@ iir_order2
 (
 	.clock(clock),
 	.rst(rst),
-	.in(in),
+	.in(in_r),
 	.out(out2)
 );
 
@@ -66,7 +76,7 @@ iir_order2
 (
 	.clock(clock),
 	.rst(rst),
-	.in(in),
+	.in(in_r),
 	.out(out3)
 );
 
@@ -80,13 +90,16 @@ iir_order1
 (
 	.clock(clock),
 	.rst(rst),
-	.in(in),
+	.in(in_r),
 	.out(out4)
 );
 
 // NOTE: the five sections are summed into `out` without extra guard bits. It
 // does not overflow for the current energy range, but widen `out` (and the
 // section outputs) if the input amplitudes ever grow.
-assign out = out1 + out2 + out3 + out4 + out5;
+reg signed [BITS_IN+16:0] out_r = 0;            // registered sum (pipeline)
+always @(posedge clock or posedge rst)
+	if (rst) out_r <= 0; else out_r <= out1 + out2 + out3 + out4 + out5;
+assign out = out_r;
 
 endmodule

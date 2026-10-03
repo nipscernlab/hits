@@ -718,9 +718,11 @@ set_global_assignment -name VERILOG_FILE sw_converter.v
 #set_global_assignment -name VERILOG_MACRO "USE_NOISE_SIGMA8=1"
 # ADC: rounds to the nearest count by default; USE_ADC_FLOOR truncates (as until 2026-10-03).
 #set_global_assignment -name VERILOG_MACRO "USE_ADC_FLOOR=1"
+# CSA + CR-4RC shaper: input registered by default; USE_SHAPER_NO_PIPE removes it (as until 2026-10-03).
+#set_global_assignment -name VERILOG_MACRO "USE_SHAPER_NO_PIPE=1"
 # The random generator is the RNG_TYPE parameter in de10_nano_soc_ghrd.v.
 # HITS of the Sensors Journal paper (tag paper-jsen-2026): the CSA_CR4RC,
-# NOISE_SIGMA8 and ADC_FLOOR macros above + RNG_TYPE = "round_robin". Same behaviour; the circuit differs
+# NOISE_SIGMA8, ADC_FLOOR and SHAPER_NO_PIPE macros above + RNG_TYPE = "round_robin". Same behaviour; the circuit differs
 # from the tag (tables in M10K, rotating LFSR bank), so the paper's resource
 # numbers come only from checking out the tag.
 set_global_assignment -name VERILOG_FILE ../../rtl/shaper/shaper_fenics_f34.v

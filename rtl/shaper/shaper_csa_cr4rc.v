@@ -28,8 +28,11 @@
 // physics of the sampled chain that the papers describe, not a fixed-point
 // artifact, and it is NOT removed here.
 //
-// Latency: 1 cycle (registered output adder): h[0] appears one clock after
-// the input impulse.
+// Latency: 2 cycles with PIPE_IN = 1 (the default since 2026-10-03: the input
+// is registered, which cuts the path bunch-train mask -> hit -> energy x hit
+// -> sections that kept HITS below 40 MHz with this shaper), 1 cycle with
+// PIPE_IN = 0 (as until then; the paper build keeps it, macro
+// USE_SHAPER_NO_PIPE). The shape is the same, only delayed.
 //
 // WARNING: the constants below bake in G_OUT_LOG = 10 (output scale 2**10,
 // the HITS convention shared by the other shapers). The parameter exists for
@@ -37,7 +40,8 @@
 module shaper_csa_cr4rc
 #(
 	parameter BITS_IN = 34,
-	parameter G_OUT_LOG = 10
+	parameter G_OUT_LOG = 10,
+	parameter PIPE_IN = 1
 )
 (
 	input  clock, rst,
@@ -71,19 +75,25 @@ localparam signed [27:0] T3 =  28'sd154;
 localparam signed [SC:0] MEIO_SC = 1 <<< (SC - 1);
 localparam signed [F:0]  MEIO_F  = 1 <<< (F - 1);
 
+// input register (PIPE_IN = 1) or the input itself (PIPE_IN = 0)
+reg  signed [BITS_IN-1:0] x0r = 0;
+wire signed [BITS_IN-1:0] x0 = PIPE_IN ? x0r : in;
+always @(posedge clock or posedge rst)
+	if (rst) x0r <= 0; else x0r <= in;
+
 reg signed [BITS_IN-1:0] x1 = 0, x2 = 0, x3 = 0;   // FIR delay line
 reg signed [WY-1:0] y0 = 0, y1 = 0, y2 = 0;        // IIR section states
 reg signed [BITS_IN+16:0] acc = 0;                 // registered, rounded output
 
 // FIR head (wide targets so the products keep every bit)
 wire signed [BC+BITS_IN+12:0] fir =
-	T0 * in + T1 * x1 + T2 * x2 + T3 * x3;
+	T0 * x0 + T1 * x1 + T2 * x2 + T3 * x3;
 
 // section k: y_k[n] = R_k*x[n] + round(Q_k * y_k[n-1] / 2**SC)
 wire signed [SC+WY+1:0] p0 = Q0 * y0, p1 = Q1 * y1, p2 = Q2 * y2;
-wire signed [WY-1:0] y0n = R0 * in + ((p0 + MEIO_SC) >>> SC);
-wire signed [WY-1:0] y1n = R1 * in + ((p1 + MEIO_SC) >>> SC);
-wire signed [WY-1:0] y2n = R2 * in + ((p2 + MEIO_SC) >>> SC);
+wire signed [WY-1:0] y0n = R0 * x0 + ((p0 + MEIO_SC) >>> SC);
+wire signed [WY-1:0] y1n = R1 * x0 + ((p1 + MEIO_SC) >>> SC);
+wire signed [WY-1:0] y2n = R2 * x0 + ((p2 + MEIO_SC) >>> SC);
 
 // sum of the NEW states + the FIR aligned from BC to F fraction bits
 wire signed [WS-1:0] soma =
@@ -96,7 +106,7 @@ always @(posedge clock or posedge rst) begin
 		acc <= 0;
 	end
 	else begin
-		x1 <= in; x2 <= x1; x3 <= x2;
+		x1 <= x0; x2 <= x1; x3 <= x2;
 		y0 <= y0n; y1 <= y1n; y2 <= y2n;
 		acc <= (soma + MEIO_F) >>> F;
 	end
