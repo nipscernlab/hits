@@ -95,27 +95,19 @@ end
 // unchanged, out_new[n] = out_old[n-1]. Stage 3 at the output adds one more.
 // The FIR head sums in 4 registered partial sums (2026-10-02; 2 until then),
 // added in the next stage. Same integer result, shorter first stage.
-(* multstyle = "logic" *)
-wire signed [BITS_IN+B_C+4:0] fir_p0 =
-	  TAP00*d[0]
-	+ TAP01*d[1]
-	+ TAP02*d[2]
-	+ TAP03*d[3];
-(* multstyle = "logic" *)
-wire signed [BITS_IN+B_C+4:0] fir_p1 =
-	  TAP04*d[4]
-	+ TAP05*d[5]
-	+ TAP06*d[6];
-(* multstyle = "logic" *)
-wire signed [BITS_IN+B_C+4:0] fir_p2 =
-	  TAP07*d[7]
-	+ TAP08*d[8]
-	+ TAP09*d[9];
-(* multstyle = "logic" *)
-wire signed [BITS_IN+B_C+4:0] fir_p3 =
-	  TAP10*d[10]
-	+ TAP11*d[11]
-	+ TAP12*d[12];
+// Since 2026-10-03 the taps are written as their CSD shift-adds (the TAPnn
+// above are the same numbers), summed as an explicit tree of 3-input adders,
+// and the rounding of fir_out enters one partial sum. Same integer result;
+// with TAP*d each tap was a separate constant multiplier.
+localparam signed [BITS_IN+B_C+4:0] FIR_HALF = 1 <<< (B_C-G_OUT_LOG-1);   // rounding of fir_out
+wire signed [BITS_IN+B_C+4:0] fir_p0 =   // taps 3-4
+	(((d[3] <<< 11) + (d[3] <<< 4) + (d[3] <<< 2)) + ((d[4] <<< 12) + (d[4] <<< 2) + d[4]) + (-(d[3] <<< 9) - d[3]));
+wire signed [BITS_IN+B_C+4:0] fir_p1 =   // taps 5-6
+	(((d[5] <<< 11) + (d[5] <<< 5) + (d[5] <<< 3)) + ((d[6] <<< 8) + (d[6] <<< 4) - (d[5] <<< 7)) + (-(d[6] <<< 2) - d[6]));
+wire signed [BITS_IN+B_C+4:0] fir_p2 =   // taps 7-9
+	(((d[7] <<< 3) + d[7] + (d[8] <<< 4)) + (d[8] - (d[7] <<< 6) - (d[8] <<< 6)) + (-(d[8] <<< 2) - (d[9] <<< 2)));
+wire signed [BITS_IN+B_C+4:0] fir_p3 =   // taps 9-12
+	((FIR_HALF - d[9] - (d[10] <<< 5)) + (-(d[10] <<< 3) - (d[10] <<< 1) - (d[11] <<< 4)) + (-(d[11] <<< 2) - (d[12] <<< 3)));
 reg  signed [BITS_IN+B_C+4:0] fir_p0_r = 0, fir_p1_r = 0, fir_p2_r = 0, fir_p3_r = 0;
 always @(posedge clock or posedge rst)
 	if (rst) begin fir_p0_r <= 0; fir_p1_r <= 0; fir_p2_r <= 0; fir_p3_r <= 0; end
@@ -126,8 +118,7 @@ reg  signed [BITS_IN+B_C+4:0] fir_acc = 0;
 always @(posedge clock or posedge rst)
 	if (rst) fir_acc <= 0; else fir_acc <= fir_p0_r + fir_p1_r + fir_p2_r + fir_p3_r;
 // FIR taps are Q(B_C); bring them down to the Q(G_OUT_LOG) output scale.
-wire signed [BITS_IN+16:0] fir_out =
-	(fir_acc + (1 <<< (B_C-G_OUT_LOG-1))) >>> (B_C-G_OUT_LOG);
+wire signed [BITS_IN+16:0] fir_out = fir_acc >>> (B_C-G_OUT_LOG);   // FIR_HALF is in fir_p3
 
 // ------------------------------- shared delay feeding the slow sections ---
 // The pulse only starts at sample N_DELAY and the FIR head already carries
