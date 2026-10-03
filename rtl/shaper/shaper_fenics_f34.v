@@ -88,37 +88,43 @@ always @(posedge clock or posedge rst) begin
 	end
 end
 
-// PIPELINE STAGE 1 (2026-10-01): the FIR sums in two registered halves, and
+// PIPELINE STAGE 1 (2026-10-01): the FIR sums in registered partial sums, and
 // every section registers its input product before the feedback loop, so
 // the big constant multiplies (G of the closing section above all) leave the
 // loop. Every component is delayed by exactly one sample: the shape is
 // unchanged, out_new[n] = out_old[n-1]. Stage 3 at the output adds one more.
+// The FIR head sums in 4 registered partial sums (2026-10-02; 2 until then),
+// added in the next stage. Same integer result, shorter first stage.
 (* multstyle = "logic" *)
 wire signed [BITS_IN+B_C+4:0] fir_p0 =
 	  TAP00*d[0]
 	+ TAP01*d[1]
 	+ TAP02*d[2]
-	+ TAP03*d[3]
-	+ TAP04*d[4]
+	+ TAP03*d[3];
+(* multstyle = "logic" *)
+wire signed [BITS_IN+B_C+4:0] fir_p1 =
+	  TAP04*d[4]
 	+ TAP05*d[5]
 	+ TAP06*d[6];
 (* multstyle = "logic" *)
-wire signed [BITS_IN+B_C+4:0] fir_p1 =
+wire signed [BITS_IN+B_C+4:0] fir_p2 =
 	  TAP07*d[7]
 	+ TAP08*d[8]
-	+ TAP09*d[9]
-	+ TAP10*d[10]
+	+ TAP09*d[9];
+(* multstyle = "logic" *)
+wire signed [BITS_IN+B_C+4:0] fir_p3 =
+	  TAP10*d[10]
 	+ TAP11*d[11]
 	+ TAP12*d[12];
-reg  signed [BITS_IN+B_C+4:0] fir_p0_r = 0, fir_p1_r = 0;
+reg  signed [BITS_IN+B_C+4:0] fir_p0_r = 0, fir_p1_r = 0, fir_p2_r = 0, fir_p3_r = 0;
 always @(posedge clock or posedge rst)
-	if (rst) begin fir_p0_r <= 0; fir_p1_r <= 0; end
-	else     begin fir_p0_r <= fir_p0; fir_p1_r <= fir_p1; end
-// PIPELINE STAGE 0 (2026-10-01): the two halves are summed and registered once
+	if (rst) begin fir_p0_r <= 0; fir_p1_r <= 0; fir_p2_r <= 0; fir_p3_r <= 0; end
+	else     begin fir_p0_r <= fir_p0; fir_p1_r <= fir_p1; fir_p2_r <= fir_p2; fir_p3_r <= fir_p3; end
+// PIPELINE STAGE 0 (2026-10-01): the partial sums are added and registered once
 // more, the same extra sample the slow sections take below.
 reg  signed [BITS_IN+B_C+4:0] fir_acc = 0;
 always @(posedge clock or posedge rst)
-	if (rst) fir_acc <= 0; else fir_acc <= fir_p0_r + fir_p1_r;
+	if (rst) fir_acc <= 0; else fir_acc <= fir_p0_r + fir_p1_r + fir_p2_r + fir_p3_r;
 // FIR taps are Q(B_C); bring them down to the Q(G_OUT_LOG) output scale.
 wire signed [BITS_IN+16:0] fir_out =
 	(fir_acc + (1 <<< (B_C-G_OUT_LOG-1))) >>> (B_C-G_OUT_LOG);
