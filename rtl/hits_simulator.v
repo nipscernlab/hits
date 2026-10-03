@@ -47,6 +47,11 @@
 //`define USE_NOISE_TABLES
 //`define USE_NOISE_SIGMA8
 
+// ADC: rounds to the nearest count by default (since 2026-10-03).
+// USE_ADC_FLOOR truncates instead (0.5 count low on average), as until then;
+// the paper build needs it. Same rule as the shaper macros.
+//`define USE_ADC_FLOOR
+
 // HITS simulator core (no PZC).
 //
 // The full front-end signal chain of the calorimeter readout, one sample per
@@ -257,7 +262,12 @@ assign shaper_corrupted = (shaper_out + {{(SHAPER_OUT_BITS-NOISE_OUT_BITS){noise
 adc
 #(
 	.BITS_IN(SHAPER_OUT_BITS),
-	.BITS_OUT(CLIP_OUT_BITS)
+	.BITS_OUT(CLIP_OUT_BITS),
+`ifdef USE_ADC_FLOOR
+	.ROUND(0)
+`else
+	.ROUND(1)
+`endif
 )clip
 (
 	.clk(clk),
