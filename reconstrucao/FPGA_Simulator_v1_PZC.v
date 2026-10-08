@@ -96,6 +96,7 @@ module FPGA_Simulator_v1_PZC
 `else
 	parameter NOISE_TYPE = (RNG_TYPE == "xoshiro") ? "gauss" : "tables",
 `endif
+	parameter MEM_SEG = "energy_seg_default.mif",
 	parameter MEM_GAUSS = "noise_gauss_s4.mif",
 	parameter PZC_M_FACTOR = 454,
 	// --- adaptive baseline estimator (USE_BASELINE_EST) ---
@@ -179,6 +180,7 @@ hits_simulator
 	.MEM_NOISE0_THRESH(MEM_NOISE0_THRESH),
 	.MEM_NOISE1_THRESH(MEM_NOISE1_THRESH),
 	.NOISE_TYPE(NOISE_TYPE),
+	.MEM_SEG(MEM_SEG),
 	.MEM_GAUSS(MEM_GAUSS)
 ) core
 (

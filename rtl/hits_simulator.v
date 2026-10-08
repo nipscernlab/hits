@@ -47,6 +47,15 @@
 //`define USE_NOISE_TABLES
 //`define USE_NOISE_SIGMA8
 
+// ENERGY: with the xoshiro generator the default is a segmented inverse CDF
+// (energy_seg.v, since 2026-10-08): the spectrum is a ROM (MEM_SEG), a
+// polynomial per segment, no staircase and a tail down to 2^-32 of probability;
+// the round_robin and leap generators keep the three inverse-CDF tables.
+//   USE_ENERGY_TABLES : the three tables also with xoshiro (the default until
+//                       2026-10-08)
+// Same rule as the shaper macros.
+//`define USE_ENERGY_TABLES
+
 // ADC: rounds to the nearest count by default (since 2026-10-03).
 // USE_ADC_FLOOR truncates instead (0.5 count low on average), as until then;
 // the paper build needs it. Same rule as the shaper macros.
@@ -88,6 +97,12 @@ module hits_simulator
 	parameter MEM_ENG2 = "energy_icdf_a13_2.mif",
 	parameter MEM_ENG0_THRESH = 1001,
 	parameter MEM_ENG1_THRESH = 985,
+`ifdef USE_ENERGY_TABLES
+	parameter ENERGY_TYPE = "tables",
+`else
+	parameter ENERGY_TYPE = (RNG_TYPE == "xoshiro") ? "seg" : "tables",
+`endif
+	parameter MEM_SEG = "energy_seg_default.mif",
 	parameter RAND_BITS_NOISE = 10,
 	parameter NOISE_OUT_BITS = 17,
 	parameter MEM_NOISE_SIZE = 2**10,
@@ -149,6 +164,8 @@ hit_generator
 energy_generator
 #(
 	.RNG_TYPE(RNG_TYPE),
+	.ENERGY_TYPE(ENERGY_TYPE),
+	.MEM_SEG(MEM_SEG),
 	.RAND_BITS(RAND_BITS_ENG),
 	.ENG_OUT_BITS(ENG_OUT_BITS),
 	.MEM_ENG_SIZE(MEM_ENG_SIZE),

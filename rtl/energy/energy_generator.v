@@ -1,8 +1,17 @@
 `timescale 1ns/100ps
 
+// Energy amplitude of each collision, one sample per clock, in whole ADC counts.
+//   ENERGY_TYPE = "seg"   : energy_seg.v, a segmented inverse CDF (polynomial per
+//                           segment) from one 32-bit xoshiro word; the spectrum
+//                           is the ROM MEM_SEG. Needs RNG_TYPE = "xoshiro".
+//   ENERGY_TYPE = "tables": energy_icdf.v, the three inverse-CDF tables used until
+//                           2026-10-08; the round_robin and leap generators and
+//                           the paper build use these.
 module energy_generator
 #(
 	parameter RNG_TYPE = "xoshiro",       // rng kind, see rtl/random/rng.v
+	parameter ENERGY_TYPE = "seg",        // "seg" or "tables", see above
+	parameter MEM_SEG = "energy_seg_default.mif",
 	parameter RAND_BITS = 10,
 	parameter ENG_OUT_BITS = 13,
 	parameter MEM_ENG_SIZE = 2**10,
@@ -17,6 +26,43 @@ module energy_generator
 	output [ENG_OUT_BITS-1:0] energy_out
 );
 
+generate
+if (ENERGY_TYPE == "seg") begin : seg
+	if (RNG_TYPE != "xoshiro") begin : erro
+		ERROR_energy_generator_ENERGY_TYPE_seg_needs_RNG_TYPE_xoshiro e ();
+	end
+	// the same generator and seeds as the xoshiro table path; the word is the
+	// 32 top bits of its result (the tables used the top 30)
+	wire [31:0] w_out;
+	rng
+	#(
+		.RNG_TYPE(RNG_TYPE),
+		.RAND_OUT_SIZE(32),
+		.SEED0(42'd3890346747),
+		.SEED1(42'd545404224),
+		.SEED2(42'd3922919432),
+		.SEED3(42'd2715962282)
+	) rng_all
+	(
+		.clk(clk),
+		.rst(rst),
+		.rand_out(w_out),
+		.rand_next()
+	);
+	energy_seg
+	#(
+		.ENG_OUT_BITS(ENG_OUT_BITS),
+		.MEM_SEG(MEM_SEG)
+	) eng_seg
+	(
+		.clk(clk),
+		.rst(rst),
+		.rnd(w_out),
+		.energy_out(energy_out)
+	);
+end else begin : tables
+
+
 
 wire [RAND_BITS-1:0] rand0_next, rand1_next, rand2_next;   // next-cycle rng words: the table read addresses
 
@@ -26,7 +72,6 @@ wire [RAND_BITS-1:0] rand0_next, rand1_next, rand2_next;   // next-cycle rng wor
 //            PractRand on the 30-bit words). 1 generator instead of 3.
 //   others : one generator per word, as always (a wider LFSR word would share
 //            more bits between reads), so their sequences do not change.
-generate
 if (RNG_TYPE == "xoshiro") begin : per_stage
 	wire [3*RAND_BITS-1:0] w_next;
 	rng
@@ -110,7 +155,6 @@ end else begin : per_word
 		.rand_next(rand2_next)
 	);
 end
-endgenerate
 
 energy_icdf
 #(
@@ -131,5 +175,7 @@ energy_icdf
 	.rand2_next(rand2_next),
 	.energy_out(energy_out)
 );
+end
+endgenerate
 
 endmodule

@@ -46,6 +46,11 @@
         "isTopLevel": false
       },
       {
+        "name": "energy_seg.v",
+        "path": "..\\..\\rtl\\energy\\energy_seg.v",
+        "isTopLevel": false
+      },
+      {
         "name": "hit_draw.v",
         "path": "..\\..\\rtl\\hits\\hit_draw.v",
         "isTopLevel": false
@@ -58,6 +63,11 @@
       {
         "name": "noise_icdf.v",
         "path": "..\\..\\rtl\\noise\\noise_icdf.v",
+        "isTopLevel": false
+      },
+      {
+        "name": "noise_gauss.v",
+        "path": "..\\..\\rtl\\noise\\noise_gauss.v",
         "isTopLevel": false
       },
       {

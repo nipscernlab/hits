@@ -707,6 +707,8 @@ set_global_assignment -name MIF_FILE ../../rtl/hits/bunch_train_mask.mif
 set_global_assignment -name MIF_FILE ../../rtl/energy/energy_icdf_a13_2.mif
 set_global_assignment -name MIF_FILE ../../rtl/energy/energy_icdf_a13_1.mif
 set_global_assignment -name MIF_FILE ../../rtl/energy/energy_icdf_a13_0.mif
+set_global_assignment -name VERILOG_FILE ../../rtl/energy/energy_seg.v
+set_global_assignment -name MIF_FILE ../../rtl/energy/energy_seg_default.mif
 set_global_assignment -name VERILOG_FILE sw_converter.v
 # Shaper selection: the default is F34 (the FENICS Phase-II pulse); uncomment
 # ONE line for another one. Each choice has its own golden VCD (see README).
@@ -716,6 +718,9 @@ set_global_assignment -name VERILOG_FILE sw_converter.v
 # USE_NOISE_TABLES uses the sigma = 4 tables instead; USE_NOISE_SIGMA8 the sigma = 8 tables.
 #set_global_assignment -name VERILOG_MACRO "USE_NOISE_TABLES=1"
 #set_global_assignment -name VERILOG_MACRO "USE_NOISE_SIGMA8=1"
+# Energy: segmented inverse CDF (energy_seg.v, ROM energy_seg_default.mif) by default with xoshiro.
+# USE_ENERGY_TABLES uses the three tables instead (the default until 2026-10-08).
+#set_global_assignment -name VERILOG_MACRO "USE_ENERGY_TABLES=1"
 # ADC: rounds to the nearest count by default; USE_ADC_FLOOR truncates (as until 2026-10-03).
 #set_global_assignment -name VERILOG_MACRO "USE_ADC_FLOOR=1"
 # CSA + CR-4RC shaper: input registered by default; USE_SHAPER_NO_PIPE removes it (as until 2026-10-03).

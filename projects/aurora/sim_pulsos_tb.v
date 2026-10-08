@@ -51,6 +51,7 @@ module sim_pulsos_tb;
         .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_a13_0.mif"}),
         .MEM_ENG1  ({RTL_DIR, "/energy/energy_icdf_a13_1.mif"}),
         .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_a13_2.mif"}),
+        .MEM_SEG   ({RTL_DIR, "/energy/energy_seg_default.mif"}),
         .MEM_GAUSS ({RTL_DIR, "/noise/noise_gauss_s4.mif"}),
         .MEM_NOISE0({RTL_DIR, "/noise/noise_s4_icdf0.mif"}),
         .MEM_NOISE1({RTL_DIR, "/noise/noise_s4_icdf1.mif"}),

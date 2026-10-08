@@ -9,8 +9,8 @@
 Real-time FPGA simulator of calorimeter readout pulses, running at 40 MHz on a
 Terasic DE10-Nano (Intel Cyclone V SoC). It emulates the front-end signal chain
 of the ATLAS Tile Calorimeter readout: pseudo-random hit generation following
-the LHC bunch-train structure, energy amplitudes drawn from measured
-distributions, electronic noise, analog pulse shaping and digitization.
+the LHC bunch-train structure, energy amplitudes drawn from a spectrum held
+in ROM, electronic noise, analog pulse shaping and digitization.
 Occupancy and pedestal are configurable at runtime from the embedded ARM
 processor (HPS). It is used to validate online energy-reconstruction techniques
 without access to the experiment; those techniques are not part of the
@@ -29,7 +29,7 @@ them is `rtl/hits_simulator.v`.
                    |
  random/ --> hits/ (Bernoulli draw x bunch-train mask) --- hit ---+
                                                                   |
- random/ --> energy/ (inverse CDF, 3 tables) ------- energy ---> [x] event_bt
+ random/ --> energy/ (segmented inverse CDF) -------- energy ---> [x] event_bt
                                                                   |
                                                      shaper/ (one of three pulse shapes)
                                                                   |  shaper_out
@@ -88,6 +88,7 @@ macro is set, the wrapper in `reconstrucao/` instantiates the PZC.
 |---|---|---|---|
 | Random generator | `"xoshiro"`, `"round_robin"`, `"leap"` | `RNG_TYPE` parameter of `hits_simulator` (on the board: `de10_nano_soc_ghrd.v`); in `simulador_tb.v`, `-DUSE_RNG_ROUND_ROBIN` or `-DUSE_RNG_LEAP` | `"xoshiro"` |
 | Pulse shape | F34 (FENICS Phase II), legacy, CSA + CR-4RC | macro `USE_SHAPER_LEGACY` or `USE_SHAPER_CSA_CR4RC` | F34 (since 2026-10-01) |
+| Energy spectrum | segmented inverse CDF (ROM `MEM_SEG`), the three tables | macro `USE_ENERGY_TABLES`; the round_robin and leap generators always use the tables | segmented, ROM `energy_seg_default.mif` (since 2026-10-08) |
 | Noise | Gaussian (segmented inverse CDF), the sigma = 4 tables, the sigma = 8 tables | macro `USE_NOISE_TABLES` or `USE_NOISE_SIGMA8`; the round_robin and leap generators always use the tables | Gaussian, sigma = 4 (since 2026-10-02) |
 | ADC quantization | round to nearest, truncate | macro `USE_ADC_FLOOR` (truncate) | round (since 2026-10-03) |
 | CSA + CR-4RC input register | on, off | macro `USE_SHAPER_NO_PIPE` (off) | on (since 2026-10-03) |
@@ -125,7 +126,10 @@ outputs):
 
 - **Default shaper is now F34** (2026-10-01), the 40 MHz filter of the FENICS
   testbeam pulse, not the legacy `shaper_fenics.v`; the legacy one is
-  `USE_SHAPER_LEGACY`.
+  `USE_SHAPER_LEGACY`. Its pipeline (2026-10-01) gives it a latency of 7
+  clocks (4 before); since 2026-10-03 the legacy and CSA shapers have their
+  input registered too (output 2 and 1 samples later); `USE_SHAPER_NO_PIPE`
+  removes that register for the paper build.
 
 - **Default generator is now xoshiro128\*\*** (2026-09-28), not the round robin
   of the paper: the round robin fails the PractRand battery. Same statistics,
@@ -135,6 +139,11 @@ outputs):
 - **Default noise is now a true Gaussian** (2026-10-02, `noise_gauss.v`): the three
   tables stopped at 6.48 sigma with 120x too much probability above 6 sigma; the
   Gaussian is correct up to 6.34 sigma. The tables remain (`USE_NOISE_TABLES`).
+- **Default energy is now a segmented inverse CDF** (2026-10-08, `energy_seg.v`):
+  the three tables give a staircase of about 3000 values and stop resolving the
+  tail below ~1e-6; the segmented form is smooth and reaches 2^-32. The spectrum
+  is a ROM; the default is a placeholder (mean 34 ADC per bunch crossing), not
+  the tables' spectrum. The tables remain (`USE_ENERGY_TABLES`).
 - **The ADC rounds to the nearest count** (2026-10-03); it used to truncate, which
   read 0.5 count low on average. `USE_ADC_FLOOR` keeps the truncation.
   Since 2026-10-01 its tables have 10-bit entries (3 M10K instead of 6), with
@@ -156,7 +165,7 @@ To get the paper's behaviour on today's code, use the `paper` build (see
 rtl/                  THE SIMULATOR, one subfolder per stage (top: hits_simulator.v)
 rtl/random/           Pseudo-random generators (three kinds, chosen by RNG_TYPE), used by every stage that draws
 rtl/hits/             Hit draw + LHC bunch-train mask
-rtl/energy/           Energy amplitude (inverse CDF, 3 tables)
+rtl/energy/           Energy amplitude (segmented inverse CDF; the 3 tables remain)
 rtl/shaper/           Pulse shapers: three shapes, selectable at synthesis time (see below)
 rtl/noise/            Electronic noise (Gaussian by segmented inverse CDF, or 3 inverse-CDF tables)
 rtl/adc/              Pedestal, quantization and saturation: the simulator output
@@ -179,7 +188,7 @@ Each `.mif` memory lives next to the module that reads it.
 |---|---|---|
 | `random/` | `lfsr42.v`, `rng.v`, `rng_round_robin.v`, `rng_leap.v`, `rng_xoshiro.v` | 42-bit LFSR step (the papers' primitive polynomial); `rng` picks the generator by `RNG_TYPE` (see *Random generators* below) |
 | `hits/` | `hit_generator.v`, `hit_draw.v`, `bunch_train_mask.v` + `.mif` | Bernoulli hit draw per bunch crossing (`rand < occupancy`), gated by the LHC bunch-train mask (3564 slots) |
-| `energy/` | `energy_generator.v`, `energy_icdf.v` + `energy_icdf_a13_0..2.mif` | Inverse-CDF lookup split across three memories (multi-memory approach), drawing energy amplitudes from a measured minimum-bias distribution |
+| `energy/` | `energy_generator.v`, `energy_seg.v` + `energy_seg_default.mif` (default); `energy_icdf.v` + `energy_icdf_a13_0..2.mif` (the tables) | Energy amplitude per bunch crossing, in whole ADC counts. By default a segmented inverse CDF of one 32-bit xoshiro word: octaves of probability from both ends of the CDF, 8 segments per octave, a degree-2 polynomial per segment (512-word ROM, 464 used), no staircase and a tail down to 2^-32 of probability. The spectrum is the ROM (`MEM_SEG`); the default one is a placeholder (mean 34 ADC, 99% below 156 ADC) until a documented spectrum replaces it. The three-table inverse CDF of the paper (multi-memory approach) stays for the other generators and the paper build (`USE_ENERGY_TABLES` forces it). |
 | `shaper/` | one of the three `shaper_*.v` (see *Shaper filters* below) | the analog pulse shape of the front end |
 | `noise/` | `noise_generator.v`, `noise_gauss.v` + `noise_gauss_s4.mif` (default); `noise_icdf.v` + `noise_s4_icdf0..2.mif` / `noise_s8_*` (the tables) | Gaussian electronic noise, sigma = 4 ADC at 12 bits (the Phase-II scale; 8 before 2026-09-29). By default a segmented inverse CDF of one 32-bit xoshiro word (polynomial per segment, correct tail up to 6.34 sigma); the three-table inverse CDF stays for the other generators and the paper build. Why that level, how the tables deviate in the tail, and where the double-Gaussian noise of the real TileCal came from: [`rtl/noise/README.md`](rtl/noise/README.md) |
 | `adc/` | `adc.v` | pedestal offset, quantization to integer ADC counts (rounded to the nearest count since 2026-10-03; truncated before, 0.5 count low on average) and saturation to the 12-bit range; its output `shaper_clip` is the simulated readout |
@@ -342,10 +351,11 @@ the technique changed and the simulator is intact.
 
 | Build | Group | Macros | Golden (`verification/`) |
 |---|---|---|---|
-| `sim` | simulador | (none: xoshiro, F34, Gaussian sigma = 4) | `simulador_tb_golden.vcd` |
+| `sim` | simulador | (none: xoshiro, F34, segmented energy, Gaussian sigma = 4) | `simulador_tb_golden.vcd` |
 | `sim_legacy` | simulador | `USE_SHAPER_LEGACY` | `simulador_tb_golden_legacy.vcd` |
 | `sim_csa_cr4rc` | simulador | `USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_csa_cr4rc.vcd` |
 | `sim_noise_tables` | simulador | `USE_NOISE_TABLES` | `simulador_tb_golden_noise_tables.vcd` |
+| `sim_energy_tables` | simulador | `USE_ENERGY_TABLES` | `simulador_tb_golden_energy_tables.vcd` |
 | `sim_round_robin` | simulador | `USE_RNG_ROUND_ROBIN` | `simulador_tb_golden_round_robin.vcd` |
 | `sim_round_robin_legacy` | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_LEGACY` | `simulador_tb_golden_round_robin_legacy.vcd` |
 | **`paper`** | simulador | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC USE_NOISE_SIGMA8 USE_ADC_FLOOR USE_SHAPER_NO_PIPE` | `simulador_tb_golden_paper.vcd` (**frozen**, see below) |
