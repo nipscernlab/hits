@@ -11,7 +11,9 @@
 // [0, 1). Inside each segment the energy is a degree-2 polynomial,
 //   E = c0 + c1 t + c2 t^2, evaluated by Horner in integers (coefficients in
 // 1/16 ADC with 10 fraction bits), then rounded to the nearest whole ADC count
-// and limited to [0, 2^ENG_OUT_BITS - 1].
+// and limited to [0, 2^(ENG_OUT_BITS-1) - 1]: the shaper input is SIGNED with
+// ENG_OUT_BITS bits, so a larger energy would enter it as negative (since
+// 2026-10-14; the coefficient format itself reaches only 4096 ADC).
 //
 // The coefficients (energy_seg_default.mif, 512 words of {c0[26:0], c1[20:0],
 // c2[21:0]}, 464 used; c1 and c2 widened from 20 and 19 bits on 2026-10-14 so
@@ -94,7 +96,7 @@ always @(posedge clk or posedge rst)
 // ---- stage 5: + c0, round to whole ADC, limits ------------------------------
 wire signed [W0+1:0] h5 = (p4 >>> FT) + c0_4;
 wire signed [W0+1:0] e5 = (h5 + (1 <<< (FC+LSB_LOG-1))) >>> (FC+LSB_LOG);
-localparam signed [W0+1:0] EMAX = (1 <<< ENG_OUT_BITS) - 1;
+localparam signed [W0+1:0] EMAX = (1 <<< (ENG_OUT_BITS-1)) - 1;   // 4095: the signed shaper input
 always @(posedge clk or posedge rst)
 	if (rst)            energy_out <= 0;
 	else if (e5 < 0)    energy_out <= 0;

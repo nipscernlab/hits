@@ -259,9 +259,10 @@ shaper_fenics_f34
 
 
 // event_bt/event_all are unsigned but feed the signed shaper input of the same
-// width (ENG_OUT_BITS). This is safe because the energy LUT holds 12-bit
-// magnitudes, so the top bit is always 0 and the signed value stays >= 0.
-// Widen the shaper input (or reserve a sign bit) if the LUT ever uses ENG_OUT_BITS.
+// width (ENG_OUT_BITS). This is safe because the energy never reaches the top
+// bit: the three tables hold 12-bit magnitudes and energy_seg.v limits its
+// output to 2^(ENG_OUT_BITS-1) - 1 = 4095 (since 2026-10-14; it allowed 8191
+// before, which no ROM reached). Widen the shaper input if that ever changes.
 // The hit gates the energy with an AND: written as energy_out * hits_out, the
 // Quartus put each 13 x 1 product in a DSP block (2 DSPs for two ANDs).
 assign event_bt  = energy_out & {ENG_OUT_BITS{hits_out}};
