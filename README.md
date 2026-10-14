@@ -140,6 +140,10 @@ outputs):
 - **Default noise is now a true Gaussian** (2026-10-02, `noise_gauss.v`): the three
   tables stopped at 6.48 sigma with 120x too much probability above 6 sigma; the
   Gaussian is correct up to 6.34 sigma. The tables remain (`USE_NOISE_TABLES`).
+- **xoshiro seeds by jump** (2026-10-14): the energy and noise generators start from
+  the hit generator's seed jumped 2^64 and 2 x 2^64 steps, so the three streams
+  provably never overlap (`rtl/random/xoshiro_jump.py` prints and checks them). Same
+  statistics, other sequences; the round-robin and leap builds, and `paper`, are unchanged.
 - **Fine occupancy and bypass** (2026-10-09): with xoshiro the hit draw is 16 bits,
   threshold {occupancy, `OCC_LSB`}; the 7 bits from the HPS keep their meaning
   (occupancy/128) and, with `OCC_LSB` = 0, the hits are bit for bit the old ones.

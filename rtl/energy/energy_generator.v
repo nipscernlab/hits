@@ -38,10 +38,12 @@ if (ENERGY_TYPE == "seg") begin : seg
 	#(
 		.RNG_TYPE(RNG_TYPE),
 		.RAND_OUT_SIZE(32),
-		.SEED0(42'd3890346747),
-		.SEED1(42'd545404224),
-		.SEED2(42'd3922919432),
-		.SEED3(42'd2715962282)
+		// xoshiro seed = the hit generator's state jumped 1 x 2^64 steps (xoshiro128 jump),
+		// so the three stages provably never overlap (2026-10-14; seeds from rtl/random/xoshiro_jump.py)
+		.SEED0(42'd1284247703),
+		.SEED1(42'd1539352703),
+		.SEED2(42'd127929272),
+		.SEED3(42'd4067956920)
 	) rng_all
 	(
 		.clk(clk),
@@ -78,10 +80,12 @@ if (RNG_TYPE == "xoshiro") begin : per_stage
 	#(
 		.RNG_TYPE(RNG_TYPE),
 		.RAND_OUT_SIZE(3*RAND_BITS),
-		.SEED0(42'd3890346747),
-		.SEED1(42'd545404224),
-		.SEED2(42'd3922919432),
-		.SEED3(42'd2715962282)
+		// xoshiro seed = the hit generator's state jumped 1 x 2^64 steps (xoshiro128 jump),
+		// so the three stages provably never overlap (2026-10-14; seeds from rtl/random/xoshiro_jump.py)
+		.SEED0(42'd1284247703),
+		.SEED1(42'd1539352703),
+		.SEED2(42'd127929272),
+		.SEED3(42'd4067956920)
 	) rng_all
 	(
 		.clk(clk),
