@@ -84,6 +84,8 @@ module hits_simulator
 	// leap-forward LFSR per rng); see rtl/random/rng.v. Each has its own goldens.
 	parameter RNG_TYPE = "xoshiro",
 	parameter RAND_BITS_HITS = 7,
+	parameter OCC_LSB = 0,                 // 9 low bits of the 16-bit occupancy (xoshiro), see rtl/hits/hit_generator.v
+	parameter OCC_BYPASS = 0,              // 1: hit on every filled bunch crossing (cells with occupancy 1)
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
 	parameter BUNCH_POS = 3564,
 	parameter BUNCH_TRAIN_ACTIVE = 1,
@@ -148,6 +150,8 @@ hit_generator
 #(
 	.RNG_TYPE(RNG_TYPE),
 	.RAND_BITS(RAND_BITS_HITS),
+	.OCC_LSB(OCC_LSB),
+	.OCC_BYPASS(OCC_BYPASS),
 	.BUNCH_MEM(BUNCH_MEM),
 	.BUNCH_POS(BUNCH_POS),
 	.BUNCH_TRAIN_ACTIVE(BUNCH_TRAIN_ACTIVE)

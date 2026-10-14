@@ -57,6 +57,8 @@ module FPGA_Simulator_v1_PZC
 #(
 	parameter RNG_TYPE = "xoshiro",   // random generator of the simulator (rtl/random/rng.v)
 	parameter RAND_BITS_HITS = 7,
+	parameter OCC_LSB = 0,                 // see rtl/hits/hit_generator.v
+	parameter OCC_BYPASS = 0,
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
 	parameter BUNCH_POS = 3564,
 	parameter BUNCH_TRAIN_ACTIVE = 1,
@@ -156,6 +158,8 @@ hits_simulator
 #(
 	.RNG_TYPE(RNG_TYPE),
 	.RAND_BITS_HITS(RAND_BITS_HITS),
+	.OCC_LSB(OCC_LSB),
+	.OCC_BYPASS(OCC_BYPASS),
 	.BUNCH_MEM(BUNCH_MEM),
 	.BUNCH_POS(BUNCH_POS),
 	.BUNCH_TRAIN_ACTIVE(BUNCH_TRAIN_ACTIVE),

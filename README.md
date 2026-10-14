@@ -94,6 +94,7 @@ macro is set, the wrapper in `reconstrucao/` instantiates the PZC.
 | CSA + CR-4RC input register | on, off | macro `USE_SHAPER_NO_PIPE` (off) | on (since 2026-10-03) |
 | Reconstruction technique | PZC, adaptive baseline estimator | macro `USE_BASELINE_EST` (only in `reconstrucao/` builds) | none yet (no macro builds the PZC) |
 | Occupancy, pedestal | 0..127 (hit probability occupancy/128), 13-bit offset | runtime inputs `occupancy`, `offset`; on the board, from the HPS (`./change_occupancy`) | set by the testbench / HPS |
+| Fine occupancy (xoshiro) | `OCC_LSB` 0..511: the 16-bit threshold is {occupancy, OCC_LSB} (step 1/65536); `OCC_BYPASS` = 1: a hit on every filled bunch crossing | synthesis parameters of `hits_simulator` | `OCC_LSB` = 0 (hits identical to the 7-bit draw), no bypass |
 
 A macro is passed with `-D` (Icarus) or `VERILOG_MACRO` (Quartus `.qsf`), or by
 uncommenting its `` `define `` line; details in the sections below. Each
@@ -139,6 +140,11 @@ outputs):
 - **Default noise is now a true Gaussian** (2026-10-02, `noise_gauss.v`): the three
   tables stopped at 6.48 sigma with 120x too much probability above 6 sigma; the
   Gaussian is correct up to 6.34 sigma. The tables remain (`USE_NOISE_TABLES`).
+- **Fine occupancy and bypass** (2026-10-09): with xoshiro the hit draw is 16 bits,
+  threshold {occupancy, `OCC_LSB`}; the 7 bits from the HPS keep their meaning
+  (occupancy/128) and, with `OCC_LSB` = 0, the hits are bit for bit the old ones.
+  `OCC_BYPASS` = 1 hits every filled bunch crossing. The energy ROM is the
+  spectrum of bunch crossings WITH a deposit; the occupancy carries P(deposit).
 - **Default energy is now a segmented inverse CDF** (2026-10-08, `energy_seg.v`):
   the three tables give a staircase of about 3000 values and stop resolving the
   tail below ~1e-6; the segmented form is smooth and reaches 2^-32. The spectrum
