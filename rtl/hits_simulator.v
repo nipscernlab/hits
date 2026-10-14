@@ -87,6 +87,12 @@ module hits_simulator
 	parameter RAND_BITS_HITS = 7,
 	parameter OCC_LSB = 0,                 // 9 low bits of the 16-bit occupancy (xoshiro), see rtl/hits/hit_generator.v
 	parameter OCC_BYPASS = 0,              // 1: hit on every filled bunch crossing (cells with occupancy 1)
+	// xoshiro states {s3, s2, s1, s0} of the hit, energy and noise generators (RNG_TYPE "xoshiro" only). The defaults
+	// are one seed and its 2^64 and 2 x 2^64 jumps; another channel takes the next jumps (rtl/random/xoshiro_jump.py),
+	// so no two streams overlap.
+	parameter [127:0] XO_SEED_HIT    = {32'd3049884771, 32'd209805534, 32'd363409739, 32'd461934351},
+	parameter [127:0] XO_SEED_ENERGY = {32'd4067956920, 32'd127929272, 32'd1539352703, 32'd1284247703},
+	parameter [127:0] XO_SEED_NOISE  = {32'd373898742, 32'd3231469901, 32'd777179928, 32'd1405228594},
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
 	parameter BUNCH_POS = 3564,
 	parameter BUNCH_TRAIN_ACTIVE = 1,
@@ -155,7 +161,8 @@ hit_generator
 	.OCC_BYPASS(OCC_BYPASS),
 	.BUNCH_MEM(BUNCH_MEM),
 	.BUNCH_POS(BUNCH_POS),
-	.BUNCH_TRAIN_ACTIVE(BUNCH_TRAIN_ACTIVE)
+	.BUNCH_TRAIN_ACTIVE(BUNCH_TRAIN_ACTIVE),
+	.XO_SEED(XO_SEED_HIT)
 ) hb_train
 (
 	.clk(clk),
@@ -178,7 +185,8 @@ energy_generator
 	.MEM_ENG1(MEM_ENG1),
 	.MEM_ENG2(MEM_ENG2),
 	.MEM_ENG0_THRESH(MEM_ENG0_THRESH),
-	.MEM_ENG1_THRESH(MEM_ENG1_THRESH)
+	.MEM_ENG1_THRESH(MEM_ENG1_THRESH),
+	.XO_SEED(XO_SEED_ENERGY)
 )ec
 (
 	.clk(clk),
@@ -284,7 +292,8 @@ noise_generator
 	.MEM_NOISE_BITS(MEM_NOISE_BITS),
 	.MEM_NOISE_FRAC(MEM_NOISE_FRAC),
 	.MEM_NOISE0_THRESH(MEM_NOISE0_THRESH),
-	.MEM_NOISE1_THRESH(MEM_NOISE1_THRESH)
+	.MEM_NOISE1_THRESH(MEM_NOISE1_THRESH),
+	.XO_SEED(XO_SEED_NOISE)
 ) noise_sim
 (
 	.clk(clk),

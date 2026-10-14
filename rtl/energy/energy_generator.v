@@ -19,7 +19,9 @@ module energy_generator
 	parameter MEM_ENG1 = "energy_icdf_a13_1.mif",
 	parameter MEM_ENG2 = "energy_icdf_a13_2.mif",
 	parameter MEM_ENG0_THRESH = 1001,
-	parameter MEM_ENG1_THRESH = 985
+	parameter MEM_ENG1_THRESH = 985,
+	// xoshiro state {s3, s2, s1, s0}: the hit generator's seed jumped 2^64 (rtl/random/xoshiro_jump.py)
+	parameter [127:0] XO_SEED = {32'd4067956920, 32'd127929272, 32'd1539352703, 32'd1284247703}
 )
 (
 	input clk, rst,
@@ -38,12 +40,12 @@ if (ENERGY_TYPE == "seg") begin : seg
 	#(
 		.RNG_TYPE(RNG_TYPE),
 		.RAND_OUT_SIZE(32),
-		// xoshiro seed = the hit generator's state jumped 1 x 2^64 steps (xoshiro128 jump),
+		// XO_SEED, by default the hit generator's state jumped 1 x 2^64 steps (xoshiro128 jump),
 		// so the three stages provably never overlap (2026-10-14; seeds from rtl/random/xoshiro_jump.py)
-		.SEED0(42'd1284247703),
-		.SEED1(42'd1539352703),
-		.SEED2(42'd127929272),
-		.SEED3(42'd4067956920)
+		.SEED0({10'd0, XO_SEED[31:0]}),
+		.SEED1({10'd0, XO_SEED[63:32]}),
+		.SEED2({10'd0, XO_SEED[95:64]}),
+		.SEED3({10'd0, XO_SEED[127:96]})
 	) rng_all
 	(
 		.clk(clk),
@@ -80,12 +82,12 @@ if (RNG_TYPE == "xoshiro") begin : per_stage
 	#(
 		.RNG_TYPE(RNG_TYPE),
 		.RAND_OUT_SIZE(3*RAND_BITS),
-		// xoshiro seed = the hit generator's state jumped 1 x 2^64 steps (xoshiro128 jump),
+		// XO_SEED, by default the hit generator's state jumped 1 x 2^64 steps (xoshiro128 jump),
 		// so the three stages provably never overlap (2026-10-14; seeds from rtl/random/xoshiro_jump.py)
-		.SEED0(42'd1284247703),
-		.SEED1(42'd1539352703),
-		.SEED2(42'd127929272),
-		.SEED3(42'd4067956920)
+		.SEED0({10'd0, XO_SEED[31:0]}),
+		.SEED1({10'd0, XO_SEED[63:32]}),
+		.SEED2({10'd0, XO_SEED[95:64]}),
+		.SEED3({10'd0, XO_SEED[127:96]})
 	) rng_all
 	(
 		.clk(clk),

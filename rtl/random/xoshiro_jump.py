@@ -7,10 +7,14 @@ its own 2^64-long stretch of the 2^128 - 1 cycle. The script also checks the
 jump against the transition matrix raised to 2^64 (GF(2) squaring), so the
 constants are not taken on faith.
 
-    python rtl/random/xoshiro_jump.py [N]   # N jumped states (default 2)
+    python rtl/random/xoshiro_jump.py [N]          # N jumped states (default 2)
+    python rtl/random/xoshiro_jump.py canais C     # the XO_SEED_* parameters of C channels
 
 Prints SEED0..SEED3 for each stage, in the order rng_xoshiro.v takes them
-(SEED0 = s0, ..., SEED3 = s3).
+(SEED0 = s0, ..., SEED3 = s3). With "canais", channel k gets the jumps 3k, 3k+1
+and 3k+2 (hit, energy, noise) as the 128-bit XO_SEED_HIT, XO_SEED_ENERGY and
+XO_SEED_NOISE parameters of hits_simulator ({s3, s2, s1, s0}); channel 0 is the
+default.
 """
 import sys
 
@@ -70,7 +74,28 @@ def matrix_jump():
     return cols
 
 
+def verilog(s):
+    return "{" + ", ".join(f"32'd{v}" for v in reversed(s)) + "}"
+
+
+def canais(c):
+    t64 = matrix_jump()
+    s = HIT_SEED
+    for k in range(c):
+        out = []
+        for _ in range(3):
+            out.append(s)
+            nxt = jump(s)
+            assert pack(nxt) == apply(t64, pack(s)), "jump constants disagree with T^(2^64)"
+            s = nxt
+        print(f"canal {k}: .XO_SEED_HIT({verilog(out[0])}), .XO_SEED_ENERGY({verilog(out[1])}), "
+              f".XO_SEED_NOISE({verilog(out[2])})")
+
+
 def main():
+    if len(sys.argv) > 2 and sys.argv[1] == "canais":
+        canais(int(sys.argv[2]))
+        return
     n = int(sys.argv[1]) if len(sys.argv) > 1 else 2
     t64 = matrix_jump()
     s = HIT_SEED

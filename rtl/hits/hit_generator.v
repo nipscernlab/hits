@@ -20,7 +20,10 @@ module hit_generator
 	parameter OCC_BYPASS = 0,             // 1: hit on every bunch crossing (occupancy 1)
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
 	parameter BUNCH_POS = 3564,
-	parameter BUNCH_TRAIN_ACTIVE = 1
+	parameter BUNCH_TRAIN_ACTIVE = 1,
+	// xoshiro state {s3, s2, s1, s0} (the other generators keep their own seeds); one channel's three generators are
+	// jumped 2^64 apart, see rtl/random/xoshiro_jump.py
+	parameter [127:0] XO_SEED = {32'd3049884771, 32'd209805534, 32'd363409739, 32'd461934351}
 )
 (
 	input clk, rst,
@@ -37,10 +40,10 @@ rng
 #(
 	.RNG_TYPE(RNG_TYPE),
 	.RAND_OUT_SIZE(DRAW_BITS),
-	.SEED0(42'd461934351),
-	.SEED1(42'd363409739),
-	.SEED2(42'd209805534),
-	.SEED3(42'd3049884771),
+	.SEED0(FINE ? {10'd0, XO_SEED[31:0]}   : 42'd461934351),
+	.SEED1(FINE ? {10'd0, XO_SEED[63:32]}  : 42'd363409739),
+	.SEED2(FINE ? {10'd0, XO_SEED[95:64]}  : 42'd209805534),
+	.SEED3(FINE ? {10'd0, XO_SEED[127:96]} : 42'd3049884771),
 	.SEED4(42'd2859598492),
 	.SEED5(42'd352859598492),
 	.SEED6(42'd42859998594)
