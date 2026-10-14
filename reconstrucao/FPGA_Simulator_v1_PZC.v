@@ -33,7 +33,7 @@
 // MEASURED (EST_LATENCIA, EST_K_VAZIO, EST_N_ANC/recip.mem, EST_IA_INIT) was
 // measured for the F34 shaper (the simulator default). Combining USE_BASELINE_EST with the
 // CSA+CR-4RC shaper (or the legacy one) compiles and runs, but is silently
-// MIS-ANCHORED: the CSA pulse has a different latency (1 cycle vs 4) and does
+// MIS-ANCHORED: the CSA pulse has a different latency (5 cycles vs 7) and does
 // not vanish at gap+13 (about 1.5% of the peak remains, since it decays
 // geometrically instead of ending with a FIR head), so anchors carry pulse
 // residue and bias the baseline. No error is raised anywhere, and only the

@@ -61,9 +61,10 @@
 // the paper build needs it. Same rule as the shaper macros.
 //`define USE_ADC_FLOOR
 
-// CSA + CR-4RC SHAPER: its input is registered by default (since 2026-10-03,
-// latency 2). USE_SHAPER_NO_PIPE removes that register (latency 1, as until
-// then); the paper build needs it. No effect on the other shapers.
+// CSA + CR-4RC SHAPER: pipelined by default (input registered since 2026-10-03,
+// everything outside the section loops since 2026-10-14: latency 5).
+// USE_SHAPER_NO_PIPE keeps the original single-cycle datapath (latency 1); the
+// paper build needs it. No effect on the other shapers.
 //`define USE_SHAPER_NO_PIPE
 
 // HITS simulator core (no PZC).
@@ -215,7 +216,7 @@ shaper_csa_cr4rc
 `ifdef USE_SHAPER_NO_PIPE
 	.PIPE_IN(0)                // the paper build: latency 1, as until 2026-10-03
 `else
-	.PIPE_IN(1)                // input registered: latency 2
+	.PIPE_IN(1)                // pipelined: latency 5
 `endif
 )sf
 (

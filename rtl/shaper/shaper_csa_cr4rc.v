@@ -28,11 +28,15 @@
 // physics of the sampled chain that the papers describe, not a fixed-point
 // artifact, and it is NOT removed here.
 //
-// Latency: 2 cycles with PIPE_IN = 1 (the default since 2026-10-03: the input
-// is registered, which cuts the path bunch-train mask -> hit -> energy x hit
-// -> sections that kept HITS below 40 MHz with this shaper), 1 cycle with
-// PIPE_IN = 0 (as until then; the paper build keeps it, macro
-// USE_SHAPER_NO_PIPE). The shape is the same, only delayed.
+// Latency: 5 cycles with PIPE_IN = 1 (the default). Since 2026-10-03 the input
+// was registered (latency 2); since 2026-10-14 everything outside the three
+// section loops is pipelined too (R_k*x, the FIR products and sum, the final
+// sum and rounding), the same values 3 cycles later: on the Cyclone V the
+// simulator with this shaper goes 53.7 -> 79.2 MHz (worst corner), and the
+// limit is now the section loop itself (Q_k*y_k in DSP blocks plus one add;
+// an exact CSD shift-add tree of Q_k was slower, 76.8 MHz, and larger).
+// PIPE_IN = 0 keeps the original single-cycle datapath, latency 1 (the paper
+// build, macro USE_SHAPER_NO_PIPE). The shape is the same, only delayed.
 //
 // WARNING: the constants below bake in G_OUT_LOG = 10 (output scale 2**10,
 // the HITS convention shared by the other shapers). The parameter exists for
@@ -75,42 +79,63 @@ localparam signed [27:0] T3 =  28'sd154;
 localparam signed [SC:0] MEIO_SC = 1 <<< (SC - 1);
 localparam signed [F:0]  MEIO_F  = 1 <<< (F - 1);
 
-// input register (PIPE_IN = 1) or the input itself (PIPE_IN = 0)
-reg  signed [BITS_IN-1:0] x0r = 0;
-wire signed [BITS_IN-1:0] x0 = PIPE_IN ? x0r : in;
-always @(posedge clock or posedge rst)
-	if (rst) x0r <= 0; else x0r <= in;
-
 reg signed [BITS_IN-1:0] x1 = 0, x2 = 0, x3 = 0;   // FIR delay line
 reg signed [WY-1:0] y0 = 0, y1 = 0, y2 = 0;        // IIR section states
 reg signed [BITS_IN+16:0] acc = 0;                 // registered, rounded output
 
-// FIR head (wide targets so the products keep every bit)
-wire signed [BC+BITS_IN+12:0] fir =
-	T0 * x0 + T1 * x1 + T2 * x2 + T3 * x3;
-
-// section k: y_k[n] = R_k*x[n] + round(Q_k * y_k[n-1] / 2**SC)
-wire signed [SC+WY+1:0] p0 = Q0 * y0, p1 = Q1 * y1, p2 = Q2 * y2;
-wire signed [WY-1:0] y0n = R0 * x0 + ((p0 + MEIO_SC) >>> SC);
-wire signed [WY-1:0] y1n = R1 * x0 + ((p1 + MEIO_SC) >>> SC);
-wire signed [WY-1:0] y2n = R2 * x0 + ((p2 + MEIO_SC) >>> SC);
-
-// sum of the NEW states + the FIR aligned from BC to F fraction bits
-wire signed [WS-1:0] soma =
-	y0n + y1n + y2n + ((fir <<< (F - BC)));
-
-always @(posedge clock or posedge rst) begin
-	if (rst) begin
-		x1 <= 0; x2 <= 0; x3 <= 0;
-		y0 <= 0; y1 <= 0; y2 <= 0;
-		acc <= 0;
-	end
-	else begin
-		x1 <= x0; x2 <= x1; x3 <= x2;
-		y0 <= y0n; y1 <= y1n; y2 <= y2n;
-		acc <= (soma + MEIO_F) >>> F;
-	end
+generate
+if (PIPE_IN == 0) begin : comb
+	// the original single-cycle datapath (the paper build): latency 1
+	wire signed [BITS_IN-1:0] x0 = in;
+	wire signed [BC+BITS_IN+12:0] fir =
+		T0 * x0 + T1 * x1 + T2 * x2 + T3 * x3;
+	wire signed [SC+WY+1:0] p0 = Q0 * y0, p1 = Q1 * y1, p2 = Q2 * y2;
+	wire signed [WY-1:0] y0n = R0 * x0 + ((p0 + MEIO_SC) >>> SC);
+	wire signed [WY-1:0] y1n = R1 * x0 + ((p1 + MEIO_SC) >>> SC);
+	wire signed [WY-1:0] y2n = R2 * x0 + ((p2 + MEIO_SC) >>> SC);
+	wire signed [WS-1:0] soma = y0n + y1n + y2n + ((fir <<< (F - BC)));
+	always @(posedge clock or posedge rst)
+		if (rst) begin
+			x1 <= 0; x2 <= 0; x3 <= 0; y0 <= 0; y1 <= 0; y2 <= 0; acc <= 0;
+		end else begin
+			x1 <= x0; x2 <= x1; x3 <= x2;
+			y0 <= y0n; y1 <= y1n; y2 <= y2n;
+			acc <= (soma + MEIO_F) >>> F;
+		end
+end else begin : pipe
+	// pipelined datapath, the same values 3 cycles later than before (latency 5):
+	//   e1  x0 <= in;  e2  m_k <= R_k*x0, FIR products;  e3  y_k loop, FIR sum;
+	//   e4  partial sums;  e5  acc.
+	// The section loop keeps only Q_k*y_k + A_k: since R_k*x is an integer,
+	//   R*x + ((Q*y + 2^(SC-1)) >>> SC) == (Q*y + R*x*2^SC + 2^(SC-1)) >>> SC,
+	// and A_k = {m_k, 1, (SC-1) zeros} is that sum by concatenation, no adder.
+	reg signed [BITS_IN-1:0] x0 = 0;
+	reg signed [BITS_IN+35:0] m0 = 0, m1 = 0, m2 = 0;
+	reg signed [BC+BITS_IN+12:0] f0 = 0, f1 = 0, f2 = 0, f3 = 0, fir = 0;
+	reg signed [WS-1:0] s01 = 0, s2f = 0;
+	wire signed [SC+WY+1:0] a0 = $signed({m0, 1'b1, {(SC-1){1'b0}}});
+	wire signed [SC+WY+1:0] a1 = $signed({m1, 1'b1, {(SC-1){1'b0}}});
+	wire signed [SC+WY+1:0] a2 = $signed({m2, 1'b1, {(SC-1){1'b0}}});
+	wire signed [SC+WY+1:0] n0 = Q0 * y0 + a0, n1 = Q1 * y1 + a1, n2 = Q2 * y2 + a2;
+	always @(posedge clock or posedge rst)
+		if (rst) begin
+			x0 <= 0; x1 <= 0; x2 <= 0; x3 <= 0;
+			m0 <= 0; m1 <= 0; m2 <= 0;
+			f0 <= 0; f1 <= 0; f2 <= 0; f3 <= 0; fir <= 0;
+			y0 <= 0; y1 <= 0; y2 <= 0;
+			s01 <= 0; s2f <= 0; acc <= 0;
+		end else begin
+			x0 <= in; x1 <= x0; x2 <= x1; x3 <= x2;
+			m0 <= R0 * x0; m1 <= R1 * x0; m2 <= R2 * x0;
+			f0 <= T0 * x0; f1 <= T1 * x1; f2 <= T2 * x2; f3 <= T3 * x3;
+			fir <= (f0 + f1) + (f2 + f3);
+			y0 <= n0 >>> SC; y1 <= n1 >>> SC; y2 <= n2 >>> SC;
+			s01 <= y0 + y1;
+			s2f <= y2 + (fir <<< (F - BC)) + MEIO_F;
+			acc <= (s01 + s2f) >>> F;
+		end
 end
+endgenerate
 
 assign out = acc;
 

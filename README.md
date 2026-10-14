@@ -91,7 +91,7 @@ macro is set, the wrapper in `reconstrucao/` instantiates the PZC.
 | Energy spectrum | segmented inverse CDF (ROM `MEM_SEG`), the three tables | macro `USE_ENERGY_TABLES`; the round_robin and leap generators always use the tables | segmented, ROM `energy_seg_default.mif` (since 2026-10-08) |
 | Noise | Gaussian (segmented inverse CDF), the sigma = 4 tables, the sigma = 8 tables | macro `USE_NOISE_TABLES` or `USE_NOISE_SIGMA8`; the round_robin and leap generators always use the tables | Gaussian, sigma = 4 (since 2026-10-02) |
 | ADC quantization | round to nearest, truncate | macro `USE_ADC_FLOOR` (truncate) | round (since 2026-10-03) |
-| CSA + CR-4RC input register | on, off | macro `USE_SHAPER_NO_PIPE` (off) | on (since 2026-10-03) |
+| CSA + CR-4RC pipeline | on, off | macro `USE_SHAPER_NO_PIPE` (off) | on (input register since 2026-10-03; full pipeline, latency 5, since 2026-10-14) |
 | Reconstruction technique | PZC, adaptive baseline estimator | macro `USE_BASELINE_EST` (only in `reconstrucao/` builds) | none yet (no macro builds the PZC) |
 | Occupancy, pedestal | 0..127 (hit probability occupancy/128), 13-bit offset | runtime inputs `occupancy`, `offset`; on the board, from the HPS (`./change_occupancy`) | set by the testbench / HPS |
 | Fine occupancy (xoshiro) | `OCC_LSB` 0..511: the 16-bit threshold is {occupancy, OCC_LSB} (step 1/65536); `OCC_BYPASS` = 1: a hit on every filled bunch crossing | synthesis parameters of `hits_simulator` | `OCC_LSB` = 0 (hits identical to the 7-bit draw), no bypass |
@@ -130,7 +130,9 @@ outputs):
   `USE_SHAPER_LEGACY`. Its pipeline (2026-10-01) gives it a latency of 7
   clocks (4 before); since 2026-10-03 the legacy and CSA shapers have their
   input registered too (output 2 and 1 samples later); `USE_SHAPER_NO_PIPE`
-  removes that register for the paper build.
+  removes that register for the paper build. Since 2026-10-14 the CSA shaper is
+  pipelined outside its section loops (latency 5, the same values 3 samples
+  later): with it the simulator goes 53.7 -> 79.2 MHz on the Cyclone V.
 
 - **Default generator is now xoshiro128\*\*** (2026-09-28), not the round robin
   of the paper: the round robin fails the PractRand battery. Same statistics,
