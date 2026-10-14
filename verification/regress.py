@@ -83,6 +83,12 @@ BUILDS = {
                                     "USE_NOISE_SIGMA8", "USE_ADC_FLOOR",
                                     "USE_SHAPER_NO_PIPE"],
                       "simulador_tb_golden_paper.vcd"),
+    # THE HITS OF THE REVISED PAPER (revision R1 of the Sensors Journal paper):
+    # the current default with the CSA/CR-4RC shaper and the Lorenzetti energy
+    # spectrum (energy_seg_lorenzetti.mif, OCC_LSB 506). To be frozen once the
+    # paper numbers close.
+    "paper_r1":      ("simulador", ["USE_SHAPER_CSA_CR4RC", "USE_ENERGY_LORENZETTI"],
+                      "simulador_tb_golden_paper_r1.vcd"),
     # the leap-forward generator (RNG_TYPE = "leap")
     "sim_leap":      ("simulador", ["USE_RNG_LEAP"], "simulador_tb_golden_leap.vcd"),
     "sim_leap_legacy": ("simulador", ["USE_RNG_LEAP", "USE_SHAPER_LEGACY"],

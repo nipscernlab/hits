@@ -88,7 +88,7 @@ macro is set, the wrapper in `reconstrucao/` instantiates the PZC.
 |---|---|---|---|
 | Random generator | `"xoshiro"`, `"round_robin"`, `"leap"` | `RNG_TYPE` parameter of `hits_simulator` (on the board: `de10_nano_soc_ghrd.v`); in `simulador_tb.v`, `-DUSE_RNG_ROUND_ROBIN` or `-DUSE_RNG_LEAP` | `"xoshiro"` |
 | Pulse shape | F34 (FENICS Phase II), legacy, CSA + CR-4RC | macro `USE_SHAPER_LEGACY` or `USE_SHAPER_CSA_CR4RC` | F34 (since 2026-10-01) |
-| Energy spectrum | segmented inverse CDF (ROM `MEM_SEG`), the three tables | macro `USE_ENERGY_TABLES`; the round_robin and leap generators always use the tables | segmented, ROM `energy_seg_default.mif` (since 2026-10-08) |
+| Energy spectrum | segmented inverse CDF (ROM `MEM_SEG`), the three tables | macro `USE_ENERGY_TABLES`; the round_robin and leap generators always use the tables; in `simulador_tb.v`, `-DUSE_ENERGY_LORENZETTI` loads `energy_seg_lorenzetti.mif` with its occupancy (`OCC_LSB` 506) | segmented, ROM `energy_seg_default.mif` (since 2026-10-08) |
 | Noise | Gaussian (segmented inverse CDF), the sigma = 4 tables, the sigma = 8 tables | macro `USE_NOISE_TABLES` or `USE_NOISE_SIGMA8`; the round_robin and leap generators always use the tables | Gaussian, sigma = 4 (since 2026-10-02) |
 | ADC quantization | round to nearest, truncate | macro `USE_ADC_FLOOR` (truncate) | round (since 2026-10-03) |
 | CSA + CR-4RC pipeline | on, off | macro `USE_SHAPER_NO_PIPE` (off) | on (input register since 2026-10-03; full pipeline, latency 5, since 2026-10-14) |
@@ -419,6 +419,25 @@ shaper.
   circuit changed since (tables in block RAM, rotating LFSR bank), so the same
   parameters give another netlist. To work on it without touching `main`:
   `git worktree add ../hits-paper paper-jsen-2026`.
+
+
+### The revised version (in preparation)
+
+The revision of the paper describes the current HITS, keeping only its pulse,
+the CSA + CR-4RC shaper. Its configuration is the `paper_r1` build:
+`USE_SHAPER_CSA_CR4RC` plus `USE_ENERGY_LORENZETTI`, on top of the defaults
+(xoshiro, segmented energy, Gaussian noise with sigma = 4, rounding ADC, the
+pipelined CSA shaper). Its golden is not frozen yet; it will be once the
+numbers of the paper close.
+
+`energy_seg_lorenzetti.mif` is the energy per bunch crossing of the hottest
+cell of the hadronic barrel in the public Lorenzetti simulator
+([fork](https://github.com/lucianomaf/lorenzetti), commit `9164136`): a
+minimum-bias library of 10 000 Pythia events, the 256 channels of that cell
+pooled (same eta, so the same distribution), 200 interactions per crossing,
+visible energy at 3 ADC counts per MeV. Mean 9.5 ADC per crossing, deposit in
+65530/65536 of them. The research scripts that produce it are kept outside
+this repository.
 
 ## Running on the DE10-Nano board
 

@@ -25,10 +25,14 @@
 // Energy: with xoshiro the segmented inverse CDF of energy_seg.v (ROM
 // energy_seg_default.mif), with the other generators the three tables
 // energy_icdf_a13_*. -DUSE_ENERGY_TABLES forces the tables.
+// -DUSE_ENERGY_LORENZETTI loads energy_seg_lorenzetti.mif (the spectrum of the
+// revised paper, from Lorenzetti) with its occupancy: OCC_LSB = 506 and the
+// occupancy input held at 127, P(deposit) = 65530/65536 (regression build paper_r1).
 //
 // - 40 MHz clock (25 ns period), like the LHC bunch clock;
 // - short reset at the start;
-// - occupancy starts at 25/127 and steps to 80/127 halfway through;
+// - occupancy starts at 25/127 and steps to 80/127 halfway through (held at
+//   127 with USE_ENERGY_LORENZETTI);
 // - offset (pedestal) = 146 ADC;
 // - 3 full bunch-train orbits (3 x 3564 slots) + margin;
 // - the .mif files are loaded through RTL_DIR, RELATIVE to this folder: the
@@ -47,7 +51,15 @@ module simulador_tb;
 
     reg clk = 1'b0;
     reg rst = 1'b1;
-    reg [6:0] occupancy = 7'd25;             // 25/127 ~ 20%
+// macros, not localparams: a parameter of the testbench would land in the VCD
+`ifdef USE_ENERGY_LORENZETTI
+  `define OCC_A 7'd127   // with OCC_LSB 506: P(deposit) of the Lorenzetti spectrum
+  `define OCC_B 7'd127
+`else
+  `define OCC_A 7'd25    // 25/127 ~ 20%, then 80/127
+  `define OCC_B 7'd80
+`endif
+    reg [6:0] occupancy = `OCC_A;
     reg signed [12:0] offset = 13'sd146;     // pedestal in ADC counts
 
     wire hits_out, bt_mask_out;
@@ -70,7 +82,12 @@ module simulador_tb;
         .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_a13_0.mif"}),
         .MEM_ENG1  ({RTL_DIR, "/energy/energy_icdf_a13_1.mif"}),
         .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_a13_2.mif"}),
+`ifdef USE_ENERGY_LORENZETTI
+        .MEM_SEG   ({RTL_DIR, "/energy/energy_seg_lorenzetti.mif"}),
+        .OCC_LSB   (506),
+`else
         .MEM_SEG   ({RTL_DIR, "/energy/energy_seg_default.mif"}),
+`endif
         .MEM_GAUSS ({RTL_DIR, "/noise/noise_gauss_s4.mif"}),
 `ifdef USE_NOISE_SIGMA8          // regression build paper
         .MEM_NOISE0({RTL_DIR, "/noise/noise_s8_icdf0.mif"}),
@@ -120,8 +137,8 @@ module simulador_tb;
         repeat (N_CICLOS/2) @(posedge clk);
 
         // 2nd half: high occupancy (80/127) — watch the hit density change
-        occupancy <= 7'd80;
-        $display("t=%0t ns: occupancy 25 -> 80", $time);
+        occupancy <= `OCC_B;
+        $display("t=%0t ns: occupancy %0d -> %0d", $time, `OCC_A, `OCC_B);
 
         repeat (N_CICLOS/2) @(posedge clk);
 
