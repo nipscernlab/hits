@@ -13,8 +13,9 @@
 // 1/16 ADC with 10 fraction bits), then rounded to the nearest whole ADC count
 // and limited to [0, 2^ENG_OUT_BITS - 1].
 //
-// The coefficients (energy_seg_default.mif, 512 words of {c0[26:0], c1[19:0],
-// c2[18:0]}, 464 used) are GENERATED from a spectrum by an integer model that
+// The coefficients (energy_seg_default.mif, 512 words of {c0[26:0], c1[20:0],
+// c2[21:0]}, 464 used; c1 and c2 widened from 20 and 19 bits on 2026-10-14 so
+// that spectra with a knee in the tail fit, same values for the default) are GENERATED from a spectrum by an integer model that
 // this module reproduces bit for bit. The default ROM is a placeholder
 // spectrum (mean 34 ADC, 99% below 156 ADC); other spectra are other .mif files
 // of the same format, passed through MEM_SEG.
@@ -32,7 +33,8 @@ module energy_seg
 	input [31:0] rnd,                              // registered uniform word
 	output reg [ENG_OUT_BITS-1:0] energy_out = 0
 );
-localparam W0 = 27, W1 = 20, W2 = 19;          // coefficient fields (signed)
+localparam W0 = 27, W1 = 21, W2 = 22;          // coefficient fields (signed)
+localparam WH = (W1 > W2 ? W1 : W2) + 2;       // c2 t + c1: |c2 t| < 2^(W2-1), |c1| <= 2^(W1-1)
 localparam FT = 16, FC = 10, LSB_LOG = 4;      // fraction bits of t, of the coefficients; coefficients in 2^-4 ADC
 
 reg [W0+W1+W2-1:0] rom [0:511];
@@ -82,8 +84,8 @@ always @(posedge clk or posedge rst)
 	else     begin p3 <= cq_2 * tt2; c1_3 <= c1_2; c0_3 <= c0_2; t3 <= tt2; end
 
 // ---- stage 4: (c2 t + c1) * t ----------------------------------------------
-wire signed [W1+1:0] h4 = (p3 >>> FT) + c1_3;   // |c2 t| < 2^(W2-1) <= 2^(W1-1), so W1+2 bits hold it
-reg  signed [W1+FT+2:0] p4 = 0;
+wire signed [WH-1:0] h4 = (p3 >>> FT) + c1_3;
+reg  signed [WH+FT:0] p4 = 0;
 reg  signed [W0-1:0]    c0_4 = 0;
 always @(posedge clk or posedge rst)
 	if (rst) begin p4 <= 0; c0_4 <= 0; end
