@@ -2,8 +2,9 @@
 // with no HPS, no Qsys and no reconstruction technique: the chain ends at the
 // ADC output, shaper_clip, which is what Signal Tap captures.
 //
-// The runtime inputs are FIXED here (no ARM): occupancy 127 and pedestal
-// 146 ADC, the values of projects/aurora_simulador/simulador_tb.v with
+// The runtime inputs are FIXED here (no ARM): the 16-bit occupancy is
+// 65530/65536 (the 7-bit input at 127 plus OCC_LSB = 506, the deposit
+// probability of the Lorenzetti spectrum) and the pedestal 146 ADC, the values of projects/aurora_simulador/simulador_tb.v with
 // USE_ENERGY_LORENZETTI. With the macros of simulador_de10.qsf
 // (USE_SHAPER_CSA_CR4RC + USE_ENERGY_LORENZETTI) this is the paper_r1 build,
 // and the samples after the reset must equal the paper_r1 golden bit for bit.

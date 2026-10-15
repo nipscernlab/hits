@@ -440,8 +440,8 @@ visible energy at 3 ADC counts per MeV. Mean 9.5 ADC per crossing, deposit in
 this repository.
 
 On the board, `projects/quartus_simulador/` is the simulator alone on the
-DE10-Nano: no HPS, no Qsys, no reconstruction technique, occupancy 127 and
-pedestal 146 fixed in the top, reset released synchronously, and the
+DE10-Nano: no HPS, no Qsys, no reconstruction technique, the 16-bit occupancy
+(65530/65536: input 127 plus OCC_LSB 506) and pedestal 146 fixed in the top, reset released synchronously, and the
 `paper_r1` macros already set in `simulador_de10.qsf`. It compiles with Quartus
 Prime Lite 24.1 (2026-10-14: 823 ALMs, 1199 registers, 7 M10K, 23 DSP, 1 PLL,
 80.0 MHz worst corner for the 40 MHz clock). After the reset its `shaper_clip`

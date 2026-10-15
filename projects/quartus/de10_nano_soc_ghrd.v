@@ -307,7 +307,8 @@ assign LED[0] = led_level;
 		.PZC_M_FACTOR(PZC_M_FACTOR),
 `ifdef USE_ENERGY_LORENZETTI
 		// the revised paper's spectrum (paper_r1 with USE_SHAPER_CSA_CR4RC):
-		// set the occupancy to 127 from the HPS, P(deposit) = 65530/65536
+		// set the 7-bit occupancy to 127 from the HPS: with OCC_LSB the 16-bit
+		// threshold is 65530/65536, P(deposit)
 		.MEM_SEG("energy_seg_lorenzetti.mif"),
 		.OCC_LSB(506),
 `endif
