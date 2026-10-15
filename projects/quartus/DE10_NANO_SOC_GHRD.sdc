@@ -34,6 +34,12 @@ derive_pll_clocks
 #**************************************************************
 derive_clock_uncertainty
 
+# HPS -> simulator (de10_nano_soc_ghrd.v): occupancy and offset cross from the
+# 50 MHz bridge PIO into clk_40 through a 2-flip-flop synchronizer; the path into
+# its first stage is asynchronous by design. The reset button likewise.
+set_false_path -to [get_registers {*cfg_s1[*]}]
+set_false_path -from [get_ports {KEY[0]}]
+
 
 
 #**************************************************************

@@ -92,7 +92,7 @@ module DE10_NANO_SoC_GHRD(
 wire hps_fpga_reset_n;
 wire     [1: 0]     fpga_debounced_buttons;
 wire     [6: 0]     fpga_led_internal;
-wire     [6: 0]     occupancy;
+wire     [6: 0]     occupancy;   // in the 40 MHz domain (synchronized below)
 wire signed    [12: 0]    offset;
 wire     [31: 0]    bridge_lw_32bits;
 wire     [2: 0]     hps_reset_req;
@@ -104,8 +104,6 @@ wire                fpga_clk_50;
 // connection of internal logics
 
 assign fpga_led_internal = bridge_lw_32bits[6:0];
-assign occupancy = bridge_lw_32bits[6:0];
-assign offset = bridge_lw_32bits[12+7:7];
 assign LED[7: 1] = fpga_led_internal;
 assign fpga_clk_50 = FPGA_CLK1_50;
 assign stm_hw_events = {{15{1'b0}}, SW, fpga_led_internal, fpga_debounced_buttons};
@@ -285,6 +283,31 @@ assign LED[0] = led_level;
 		);
 		
 	  
+	// Clock-domain crossing (2026-10-15). The HPS writes occupancy and offset
+	// through the lightweight bridge PIO, clocked at 50 MHz; the simulator runs
+	// at 40 MHz. Each bit goes through two flip-flops of clk_40, and the word is
+	// taken only when it is the same on two consecutive cycles, so a write that
+	// lands between edges never shows a mix of old and new bits. The values are
+	// quasi-static (set once per run), so the only cost is a few cycles of delay.
+	// The reset button is asserted at once and released in step with clk_40, as
+	// in projects/quartus_simulador.
+	reg [19:0] cfg_s1 = 20'd0, cfg_s2 = 20'd0, cfg_s3 = 20'd0, cfg_q = 20'd0;
+	always @(posedge clk_40) begin
+		cfg_s1 <= bridge_lw_32bits[19:0];
+		cfg_s2 <= cfg_s1;
+		cfg_s3 <= cfg_s2;
+		if (cfg_s2 == cfg_s3)
+			cfg_q <= cfg_s3;
+	end
+	assign occupancy = cfg_q[6:0];
+	assign offset    = cfg_q[19:7];
+
+	reg [1:0] rst_sync = 2'b11;
+	always @(posedge clk_40 or negedge KEY[0])
+		if (!KEY[0]) rst_sync <= 2'b11;
+		else         rst_sync <= {rst_sync[0], 1'b0};
+	wire rst_40 = rst_sync[1];
+
 	wire bt_mask_out;
 	wire [12:0] event_bt;
 	wire signed [29:0] shaper_corrupted;
@@ -317,7 +340,7 @@ assign LED[0] = led_level;
 	sim
 	(
 		.clk(clk_40), 
-		.rst(~KEY[0]),
+		.rst(rst_40),
 		.occupancy(occupancy),
 		.offset(offset),	
 		.hits_out(),
