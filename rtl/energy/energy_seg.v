@@ -18,7 +18,13 @@
 // The coefficients (energy_seg_default.mif, 512 words of {c0[26:0], c1[20:0],
 // c2[21:0]}, 464 used; c1 and c2 widened from 20 and 19 bits on 2026-10-14 so
 // that spectra with a knee in the tail fit, same values for the default) are GENERATED from a spectrum by an integer model that
-// this module reproduces bit for bit. The default ROM is a placeholder
+// this module reproduces bit for bit. Since 2026-10-15 each segment's
+// polynomial passes through the target at both ends (c0 + c1 + c2 is exactly
+// the next segment's c0) and only its curvature is fitted, limited so that the
+// integer Horner above stays monotone: the energy never steps back nor skips a
+// count at a segment boundary. (Before, a free fit per segment let the end of
+// one segment land up to 6 ADC away from the start of the next with a
+// spectrum that has structure.) The default ROM is a placeholder
 // spectrum (mean 34 ADC, 99% below 156 ADC); other spectra are other .mif files
 // of the same format, passed through MEM_SEG.
 //

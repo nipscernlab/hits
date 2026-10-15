@@ -156,6 +156,16 @@ outputs):
   tail below ~1e-6; the segmented form is smooth and reaches 2^-32. The spectrum
   is a ROM; the default is a placeholder (mean 34 ADC per bunch crossing), not
   the tables' spectrum. The tables remain (`USE_ENERGY_TABLES`).
+- **Energy ROMs continuous and monotone** (2026-10-15): each segment's polynomial
+  now passes through the target spectrum at both ends and only its curvature is
+  fitted, kept small enough for the integer evaluation to stay monotone. With
+  the free fit used before, a spectrum with structure put the end of a segment
+  up to 6 ADC away from the start of the next one (the Lorenzetti ROM: 15 places
+  where the energy stepped back, and values such as 177 and 178 ADC that never
+  came out; the default ROM: 3 steps back of 1 ADC and 389 ADC never drawn).
+  Checked over all 2^32 words: no step back, and no value missing except in the
+  far tail, where two neighbouring words already differ by more than 1 ADC. Both
+  ROMs were regenerated; the goldens of every build with segmented energy changed.
 - **The ADC rounds to the nearest count** (2026-10-03); it used to truncate, which
   read 0.5 count low on average. `USE_ADC_FLOOR` keeps the truncation.
   Since 2026-10-01 its tables have 10-bit entries (3 M10K instead of 6), with
