@@ -15,9 +15,9 @@ module energy_generator
 	parameter RAND_BITS = 10,
 	parameter ENG_OUT_BITS = 13,
 	parameter MEM_ENG_SIZE = 2**10,
-	parameter MEM_ENG0 = "energy_icdf_a13_0.mif",
-	parameter MEM_ENG1 = "energy_icdf_a13_1.mif",
-	parameter MEM_ENG2 = "energy_icdf_a13_2.mif",
+	parameter MEM_ENG0 = "energy_icdf_paper_0.mif",
+	parameter MEM_ENG1 = "energy_icdf_paper_1.mif",
+	parameter MEM_ENG2 = "energy_icdf_paper_2.mif",
 	parameter MEM_ENG0_THRESH = 1001,
 	parameter MEM_ENG1_THRESH = 985,
 	// xoshiro state {s3, s2, s1, s0}: the hit generator's seed jumped 2^64 (rtl/random/xoshiro_jump.py)

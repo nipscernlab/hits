@@ -704,9 +704,9 @@ set_global_assignment -name VERILOG_FILE ../../reconstrucao/estimador_baseline/e
 set_global_assignment -name VERILOG_FILE ../../reconstrucao/estimador_baseline/gerador_ancora.v
 set_global_assignment -name MIF_FILE ../../reconstrucao/estimador_baseline/recip.mem
 set_global_assignment -name MIF_FILE ../../rtl/hits/bunch_train_mask.mif
-set_global_assignment -name MIF_FILE ../../rtl/energy/energy_icdf_a13_2.mif
-set_global_assignment -name MIF_FILE ../../rtl/energy/energy_icdf_a13_1.mif
-set_global_assignment -name MIF_FILE ../../rtl/energy/energy_icdf_a13_0.mif
+set_global_assignment -name MIF_FILE ../../rtl/energy/energy_icdf_paper_2.mif
+set_global_assignment -name MIF_FILE ../../rtl/energy/energy_icdf_paper_1.mif
+set_global_assignment -name MIF_FILE ../../rtl/energy/energy_icdf_paper_0.mif
 set_global_assignment -name VERILOG_FILE ../../rtl/energy/energy_seg.v
 set_global_assignment -name MIF_FILE ../../rtl/energy/energy_seg_default.mif
 set_global_assignment -name MIF_FILE ../../rtl/energy/energy_seg_lorenzetti.mif

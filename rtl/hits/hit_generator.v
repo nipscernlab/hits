@@ -1,6 +1,6 @@
 `timescale 1ns/100ps
 
-// Hit draw per bunch crossing, gated by the LHC bunch-train mask.
+// Hit draw per bunch crossing, gated by the bunch-train mask.
 //
 // Occupancy (since 2026-10-09): the runtime input `occupancy` keeps its
 // RAND_BITS (7) bits from the HPS, hit probability occupancy/128 as before.

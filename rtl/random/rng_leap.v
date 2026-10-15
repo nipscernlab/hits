@@ -5,7 +5,7 @@
 // m-sequence and consecutive words never share a bit. Selected by
 // RNG_TYPE = "leap" in rng.v.
 //
-// Validated 2026-09-28 against the round-robin bank (200 LHC orbits, 713k
+// Validated 2026-09-28 against the round-robin bank (200 orbits, 713k
 // cycles): hit rates on filled slots within 1 sigma of occupancy/128, energy
 // and noise distributions against the ones the tables define (chi2 52.9 and
 // 47.8, df 49), and no autocorrelation above noise at lags 1..10, where the

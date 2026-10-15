@@ -8,8 +8,8 @@
 
 Real-time FPGA simulator of calorimeter readout pulses, running at 40 MHz on a
 Terasic DE10-Nano (Intel Cyclone V SoC). It emulates the front-end signal chain
-of the ATLAS Tile Calorimeter readout: pseudo-random hit generation following
-the LHC bunch-train structure, energy amplitudes drawn from a spectrum held
+of a hadronic calorimeter readout: pseudo-random hit generation following a
+periodic bunch-train structure, energy amplitudes drawn from a spectrum held
 in ROM, electronic noise, analog pulse shaping and digitization.
 Occupancy and pedestal are configurable at runtime from the embedded ARM
 processor (HPS). It is used to validate online energy-reconstruction techniques
@@ -112,7 +112,7 @@ knew the repo then, this is where things went:
 | `rtl/Hits_Bunch_train.v`, `rtl/hits_positions.v` | `rtl/hits/hit_generator.v`, `rtl/hits/hit_draw.v` |
 | `rtl/bunch_train_mask.v` + `.mif` | `rtl/hits/` |
 | `rtl/energy_collisions.v`, `rtl/energy_distribution.v` | `rtl/energy/energy_generator.v`, `rtl/energy/energy_icdf.v` |
-| `rtl/A13_PART1..3.mif` | `rtl/energy/energy_icdf_a13_0..2.mif` (same content) |
+| `rtl/<cell>_PART1..3.mif` (at the paper tag) | `rtl/energy/energy_icdf_paper_0..2.mif` (same content) |
 | `rtl/noise_collisions.v`, `rtl/noise_distribution.v` | `rtl/noise/noise_generator.v`, `rtl/noise/noise_icdf.v` |
 | `rtl/NOISE_PART1..3.mif` | `rtl/noise/noise_s8_icdf0..2.mif` (same content; no longer the default) |
 | `rtl/random_number_generator.v`, `rtl/select_rand.v`, `rtl/rand_LFSR.v` | `rtl/random/rng_round_robin.v` + `lfsr42.v`, chosen through `rtl/random/rng.v` |
@@ -186,7 +186,7 @@ To get the paper's behaviour on today's code, use the `paper` build (see
 ```
 rtl/                  THE SIMULATOR, one subfolder per stage (top: hits_simulator.v)
 rtl/random/           Pseudo-random generators (three kinds, chosen by RNG_TYPE), used by every stage that draws
-rtl/hits/             Hit draw + LHC bunch-train mask
+rtl/hits/             Hit draw + bunch-train mask
 rtl/energy/           Energy amplitude (segmented inverse CDF; the 3 tables remain)
 rtl/shaper/           Pulse shapers: three shapes, selectable at synthesis time (see below)
 rtl/noise/            Electronic noise (Gaussian by segmented inverse CDF, or 3 inverse-CDF tables)
@@ -209,10 +209,10 @@ Each `.mif` memory lives next to the module that reads it.
 | Folder | Files | Description |
 |---|---|---|
 | `random/` | `lfsr42.v`, `rng.v`, `rng_round_robin.v`, `rng_leap.v`, `rng_xoshiro.v` | 42-bit LFSR step (the papers' primitive polynomial); `rng` picks the generator by `RNG_TYPE` (see *Random generators* below) |
-| `hits/` | `hit_generator.v`, `hit_draw.v`, `bunch_train_mask.v` + `.mif` | Bernoulli hit draw per bunch crossing (`rand < occupancy`), gated by the LHC bunch-train mask (3564 slots) |
-| `energy/` | `energy_generator.v`, `energy_seg.v` + `energy_seg_default.mif` (default); `energy_icdf.v` + `energy_icdf_a13_0..2.mif` (the tables) | Energy amplitude per bunch crossing, in whole ADC counts. By default a segmented inverse CDF of one 32-bit xoshiro word: octaves of probability from both ends of the CDF, 8 segments per octave, a degree-2 polynomial per segment (512-word ROM, 464 used), no staircase and a tail down to 2^-32 of probability. The spectrum is the ROM (`MEM_SEG`); the default one is a placeholder (mean 34 ADC, 99% below 156 ADC) until a documented spectrum replaces it. The three-table inverse CDF of the paper (multi-memory approach) stays for the other generators and the paper build (`USE_ENERGY_TABLES` forces it). |
+| `hits/` | `hit_generator.v`, `hit_draw.v`, `bunch_train_mask.v` + `.mif` | Bernoulli hit draw per bunch crossing (`rand < occupancy`), gated by the bunch-train mask (3564 slots) |
+| `energy/` | `energy_generator.v`, `energy_seg.v` + `energy_seg_default.mif` (default); `energy_icdf.v` + `energy_icdf_paper_0..2.mif` (the tables) | Energy amplitude per bunch crossing, in whole ADC counts. By default a segmented inverse CDF of one 32-bit xoshiro word: octaves of probability from both ends of the CDF, 8 segments per octave, a degree-2 polynomial per segment (512-word ROM, 464 used), no staircase and a tail down to 2^-32 of probability. The spectrum is the ROM (`MEM_SEG`); the default one is a placeholder (mean 34 ADC, 99% below 156 ADC) until a documented spectrum replaces it. The three-table inverse CDF of the paper (multi-memory approach) stays for the other generators and the paper build (`USE_ENERGY_TABLES` forces it). |
 | `shaper/` | one of the three `shaper_*.v` (see *Shaper filters* below) | the analog pulse shape of the front end |
-| `noise/` | `noise_generator.v`, `noise_gauss.v` + `noise_gauss_s4.mif` (default); `noise_icdf.v` + `noise_s4_icdf0..2.mif` / `noise_s8_*` (the tables) | Gaussian electronic noise, sigma = 4 ADC at 12 bits (the Phase-II scale; 8 before 2026-09-29). By default a segmented inverse CDF of one 32-bit xoshiro word (polynomial per segment, correct tail up to 6.34 sigma); the three-table inverse CDF stays for the other generators and the paper build. Why that level, how the tables deviate in the tail, and where the double-Gaussian noise of the real TileCal came from: [`rtl/noise/README.md`](rtl/noise/README.md) |
+| `noise/` | `noise_generator.v`, `noise_gauss.v` + `noise_gauss_s4.mif` (default); `noise_icdf.v` + `noise_s4_icdf0..2.mif` / `noise_s8_*` (the tables) | Gaussian electronic noise, sigma = 4 ADC at 12 bits (the Phase-II scale; 8 before 2026-09-29). By default a segmented inverse CDF of one 32-bit xoshiro word (polynomial per segment, correct tail up to 6.34 sigma); the three-table inverse CDF stays for the other generators and the paper build. Why that level, how the tables deviate in the tail, and where the double-Gaussian noise model came from: [`rtl/noise/README.md`](rtl/noise/README.md) |
 | `adc/` | `adc.v` | pedestal offset, quantization to integer ADC counts (rounded to the nearest count since 2026-10-03; truncated before, 0.5 count low on average) and saturation to the 12-bit range; its output `shaper_clip` is the simulated readout |
 
 ### Random generators (`rtl/random/`)
@@ -229,7 +229,7 @@ Which one is built is chosen by the **`RNG_TYPE` parameter** of
 The ALM column is the whole simulator as it stood on 2026-09-29 (legacy
 shaper, 16-bit noise tables): it compares the generators, not today's total.
 
-All three were validated in the simulator itself over 200 LHC orbits (713k
+All three were validated in the simulator itself over 200 orbits (713k
 cycles): hit rates on filled slots against occupancy/128 and energy and noise
 distributions against the ones the tables define (chi2 within the expected
 range for the three). xoshiro is the default since 2026-09-28: the only one
@@ -309,7 +309,7 @@ and [19:7] of the HPS-to-FPGA register).
 ## Simulating without hardware
 
 The simulator core is plain Verilog (no ARM/PLL/Qsys) and runs in open-source
-simulators. The testbench (`projects/aurora/sim_pulsos_tb.v`) drives 3 full LHC
+simulators. The testbench (`projects/aurora/sim_pulsos_tb.v`) drives 3 full
 orbits (3 × 3564 bunch crossings) with an occupancy step 25 → 80 halfway through.
 
 All paths are relative, so the project works from any clone location. The one

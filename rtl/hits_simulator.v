@@ -70,7 +70,7 @@
 // HITS simulator core (no PZC).
 //
 // The full front-end signal chain of the calorimeter readout, one sample per
-// 25 ns clock cycle: pseudo-random hit generation gated by the LHC bunch-train
+// 25 ns clock cycle: pseudo-random hit generation gated by the bunch-train
 // mask, energy amplitudes from the measured distribution, analog pulse shaping
 // (the selected shaper, F34 by default), electronic noise, and digitization (pedestal offset + clip to the
 // ADC range). The digitized sample `shaper_clip` IS the simulator output.
@@ -101,9 +101,9 @@ module hits_simulator
 	parameter CLIP_OUT_BITS = ENG_OUT_BITS-1,
 	parameter SHAPER_OUT_BITS = ENG_OUT_BITS+16+1,
 	parameter MEM_ENG_SIZE = 2**10,
-	parameter MEM_ENG0 = "energy_icdf_a13_0.mif",
-	parameter MEM_ENG1 = "energy_icdf_a13_1.mif",
-	parameter MEM_ENG2 = "energy_icdf_a13_2.mif",
+	parameter MEM_ENG0 = "energy_icdf_paper_0.mif",
+	parameter MEM_ENG1 = "energy_icdf_paper_1.mif",
+	parameter MEM_ENG2 = "energy_icdf_paper_2.mif",
 	parameter MEM_ENG0_THRESH = 1001,
 	parameter MEM_ENG1_THRESH = 985,
 `ifdef USE_ENERGY_TABLES

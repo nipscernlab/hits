@@ -24,12 +24,12 @@
 //
 // Energy: with xoshiro the segmented inverse CDF of energy_seg.v (ROM
 // energy_seg_default.mif), with the other generators the three tables
-// energy_icdf_a13_*. -DUSE_ENERGY_TABLES forces the tables.
+// energy_icdf_paper_*. -DUSE_ENERGY_TABLES forces the tables.
 // -DUSE_ENERGY_LORENZETTI loads energy_seg_lorenzetti.mif (the spectrum of the
 // revised paper, from Lorenzetti) with its occupancy: OCC_LSB = 506 and the
 // occupancy input held at 127, P(deposit) = 65530/65536 (regression build paper_r1).
 //
-// - 40 MHz clock (25 ns period), like the LHC bunch clock;
+// - 40 MHz clock (25 ns period), like a collider bunch clock;
 // - short reset at the start;
 // - occupancy starts at 25/127 and steps to 80/127 halfway through (held at
 //   127 with USE_ENERGY_LORENZETTI);
@@ -79,9 +79,9 @@ module simulador_tb;
         .RNG_TYPE("round_robin"), // regression builds sim_round_robin*
 `endif
         .BUNCH_MEM ({RTL_DIR, "/hits/bunch_train_mask.mif"}),
-        .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_a13_0.mif"}),
-        .MEM_ENG1  ({RTL_DIR, "/energy/energy_icdf_a13_1.mif"}),
-        .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_a13_2.mif"}),
+        .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_paper_0.mif"}),
+        .MEM_ENG1  ({RTL_DIR, "/energy/energy_icdf_paper_1.mif"}),
+        .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_paper_2.mif"}),
 `ifdef USE_ENERGY_LORENZETTI
         .MEM_SEG   ({RTL_DIR, "/energy/energy_seg_lorenzetti.mif"}),
         .OCC_LSB   (506),

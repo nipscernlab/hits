@@ -9,7 +9,7 @@
 // compiled first). The simulator ALONE, up to the ADC quantization, has its
 // own project and testbench: projects/aurora_simulador/.
 //
-// - 40 MHz clock (25 ns period), like the LHC bunch clock;
+// - 40 MHz clock (25 ns period), like a collider bunch clock;
 // - short reset at the start;
 // - occupancy starts at 25/127 and steps to 80/127 halfway through
 //   (reproduces the SignalTap test of the ENMC 2024 paper, now in GTKWave);
@@ -48,9 +48,9 @@ module sim_pulsos_tb;
     FPGA_Simulator_v1_PZC
     #(
         .BUNCH_MEM ({RTL_DIR, "/hits/bunch_train_mask.mif"}),
-        .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_a13_0.mif"}),
-        .MEM_ENG1  ({RTL_DIR, "/energy/energy_icdf_a13_1.mif"}),
-        .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_a13_2.mif"}),
+        .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_paper_0.mif"}),
+        .MEM_ENG1  ({RTL_DIR, "/energy/energy_icdf_paper_1.mif"}),
+        .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_paper_2.mif"}),
         .MEM_SEG   ({RTL_DIR, "/energy/energy_seg_default.mif"}),
         .MEM_GAUSS ({RTL_DIR, "/noise/noise_gauss_s4.mif"}),
         .MEM_NOISE0({RTL_DIR, "/noise/noise_s4_icdf0.mif"}),

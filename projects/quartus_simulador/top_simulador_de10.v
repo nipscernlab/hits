@@ -42,9 +42,9 @@ module top_simulador_de10 (
     hits_simulator
     #(
         .BUNCH_MEM ({RTL, "/hits/bunch_train_mask.mif"}),
-        .MEM_ENG0  ({RTL, "/energy/energy_icdf_a13_0.mif"}),
-        .MEM_ENG1  ({RTL, "/energy/energy_icdf_a13_1.mif"}),
-        .MEM_ENG2  ({RTL, "/energy/energy_icdf_a13_2.mif"}),
+        .MEM_ENG0  ({RTL, "/energy/energy_icdf_paper_0.mif"}),
+        .MEM_ENG1  ({RTL, "/energy/energy_icdf_paper_1.mif"}),
+        .MEM_ENG2  ({RTL, "/energy/energy_icdf_paper_2.mif"}),
 `ifdef USE_ENERGY_LORENZETTI
         .MEM_SEG   ({RTL, "/energy/energy_seg_lorenzetti.mif"}),
         .OCC_LSB   (506),
