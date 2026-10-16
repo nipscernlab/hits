@@ -19,7 +19,7 @@
 // --- 1. Technique after the simulator (no line = the wrapper's PZC) ---
 //`define USE_BASELINE_EST        // adaptive baseline estimator (calibrated for F34)
 // (the simulator ALONE is not an option here: it has its own project,
-//  projects/aurora_simulador/)
+//  projects/simulador_puro/aurora/)
 
 // --- 2. Shaper (at most ONE; none = F34, the FENICS Phase-II pulse) ---
 //`define USE_SHAPER_LEGACY       // the shaper HITS was born with (default until 2026-10-01)

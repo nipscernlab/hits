@@ -8,9 +8,9 @@ each one bit-for-bit against its frozen baseline.
 
 Two groups of builds, so a failure says WHAT broke:
   simulador     the HITS simulator ALONE, up to the ADC quantization
-                (projects/aurora_simulador/, simulador_tb.v, only rtl/ is
+                (projects/simulador_puro/aurora/, simulador_tb.v, only rtl/ is
                 compiled), one per shaper. If one fails, the SIMULATOR changed.
-  reconstrucao  simulator + the technique under test (projects/aurora/,
+  reconstrucao  simulator + the technique under test (projects/simulador_reco/aurora/,
                 sim_pulsos_tb.v, rtl/ + reconstrucao/). If only these fail,
                 the TECHNIQUE changed, not the simulator.
 
@@ -44,10 +44,10 @@ VERIF = os.path.join(RAIZ, "verification")
 # the two projects: folder (the simulation cwd), testbench, top, VCD it
 # writes ($dumpfile is hardcoded in each tb) and what gets compiled
 PROJETOS = {
-    "simulador": (os.path.join(RAIZ, "projects", "aurora_simulador"),
+    "simulador": (os.path.join(RAIZ, "projects", "simulador_puro", "aurora"),
                   "simulador_tb.v", "simulador_tb", "simulador_tb.vcd",
                   ("rtl/*.v", "rtl/*/*.v")),
-    "reconstrucao": (os.path.join(RAIZ, "projects", "aurora"),
+    "reconstrucao": (os.path.join(RAIZ, "projects", "simulador_reco", "aurora"),
                      "sim_pulsos_tb.v", "sim_pulsos_tb", "sim_pulsos_tb.vcd",
                      ("rtl/*.v", "rtl/*/*.v", "reconstrucao/*.v",
                       "reconstrucao/*/*.v")),
@@ -119,7 +119,7 @@ CONGELADOS = {
 
 # where a choice can be left on by hand; the builds pass their own macros
 # with -D, so every one of these must be committed with the lines commented
-ESCOLHAS = ("projects/aurora/simulacao.v", "rtl/hits_simulator.v",
+ESCOLHAS = ("projects/simulador_reco/aurora/simulacao.v", "rtl/hits_simulator.v",
             "reconstrucao/FPGA_Simulator_v1_PZC.v")
 
 # builds run serially and every artifact is deleted before and after each one

@@ -5,11 +5,11 @@
     "lastModified": "2026-07-17T13:45:19.822Z",
     "computerName": "",
     "appVersion": "",
-    "projectPath": "C:\\nipscern\\hits\\projects\\aurora",
+    "projectPath": "C:\\nipscern\\hits\\projects\\simulador_reco\\aurora",
     "lastOpened": "2026-07-18T15:05:34.982Z"
   },
   "structure": {
-    "basePath": "C:\\nipscern\\hits\\projects\\aurora",
+    "basePath": "C:\\nipscern\\hits\\projects\\simulador_reco\\aurora",
     "folders": [],
     "processors": [],
     "topLevelFile": "..\\..\\reconstrucao\\FPGA_Simulator_v1_PZC.v",

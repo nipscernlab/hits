@@ -60,13 +60,13 @@ Outputs of `hits_simulator`, all on the same clock:
 **Simulate, no hardware.** From the repo root, with Icarus Verilog:
 
 ```sh
-cd projects/aurora_simulador
-iverilog -s simulador_tb -o tb.vvp ../../rtl/*.v ../../rtl/*/*.v simulador_tb.v
+cd projects/simulador_puro/aurora
+iverilog -s simulador_tb -o tb.vvp ../../../rtl/*.v ../../../rtl/*/*.v simulador_tb.v
 vvp tb.vvp                  # writes simulador_tb.vcd: open it in GTKWave or Surfer
 ```
 
-Or open `projects/aurora_simulador/simulador.spf` in Aurora and press the wave
-button. That is the simulator alone; `projects/aurora/` is the simulator plus a
+Or open `projects/simulador_puro/aurora/simulador.spf` in Aurora and press the wave
+button. That is the simulator alone; `projects/simulador_reco/aurora/` is the simulator plus a
 reconstruction technique (see *Simulating without hardware*).
 
 **Check that nothing broke** after any change to the RTL:
@@ -119,7 +119,8 @@ knew the repo then, this is where things went:
 | `rtl/filtros/` | `rtl/shaper/` |
 | `rtl/clip_shaper.v` | `rtl/adc/adc.v` |
 | `rtl_test/` | `reconstrucao/pzc/`, `reconstrucao/estimador_baseline/` and the wrapper `reconstrucao/FPGA_Simulator_v1_PZC.v` |
-| `projects/aurora/` (simulator + PZC) | still there; the simulator alone is now `projects/aurora_simulador/` |
+| `projects/aurora/` (simulator + PZC) | `projects/simulador_reco/aurora/`; the simulator alone is `projects/simulador_puro/aurora/` |
+| `projects/quartus/` (board with the ARM) | `projects/simulador_reco/quartus/`; the simulator alone on the board is `projects/simulador_puro/quartus/` |
 | comparing VCDs by hand | `python verification/regress.py`, also run by CI and by the pre-commit hook |
 
 What changed behaviour (the rest is renaming and cheaper circuits with the same
@@ -194,11 +195,14 @@ rtl/adc/              Pedestal, quantization and saturation: the simulator outpu
 reconstrucao/         Reconstruction techniques under test and the core+technique wrapper (not the simulator)
 reconstrucao/pzc/                 Pole-zero cancellation + pedestal tracking
 reconstrucao/estimador_baseline/  Adaptive baseline estimator (+ its recip.mem ROM)
-projects/quartus/     Quartus Prime project for the DE10-Nano SoC (FPGA + ARM/HPS)
-projects/quartus/software/change_occupancy/  ARM program that sets occupancy and pedestal (main.c, Makefile, prebuilt binary)
-projects/quartus/tools/  MATLAB script that plots a SignalTap capture (output_files/stp1.csv)
-projects/aurora_simulador/  Aurora project: the simulator alone, up to the ADC
-projects/aurora/      Aurora project: simulator + reconstruction technique
+projects/simulador_puro/          The simulator alone, up to the ADC (what the paper describes)
+projects/simulador_puro/aurora/   Aurora project (simulation)
+projects/simulador_puro/quartus/  Quartus project for the DE10-Nano: no HPS, no Qsys, occupancy and pedestal fixed in the top
+projects/simulador_reco/          Simulator + reconstruction technique
+projects/simulador_reco/aurora/   Aurora project (simulation); simulacao.v picks the technique and the shaper
+projects/simulador_reco/quartus/  Quartus project for the DE10-Nano SoC (FPGA + ARM/HPS, Qsys, SignalTap)
+projects/simulador_reco/quartus/software/change_occupancy/  ARM program that sets occupancy and pedestal (main.c, Makefile, prebuilt binary)
+projects/simulador_reco/quartus/tools/  MATLAB script that plots a SignalTap capture (output_files/stp1.csv)
 verification/         Regression baseline: golden VCD + comparison script
 ```
 
@@ -304,26 +308,26 @@ warning in the wrapper header). Its golden is `est` in the table of
 Top-level modules: `rtl/hits_simulator.v` (the simulator core, no
 reconstruction), `reconstrucao/FPGA_Simulator_v1_PZC.v` (core plus the technique
 under test, the top used in simulation and on the board), and
-`projects/quartus/de10_nano_soc_ghrd.v` (board top, entity `DE10_NANO_SoC_GHRD`:
+`projects/simulador_reco/quartus/de10_nano_soc_ghrd.v` (board top, entity `DE10_NANO_SoC_GHRD`:
 connected to the HPS via Qsys, it takes `occupancy` and `offset` from bits [6:0]
 and [19:7] of the HPS-to-FPGA register).
 
 ## Simulating without hardware
 
 The simulator core is plain Verilog (no ARM/PLL/Qsys) and runs in open-source
-simulators. The testbench (`projects/aurora/sim_pulsos_tb.v`) drives 3 full
+simulators. The testbench (`projects/simulador_reco/aurora/sim_pulsos_tb.v`) drives 3 full
 orbits (3 × 3564 bunch crossings) with an occupancy step 25 → 80 halfway through.
 
 All paths are relative, so the project works from any clone location. The one
-requirement is that the simulation runs with cwd = `projects/aurora/`, because
+requirement is that the simulation runs with cwd = `projects/simulador_reco/aurora/`, because
 the `.mif` memories are loaded via the relative `RTL_DIR` of the testbench.
 
 ### Two Aurora projects
 
 | Project | Testbench | What runs | Compiles |
 |---|---|---|---|
-| `projects/aurora_simulador/simulador.spf` | `simulador_tb.v` | the simulator ALONE, up to the ADC quantization (`shaper_clip`) | `rtl/` only |
-| `projects/aurora/sim_pulsos.spf` | `sim_pulsos_tb.v` | simulator + the reconstruction technique under test | `rtl/` + `reconstrucao/` |
+| `projects/simulador_puro/aurora/simulador.spf` | `simulador_tb.v` | the simulator ALONE, up to the ADC quantization (`shaper_clip`) | `rtl/` only |
+| `projects/simulador_reco/aurora/sim_pulsos.spf` | `sim_pulsos_tb.v` | simulator + the reconstruction technique under test | `rtl/` + `reconstrucao/` |
 
 With [Aurora](https://nipscern.com): open the `.spf` and press the wave button
 (Icarus Verilog, then GTKWave or Surfer, chosen in the toolbar). Requires an
@@ -333,7 +337,7 @@ Aurora's temp dir and cannot resolve the relative paths).
 **Shaper** (both projects): the `` `define `` lines at the top of
 `rtl/hits_simulator.v`, see *Selecting the shaper*.
 
-**Technique** (`projects/aurora/` only): `projects/aurora/simulacao.v` is the
+**Technique** (`projects/simulador_reco/aurora/` only): `projects/simulador_reco/aurora/simulacao.v` is the
 menu, `USE_BASELINE_EST` or (no line) the PZC; it can also pick the shaper for
 that project. It is a file of its own, the first entry of the `.spf`, because
 Icarus applies a `` `define `` only to the files compiled after it and Aurora
@@ -346,13 +350,13 @@ regression passes its own macros with `-D` and refuses to run otherwise.
 With Icarus Verilog directly (`-D` to choose):
 
 ```sh
-cd projects/aurora_simulador        # the simulator alone
-iverilog -s simulador_tb -o tb.vvp ../../rtl/*.v ../../rtl/*/*.v simulador_tb.v
+cd projects/simulador_puro/aurora        # the simulator alone
+iverilog -s simulador_tb -o tb.vvp ../../../rtl/*.v ../../../rtl/*/*.v simulador_tb.v
 vvp tb.vvp                          # writes simulador_tb.vcd here
 
-cd projects/aurora                  # simulator + technique
-iverilog -s sim_pulsos_tb -o tb.vvp simulacao.v ../../rtl/*.v ../../rtl/*/*.v \
-    ../../reconstrucao/*.v ../../reconstrucao/*/*.v sim_pulsos_tb.v
+cd projects/simulador_reco/aurora                  # simulator + technique
+iverilog -s sim_pulsos_tb -o tb.vvp simulacao.v ../../../rtl/*.v ../../../rtl/*/*.v \
+    ../../../reconstrucao/*.v ../../../reconstrucao/*/*.v sim_pulsos_tb.v
 vvp tb.vvp                          # writes sim_pulsos_tb.vcd here
 ```
 
@@ -451,7 +455,7 @@ visible energy at 3 ADC counts per MeV. Mean 9.5 ADC per crossing, deposit in
 65530/65536 of them. The research scripts that produce it are kept outside
 this repository.
 
-On the board, `projects/quartus_simulador/` is the simulator alone on the
+On the board, `projects/simulador_puro/quartus/` is the simulator alone on the
 DE10-Nano: no HPS, no Qsys, no reconstruction technique, the 16-bit occupancy
 (65530/65536: input 127 plus OCC_LSB 506) and pedestal 146 fixed in the top, reset released synchronously, and the
 `paper_r1` macros already set in `simulador_de10.qsf`. It compiles with Quartus
@@ -474,16 +478,16 @@ micro-SD card (2 GB minimum).
    (login `root`, password `simhits`).
 4. Run `./change_occupancy` and follow the menu to change the occupancy or the
    pedestal offset at runtime. Its source is
-   `projects/quartus/software/change_occupancy/` (`make` there, with Intel EDS,
-   rebuilds `build/change_occupancy`; it reads `hps_0.h` from `projects/quartus/`,
+   `projects/simulador_reco/quartus/software/change_occupancy/` (`make` there, with Intel EDS,
+   rebuilds `build/change_occupancy`; it reads `hps_0.h` from `projects/simulador_reco/quartus/`,
    regenerated by `generate_hps_qsys_header.sh`).
-5. To observe the internal signals: open `projects/quartus/DE10_NANO_SoC_GHRD.qpf`
+5. To observe the internal signals: open `projects/simulador_reco/quartus/DE10_NANO_SoC_GHRD.qpf`
    in Quartus, connect the USB-Blaster II, open `stp1.stp` (SignalTap) and press
    *Autorun Analysis*. The effect of the SSH menu is visible live.
 
 To rebuild the FPGA design instead of using the prebuilt bitstream: compile the
 project in Quartus (ready-to-flash `.sof`/`.rbf` are kept in
-`projects/quartus/output_files/`).
+`projects/simulador_reco/quartus/output_files/`).
 
 ## Contributing (branch workflow)
 

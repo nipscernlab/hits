@@ -3,7 +3,7 @@
 //
 // The DUT is hits_simulator (rtl/) and nothing else: the chain ends at the
 // ADC quantization, `shaper_clip`. No reconstruction technique is compiled or
-// instantiated here; those are tested by projects/aurora/ (sim_pulsos_tb.v).
+// instantiated here; those are tested by projects/simulador_reco/aurora/ (sim_pulsos_tb.v).
 // Aurora project: simulador.spf in this folder, which lists only rtl/ files.
 //
 // Shaper: chosen where the simulator chooses it, the `define lines at the top
@@ -36,14 +36,14 @@
 // - offset (pedestal) = 146 ADC;
 // - 3 full bunch-train orbits (3 x 3564 slots) + margin;
 // - the .mif files are loaded through RTL_DIR, RELATIVE to this folder: the
-//   simulation must run with cwd = projects/aurora_simulador (Aurora runs it
+//   simulation must run with cwd = projects/simulador_puro/aurora (Aurora runs it
 //   in the .spf folder).
 
 `timescale 1ns/100ps
 
 module simulador_tb;
 
-    localparam RTL_DIR = "../../rtl";
+    localparam RTL_DIR = "../../../rtl";
 
     localparam ORBITA    = 3564;             // 25 ns slots per orbit
     localparam N_ORBITAS = 3;

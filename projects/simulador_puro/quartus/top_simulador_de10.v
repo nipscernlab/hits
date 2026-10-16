@@ -4,7 +4,7 @@
 //
 // The runtime inputs are FIXED here (no ARM): the 16-bit occupancy is
 // 65530/65536 (the 7-bit input at 127 plus OCC_LSB = 506, the deposit
-// probability of the Lorenzetti spectrum) and the pedestal 146 ADC, the values of projects/aurora_simulador/simulador_tb.v with
+// probability of the Lorenzetti spectrum) and the pedestal 146 ADC, the values of projects/simulador_puro/aurora/simulador_tb.v with
 // USE_ENERGY_LORENZETTI. With the macros of simulador_de10.qsf
 // (USE_SHAPER_CSA_CR4RC + USE_ENERGY_LORENZETTI) this is the paper_r1 build,
 // and the samples after the reset must equal the paper_r1 golden bit for bit.
@@ -20,7 +20,7 @@ module top_simulador_de10 (
     input  wire       KEY0,
     output wire [3:0] LED
 );
-    localparam RTL = "../../rtl";
+    localparam RTL = "../../../rtl";
 
     wire clk40, locked;
     pll_40mhz_de10 u_pll (.refclk(FPGA_CLK1_50), .outclk_0(clk40), .locked(locked));

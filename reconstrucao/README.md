@@ -25,7 +25,7 @@ technique, its result goes out on `pzc_out` and its baseline estimate on
 techniques.
 
 The module keeps the name `FPGA_Simulator_v1_PZC` even though it no longer
-holds only the PZC: the board top (`projects/quartus/de10_nano_soc_ghrd.v`)
+holds only the PZC: the board top (`projects/simulador_reco/quartus/de10_nano_soc_ghrd.v`)
 instantiates it by that name, and the SignalTap assignments in the `.qsf` refer
 to its hierarchy (`FPGA_Simulator_v1_PZC:sim|...`).
 
@@ -51,19 +51,19 @@ comparing them.
    any, becomes the default is still to be decided.
 
 3. **Icarus** needs nothing: the README commands compile
-   `../../reconstrucao/*.v ../../reconstrucao/*/*.v`.
+   `../../../reconstrucao/*.v ../../../reconstrucao/*/*.v`.
 
-4. **AURORA** (`projects/aurora/sim_pulsos.spf`) compiles only the files it
+4. **AURORA** (`projects/simulador_reco/aurora/sim_pulsos.spf`) compiles only the files it
    lists in `synthesizableFiles`: add the new `.v` files there.
 
-5. **Quartus** (`projects/quartus/DE10_NANO_SoC_GHRD.qsf`): add
-   `set_global_assignment -name SEARCH_PATH ../../reconstrucao/<technique>`.
+5. **Quartus** (`projects/simulador_reco/quartus/DE10_NANO_SoC_GHRD.qsf`): add
+   `set_global_assignment -name SEARCH_PATH ../../../reconstrucao/<technique>`.
    Quartus then finds both the modules and the memory files by name in that
    folder; this is how the estimator and its `recip.mem` are found (checked
    with Quartus Prime Lite 24.1, 2026-09-25).
 
 6. **Memory files.** Icarus resolves a relative `$readmemh` name against the
-   cwd of the simulation (`projects/aurora/`), not against the folder of the
+   cwd of the simulation (`projects/simulador_reco/aurora/`), not against the folder of the
    `.v`. The testbench must therefore pass the full relative path as a
    parameter, as it does for the estimator
    (`` .EST_RECIP_MEM({`EST_DIR, "/recip.mem"}) ``); otherwise the read fails and
@@ -71,7 +71,7 @@ comparing them.
    `localparam`: a localparam of the testbench enters the VCD and would break
    every existing golden.
 
-7. **Choice and regression.** Add the macro to `projects/aurora/simulacao.v`
+7. **Choice and regression.** Add the macro to `projects/simulador_reco/aurora/simulacao.v`
    (commented), add the build to `BUILDS` in `verification/regress.py`, group
    `reconstrucao`, and create its golden from a clean run with
    `python verification/regress.py --gera <build>`, which refuses to overwrite

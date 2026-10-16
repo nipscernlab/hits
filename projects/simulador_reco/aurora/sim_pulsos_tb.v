@@ -7,7 +7,7 @@
 //
 // WHICH technique and shaper run is chosen in simulacao.v (next to this file,
 // compiled first). The simulator ALONE, up to the ADC quantization, has its
-// own project and testbench: projects/aurora_simulador/.
+// own project and testbench: projects/simulador_puro/aurora/.
 //
 // - 40 MHz clock (25 ns period), like a collider bunch clock;
 // - short reset at the start;
@@ -16,17 +16,17 @@
 // - offset (pedestal) = 146 ADC;
 // - 3 full bunch-train orbits (3 x 3564 slots) + margin;
 // - the .mif files are loaded by $readmemb through RTL_DIR, RELATIVE to this
-//   folder: the simulation must run with cwd = projects/aurora (Aurora does
+//   folder: the simulation must run with cwd = projects/simulador_reco/aurora (Aurora does
 //   that since 2026-07-17; on the command line, cd here first — see README).
 
 `timescale 1ns/100ps
 
 module sim_pulsos_tb;
 
-    localparam RTL_DIR = "../../rtl";
+    localparam RTL_DIR = "../../../rtl";
     // caminho da ROM do estimador via `define (macro nao aparece no VCD; um localparam
     // novo entraria no dump e quebraria a comparacao com os goldens antigos)
-    `define EST_DIR "../../reconstrucao/estimador_baseline"
+    `define EST_DIR "../../../reconstrucao/estimador_baseline"
 
     localparam ORBITA    = 3564;             // 25 ns slots per orbit
     localparam N_ORBITAS = 3;

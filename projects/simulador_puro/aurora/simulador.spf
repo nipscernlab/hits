@@ -5,11 +5,11 @@
     "lastModified": "2026-09-25T12:00:00.000Z",
     "computerName": "",
     "appVersion": "",
-    "projectPath": "C:\\nipscern\\hits\\projects\\aurora_simulador",
+    "projectPath": "C:\\nipscern\\hits\\projects\\simulador_puro\\aurora",
     "lastOpened": "2026-09-25T12:00:00.000Z"
   },
   "structure": {
-    "basePath": "C:\\nipscern\\hits\\projects\\aurora_simulador",
+    "basePath": "C:\\nipscern\\hits\\projects\\simulador_puro\\aurora",
     "folders": [],
     "processors": [],
     "topLevelFile": "..\\..\\rtl\\hits_simulator.v",
