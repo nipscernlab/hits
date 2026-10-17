@@ -95,6 +95,7 @@ macro is set, the wrapper in `reconstrucao/` instantiates the PZC.
 | Reconstruction technique | PZC, adaptive baseline estimator | macro `USE_BASELINE_EST` (only in `reconstrucao/` builds) | none yet (no macro builds the PZC) |
 | Occupancy, pedestal | 0..127 (hit probability occupancy/128), 13-bit offset | runtime inputs `occupancy`, `offset`; on the board, from the HPS (`./change_occupancy`) | set by the testbench / HPS |
 | Fine occupancy (xoshiro) | `OCC_LSB` 0..511: the 16-bit threshold is {occupancy, OCC_LSB} (step 1/65536); `OCC_BYPASS` = 1: a hit on every filled bunch crossing | synthesis parameters of `hits_simulator` | `OCC_LSB` = 0 (hits identical to the 7-bit draw), no bypass |
+| Pulse phase (F34, CSA + CR-4RC) | fixed phase `PHASE0` (−32..31 steps of 0.390625 ns); Gaussian jitter per hit `SIGMA_PS` (ps, no cut) | synthesis parameters of `hits_simulator`; in `simulador_tb.v`, `-DUSE_PHASE0=<n>` and `-DUSE_PHASE_SIGMA_PS=<ps>` | none (`PHASE0` = 0, `SIGMA_PS` = 0: the shaper of before, bit for bit; since 2026-10-17) |
 
 A macro is passed with `-D` (Icarus) or `VERILOG_MACRO` (Quartus `.qsf`), or by
 uncommenting its `` `define `` line; details in the sections below. Each
@@ -217,7 +218,7 @@ Each `.mif` memory lives next to the module that reads it.
 | `random/` | `lfsr42.v`, `rng.v`, `rng_round_robin.v`, `rng_leap.v`, `rng_xoshiro.v` | 42-bit LFSR step (the papers' primitive polynomial); `rng` picks the generator by `RNG_TYPE` (see *Random generators* below) |
 | `hits/` | `hit_generator.v`, `hit_draw.v`, `bunch_train_mask.v` + `.mif` | Bernoulli hit draw per bunch crossing (`rand < occupancy`), gated by the bunch-train mask (3564 slots) |
 | `energy/` | `energy_generator.v`, `energy_seg.v` + `energy_seg_default.mif` (default); `energy_icdf.v` + `energy_icdf_paper_0..2.mif` (the tables) | Energy amplitude per bunch crossing, in whole ADC counts. By default a segmented inverse CDF of one 32-bit xoshiro word: octaves of probability from both ends of the CDF, 8 segments per octave, a degree-2 polynomial per segment (512-word ROM, 464 used), no staircase and a tail down to 2^-32 of probability. The spectrum is the ROM (`MEM_SEG`); the default one is a placeholder (mean 34 ADC, 99% below 156 ADC) until a documented spectrum replaces it. The three-table inverse CDF of the paper (multi-memory approach) stays for the other generators and the paper build (`USE_ENERGY_TABLES` forces it). |
-| `shaper/` | one of the three `shaper_*.v` (see *Shaper filters* below) | the analog pulse shape of the front end |
+| `shaper/` | one of the three `shaper_*.v` (see *Shaper filters* below), or the `*_phase.v` version of F34 / CSA + CR-4RC with its `*_phase.mif` (see *Pulse phase*) | the analog pulse shape of the front end |
 | `noise/` | `noise_generator.v`, `noise_gauss.v` + `noise_gauss_s4.mif` (default); `noise_icdf.v` + `noise_s4_icdf0..2.mif` / `noise_s8_*` (the tables) | Gaussian electronic noise, sigma = 4 ADC at 12 bits (the Phase-II scale; 8 before 2026-09-29). By default a segmented inverse CDF of one 32-bit xoshiro word (polynomial per segment, correct tail up to 6.34 sigma); the three-table inverse CDF stays for the other generators and the paper build. Why that level, how the tables deviate in the tail, and where the double-Gaussian noise model came from: [`rtl/noise/README.md`](rtl/noise/README.md) |
 | `adc/` | `adc.v` | pedestal offset, quantization to integer ADC counts (rounded to the nearest count since 2026-10-03; truncated before, 0.5 count low on average) and saturation to the 12-bit range; its output `shaper_clip` is the simulated readout |
 
@@ -285,6 +286,39 @@ keep working. Two shapers at once stop the compilation with an
 
 ⚠️ **Each choice has its own golden VCD** (table in *Regression check*): the
 builds produce different pulses, which is the whole point.
+
+### Pulse phase (since 2026-10-17)
+
+Each shaper reproduces the pulse sampled at one phase (F34: 1.4128 ns after the
+bunch crossing; CSA + CR-4RC: 10.1 ns). Two synthesis parameters of
+`hits_simulator` move it, for the F34 and the CSA + CR-4RC shapers:
+
+- `PHASE0`: a fixed phase for the whole channel, in steps of 25/64 = 0.390625 ns
+  (−32..31, so −12.5 to +12.1 ns); positive = the pulse arrives later;
+- `SIGMA_PS`: a jitter per hit, delta ~ N(0, `SIGMA_PS` ps) added to `PHASE0`, zero
+  mean and symmetric, with no cut (the Gaussian tail of `noise_gauss.v`, to
+  6.34 sigma); a draw past the table edge saturates there.
+
+With both at 0 (the default) nothing changes: the base shaper is built, bit for
+bit and at the same cost. Otherwise `shaper_fenics_f34_phase.v` or
+`shaper_csa_cr4rc_phase.v` is built: the same shaper with a `phase` port, its
+FIR head (and, in the CSA, the input gains of the 51 ns and 41.5 ns sections)
+read hit by hit from a ROM of 64 phases (`*_phase.mif`). The head is in transposed
+form, so each hit keeps its own phase; the IIR sections are unchanged. At
+phase 0 both give the base shaper output bit for bit. The jitter draw is its own
+xoshiro word (`XO_SEED_PHASE`, the long jump of `XO_SEED_HIT`, from
+`rtl/random/xoshiro_jump.py`) through the Gaussian of `noise_gauss.v`; the phase
+step makes sigma about 0.6% larger at sigma = 1 ns. `USE_SHAPER_LEGACY` and
+`USE_SHAPER_NO_PIPE` have no phase and stop the compilation if one is set.
+
+The `*_phase` files are generated, not written by hand: the generator (research
+phase F07) copies the base shaper, swaps the head and checks phase 0 bit for bit
+against it; rerun it after regenerating a base shaper. Cost on the DE10-Nano
+(simulator alone, Quartus 24.1, worst-corner Fmax): F34 with jitter 1913 ALMs,
+20 DSP, 15 M10K, 86.3 MHz; F34 with a fixed phase only 1707 ALMs, 18 DSP, 13 M10K,
+84.6 MHz (the table stays a ROM); F34 without phase 1751 ALMs, 3 DSP, 7 M10K,
+84.7 MHz. CSA + CR-4RC with jitter 1186 ALMs, 30 DSP, 14 M10K, 71.7 MHz; without
+phase 883 ALMs, 23 DSP, 7 M10K, 83.5 MHz.
 
 ### Reconstruction techniques (`reconstrucao/`)
 
@@ -390,6 +424,10 @@ the technique changed and the simulator is intact.
 | `sim_leap` | simulador | `USE_RNG_LEAP` | `simulador_tb_golden_leap.vcd` |
 | `sim_leap_legacy` | simulador | `USE_RNG_LEAP USE_SHAPER_LEGACY` | `simulador_tb_golden_leap_legacy.vcd` |
 | `sim_leap_csa_cr4rc` | simulador | `USE_RNG_LEAP USE_SHAPER_CSA_CR4RC` | `simulador_tb_golden_leap_csa_cr4rc.vcd` |
+| `sim_phase` | simulador | `USE_PHASE0=8` (+3.125 ns) | `simulador_tb_golden_phase.vcd` |
+| `sim_jitter` | simulador | `USE_PHASE_SIGMA_PS=1000` (sigma = 1 ns) | `simulador_tb_golden_jitter.vcd` |
+| `sim_phase_csa_cr4rc` | simulador | `USE_SHAPER_CSA_CR4RC USE_PHASE0=8` | `simulador_tb_golden_phase_csa_cr4rc.vcd` |
+| `sim_jitter_csa_cr4rc` | simulador | `USE_SHAPER_CSA_CR4RC USE_PHASE_SIGMA_PS=1000` | `simulador_tb_golden_jitter_csa_cr4rc.vcd` |
 | `pzc` | reconstrucao | (none: PZC, F34) | `sim_pulsos_tb_golden_pzc.vcd` |
 | `pzc_legacy` | reconstrucao | `USE_SHAPER_LEGACY` | `sim_pulsos_tb_golden_pzc_legacy.vcd` |
 | `pzc_csa_cr4rc` | reconstrucao | `USE_SHAPER_CSA_CR4RC` | `sim_pulsos_tb_golden_pzc_csa_cr4rc.vcd` |

@@ -736,8 +736,12 @@ set_global_assignment -name VERILOG_FILE sw_converter.v
 # from the tag (tables in M10K, rotating LFSR bank), so the paper's resource
 # numbers come only from checking out the tag.
 set_global_assignment -name VERILOG_FILE ../../../rtl/shaper/shaper_fenics_f34.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/shaper/shaper_fenics_f34_phase.v
+set_global_assignment -name MIF_FILE ../../../rtl/shaper/shaper_fenics_f34_phase.mif
 set_global_assignment -name VERILOG_FILE ../../../rtl/shaper/shaper_fenics.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/shaper/shaper_csa_cr4rc.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/shaper/shaper_csa_cr4rc_phase.v
+set_global_assignment -name MIF_FILE ../../../rtl/shaper/shaper_csa_cr4rc_phase.mif
 set_global_assignment -name VERILOG_FILE ../../../rtl/random/rng.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/random/rng_round_robin.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/random/rng_leap.v

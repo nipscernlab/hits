@@ -15,12 +15,20 @@ Prints SEED0..SEED3 for each stage, in the order rng_xoshiro.v takes them
 and 3k+2 (hit, energy, noise) as the 128-bit XO_SEED_HIT, XO_SEED_ENERGY and
 XO_SEED_NOISE parameters of hits_simulator ({s3, s2, s1, s0}); channel 0 is the
 default.
+
+The phase draw (2026-10-17) is a fourth stream per channel. Putting it in the
+3k scheme would move the seeds of every channel but 0, so it takes the LONG
+jump instead (2^96 steps, same source) of the channel's hit seed:
+XO_SEED_PHASE = long_jump(XO_SEED_HIT). The 3k streams of channel k sit at
+3k * 2^64 from the hit seed, far below 2^96 for any realistic k, so the phase
+stream never meets them. Checked against the matrix raised to 2^96.
 """
 import sys
 
 M = 0xFFFFFFFF
 HIT_SEED = [461934351, 363409739, 209805534, 3049884771]  # rtl/hits/hit_generator.v
 JUMP = [0x8764000B, 0xF542D2D3, 0x6FA035C3, 0x77F2DB5B]
+LONG_JUMP = [0xB523952E, 0x0B6F099F, 0xCCF5A0EF, 0x1C580662]
 
 
 def rotl(x, k):
@@ -38,9 +46,9 @@ def step(s):  # the state update of rng_xoshiro.v
     return [s0, s1, s2, rotl(s3, 11)]
 
 
-def jump(s):
+def jump(s, consts=JUMP):
     acc = [0, 0, 0, 0]
-    for w in JUMP:
+    for w in consts:
         for b in range(32):
             if w >> b & 1:
                 acc = [a ^ x for a, x in zip(acc, s)]
@@ -66,12 +74,19 @@ def apply(cols, v):
     return r
 
 
-def matrix_jump():
-    """Columns of T^(2^64), T the one-step transition over GF(2)^128."""
+def matrix_jump(e=64):
+    """Columns of T^(2^e), T the one-step transition over GF(2)^128."""
     cols = [pack(step(unpack(1 << i))) for i in range(128)]
-    for _ in range(64):
+    for _ in range(e):
         cols = [apply(cols, c) for c in cols]
     return cols
+
+
+def long_jump(s, t96=None):
+    out = jump(s, LONG_JUMP)
+    if t96 is not None:
+        assert pack(out) == apply(t96, pack(s)), "long jump constants disagree with T^(2^96)"
+    return out
 
 
 def verilog(s):
@@ -80,6 +95,7 @@ def verilog(s):
 
 def canais(c):
     t64 = matrix_jump()
+    t96 = matrix_jump(96)
     s = HIT_SEED
     for k in range(c):
         out = []
@@ -89,7 +105,7 @@ def canais(c):
             assert pack(nxt) == apply(t64, pack(s)), "jump constants disagree with T^(2^64)"
             s = nxt
         print(f"canal {k}: .XO_SEED_HIT({verilog(out[0])}), .XO_SEED_ENERGY({verilog(out[1])}), "
-              f".XO_SEED_NOISE({verilog(out[2])})")
+              f".XO_SEED_NOISE({verilog(out[2])}), .XO_SEED_PHASE({verilog(long_jump(out[0], t96))})")
 
 
 def main():
@@ -105,6 +121,7 @@ def main():
         assert pack(nxt) == apply(t64, pack(s)), "jump constants disagree with T^(2^64)"
         s = nxt
         print(f"stage {k}:", s)
+    print("phase (long jump of the hit seed):", long_jump(HIT_SEED, matrix_jump(96)))
 
 
 if __name__ == "__main__":

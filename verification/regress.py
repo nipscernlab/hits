@@ -95,6 +95,14 @@ BUILDS = {
                       "simulador_tb_golden_leap_legacy.vcd"),
     "sim_leap_csa_cr4rc": ("simulador", ["USE_RNG_LEAP", "USE_SHAPER_CSA_CR4RC"],
                       "simulador_tb_golden_leap_csa_cr4rc.vcd"),
+    # the phase of the pulse (2026-10-17), with the two shapers that have one: a fixed
+    # phase of +8 steps (+3.125 ns) and a jitter per hit of sigma = 1 ns
+    "sim_phase":     ("simulador", ["USE_PHASE0=8"], "simulador_tb_golden_phase.vcd"),
+    "sim_jitter":    ("simulador", ["USE_PHASE_SIGMA_PS=1000"], "simulador_tb_golden_jitter.vcd"),
+    "sim_phase_csa_cr4rc": ("simulador", ["USE_SHAPER_CSA_CR4RC", "USE_PHASE0=8"],
+                      "simulador_tb_golden_phase_csa_cr4rc.vcd"),
+    "sim_jitter_csa_cr4rc": ("simulador", ["USE_SHAPER_CSA_CR4RC", "USE_PHASE_SIGMA_PS=1000"],
+                      "simulador_tb_golden_jitter_csa_cr4rc.vcd"),
     # simulator + technique; the wrapper instantiates the PZC when
     # USE_BASELINE_EST is not set
     "pzc":           ("reconstrucao", [], "sim_pulsos_tb_golden_pzc.vcd"),
