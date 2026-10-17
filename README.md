@@ -199,6 +199,7 @@ reconstrucao/estimador_baseline/  Adaptive baseline estimator (+ its recip.mem R
 projects/simulador_puro/          The simulator alone, up to the ADC (what the paper describes)
 projects/simulador_puro/aurora/   Aurora project (simulation)
 projects/simulador_puro/quartus/  Quartus project for the DE10-Nano: no HPS, no Qsys, occupancy and pedestal fixed in the top
+projects/simulador_puro/vivado/   Vivado example: hits_vivado.tcl synthesizes the core out of context for any part (default xc7z010clg400-1)
 projects/simulador_reco/          Simulator + reconstruction technique
 projects/simulador_reco/aurora/   Aurora project (simulation); simulacao.v picks the technique and the shaper
 projects/simulador_reco/quartus/  Quartus project for the DE10-Nano SoC (FPGA + ARM/HPS, Qsys, SignalTap)
