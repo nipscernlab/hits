@@ -131,18 +131,8 @@
         "isTopLevel": false
       },
       {
-        "name": "shaper_fenics_f34_phase.v",
-        "path": "..\\..\\..\\rtl\\shaper\\shaper_fenics_f34_phase.v",
-        "isTopLevel": false
-      },
-      {
         "name": "shaper_csa_cr4rc.v",
         "path": "..\\..\\..\\rtl\\shaper\\shaper_csa_cr4rc.v",
-        "isTopLevel": false
-      },
-      {
-        "name": "shaper_csa_cr4rc_phase.v",
-        "path": "..\\..\\..\\rtl\\shaper\\shaper_csa_cr4rc_phase.v",
         "isTopLevel": false
       },
       {

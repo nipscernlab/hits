@@ -29,11 +29,6 @@
 // revised paper, from Lorenzetti) with its occupancy: 127 in the top 7 bits and
 // 506 in the low 9, P(deposit) = 65530/65536 (regression build paper_r1).
 //
-// Phase (F34 and CSA): -DUSE_PHASE0=<n> sets the fixed phase PHASE0 (n steps of
-// 0.390625 ns) and -DUSE_PHASE_SIGMA_PS=<ps> the jitter per hit SIGMA_PS of
-// hits (regression builds *_phase and *_jitter). Without them: no phase,
-// the shaper of before.
-//
 // - 40 MHz clock (25 ns period), like a collider bunch clock;
 // - short reset at the start;
 // - occupancy starts at 25/127 and steps to 80/127 halfway through (held at
@@ -99,15 +94,6 @@ module hits_tb;
         .MEM_SEG   ({RTL_DIR, "/energy/energy_seg_default.mif"}),
 `endif
         .MEM_GAUSS ({RTL_DIR, "/noise/noise_gauss_s4.mif"}),
-`ifdef USE_PHASE0                // regression builds *_phase: -DUSE_PHASE0=<steps of 0.390625 ns>
-        .PHASE0    (`USE_PHASE0),
-`endif
-`ifdef USE_PHASE_SIGMA_PS        // regression builds *_jitter: -DUSE_PHASE_SIGMA_PS=<ps>
-        .SIGMA_PS  (`USE_PHASE_SIGMA_PS),
-`endif
-        .MEM_GAUSS_PHASE({RTL_DIR, "/noise/noise_gauss_s4.mif"}),
-        .MEM_PH_F34({RTL_DIR, "/shaper/shaper_fenics_f34_phase.mif"}),
-        .MEM_PH_CSA({RTL_DIR, "/shaper/shaper_csa_cr4rc_phase.mif"}),
 `ifdef USE_NOISE_SIGMA8          // regression build paper
         .MEM_NOISE0({RTL_DIR, "/noise/noise_s8_icdf0.mif"}),
         .MEM_NOISE1({RTL_DIR, "/noise/noise_s8_icdf1.mif"}),

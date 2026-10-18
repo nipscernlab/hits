@@ -25,12 +25,8 @@ set_global_assignment -name VERILOG_FILE ../../../rtl/random/rng_xoshiro.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/shaper/iir_order1.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/shaper/iir_order2.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/shaper/shaper_csa_cr4rc.v
-set_global_assignment -name VERILOG_FILE ../../../rtl/shaper/shaper_csa_cr4rc_phase.v
-set_global_assignment -name MIF_FILE ../../../rtl/shaper/shaper_csa_cr4rc_phase.mif
 set_global_assignment -name VERILOG_FILE ../../../rtl/shaper/shaper_fenics.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/shaper/shaper_fenics_f34.v
-set_global_assignment -name VERILOG_FILE ../../../rtl/shaper/shaper_fenics_f34_phase.v
-set_global_assignment -name MIF_FILE ../../../rtl/shaper/shaper_fenics_f34_phase.mif
 set_global_assignment -name VERILOG_MACRO "USE_SHAPER_CSA_CR4RC=1"
 set_global_assignment -name VERILOG_MACRO "USE_ENERGY_LORENZETTI=1"
 # pins (DE10-Nano User Manual, Terasic): 50 MHz clock, KEY0, LED0-LED3

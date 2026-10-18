@@ -136,20 +136,7 @@ module hits
 `else
 	parameter NOISE_TYPE = (RNG_TYPE == "xoshiro") ? "gauss" : "tables",
 `endif
-	parameter MEM_GAUSS = "noise_gauss_s4.mif",
-	// PHASE of the pulse (2026-10-17), F34 and CSA + CR-4RC only. phi > 0 = the hit arrives later.
-	// The phase is an index of 64 steps of 25/64 = 0.390625 ns: index 32 + PHASE0 + delta.
-	// PHASE0 = 0 and SIGMA_PS = 0 (the defaults) build the shaper of before, bit for bit and
-	// at the same cost; anything else builds the *_phase shaper (taps per hit from a ROM).
-	parameter integer PHASE0 = 0,          // fixed phase, in steps of 0.390625 ns, -32..31
-	parameter integer SIGMA_PS = 0,        // jitter per hit: delta ~ N(0, SIGMA_PS ps), no cut
-	                                       // (Gaussian tail to 6.34 sigma), saturated at -32..31
-	// xoshiro state of the phase draw: the LONG jump (2^96) of XO_SEED_HIT (rtl/random/xoshiro_jump.py)
-	parameter [127:0] XO_SEED_PHASE  = {32'd3324829296, 32'd1325001476, 32'd2724274168, 32'd176110054},
-	// the Gaussian source of the draw: the sigma = 4 ADC noise ROM, read as 4096 z (2^-10 ADC)
-	parameter MEM_GAUSS_PHASE = "noise_gauss_s4.mif",
-	parameter MEM_PH_F34 = "shaper_fenics_f34_phase.mif",
-	parameter MEM_PH_CSA = "shaper_csa_cr4rc_phase.mif"
+	parameter MEM_GAUSS = "noise_gauss_s4.mif"
 )
 (
 	input clk, rst,
@@ -206,66 +193,6 @@ energy_generator
 );
 
 
-// ------------------------------------------------------------- phase of each hit ---
-// The shaper reads the phase of the hit that enters it in the same cycle. With SIGMA_PS = 0
-// the index is the constant 32 + PHASE0. With jitter, delta comes from its own xoshiro
-// word through the segmented inverse CDF of noise_gauss.v (MEM_GAUSS_PHASE, g = 4096 z):
-//   index = 32 + PHASE0 + round(z * SIGMA_PS / 390.625 ps), saturated to 0..63.
-// The draw runs every cycle and is independent of the hits, so whichever hit enters
-// takes a fresh delta.
-localparam PHASE_ON = (PHASE0 != 0) || (SIGMA_PS != 0);
-wire [5:0] ph_idx;
-generate
-if (PHASE0 < -32 || PHASE0 > 31) begin : erro_phase0
-	ERROR_PHASE0_must_be_in_minus32_to_31 e ();
-end
-if (SIGMA_PS < 0 || SIGMA_PS > 12500) begin : erro_sigma
-	ERROR_SIGMA_PS_must_be_in_0_to_12500 e ();
-end
-if (SIGMA_PS != 0) begin : jitter
-	wire [31:0] w_ph;
-	rng
-	#(
-		.RNG_TYPE("xoshiro"),          // the draw is xoshiro whatever RNG_TYPE says
-		.RAND_OUT_SIZE(32),
-		.SEED0({10'd0, XO_SEED_PHASE[31:0]}),
-		.SEED1({10'd0, XO_SEED_PHASE[63:32]}),
-		.SEED2({10'd0, XO_SEED_PHASE[95:64]}),
-		.SEED3({10'd0, XO_SEED_PHASE[127:96]})
-	) rng_ph
-	(
-		.clk(clk),
-		.rst(rst),
-		.rand_out(w_ph),
-		.rand_next()
-	);
-	wire signed [16:0] g_ph;
-	noise_gauss
-	#(
-		.NOISE_OUT_BITS(17),
-		.MEM_GAUSS(MEM_GAUSS_PHASE)
-	) gauss_ph
-	(
-		.clk(clk),
-		.rst(rst),
-		.rnd(w_ph),
-		.noise_out(g_ph)
-	);
-	// z * SIGMA_PS / 390.625 = g * K_SIG / 2^20 with K_SIG = SIGMA_PS * 2^20 / (4096 * 390.625)
-	localparam integer K_SIG = (SIGMA_PS * 4096 + 3125) / 6250;
-	wire signed [40:0] d_ph = g_ph * K_SIG + (41'sd1 <<< 19);
-	wire signed [20:0] d_idx = d_ph >>> 20;
-	wire signed [21:0] i_ph = 32 + PHASE0 + d_idx;
-	reg [5:0] idx = 32 + PHASE0;
-	always @(posedge clk or posedge rst)
-		if (rst) idx <= 32 + PHASE0;
-		else idx <= (i_ph < 0) ? 6'd0 : (i_ph > 63) ? 6'd63 : i_ph[5:0];
-	assign ph_idx = idx;
-end else begin : fixed
-	assign ph_idx = 32 + PHASE0;
-end
-endgenerate
-
 // Two shapers at once is a mistake, not a choice: stop the compilation
 // with a module name that says so.
 `ifdef USE_SHAPER_CSA_CR4RC
@@ -288,52 +215,25 @@ endgenerate
 // with a 51 ns feedback pole, unbuffered CR-4RC with a 500 us CR and four
 // 5 ns RC stages). Peak = 1 (at scale 2**G_OUT_LOG) on sample 2; 1 cycle of
 // latency; needs a reset.
-generate
-if (PHASE_ON) begin : g_phase
+shaper_csa_cr4rc
+#(
+	.BITS_IN(ENG_OUT_BITS),
+	.G_OUT_LOG(10),
 `ifdef USE_SHAPER_NO_PIPE
-	ERROR_the_phase_needs_the_pipelined_CSA_drop_USE_SHAPER_NO_PIPE e_ph ();
-`endif
-	shaper_csa_cr4rc_phase
-	#(
-		.BITS_IN(ENG_OUT_BITS),
-		.G_OUT_LOG(10),
-		.PIPE_IN(1),
-		.MEM_PH(MEM_PH_CSA)
-	)sf
-	(
-		.clock(clk),
-		.rst(rst),
-		.in(event_bt),
-		.phase(ph_idx),
-		.out(shaper_out)
-	);
-end else begin : g_base
-	shaper_csa_cr4rc
-	#(
-		.BITS_IN(ENG_OUT_BITS),
-		.G_OUT_LOG(10),
-`ifdef USE_SHAPER_NO_PIPE
-		.PIPE_IN(0)                // the paper build: latency 1, as until 2026-10-03
+	.PIPE_IN(0)                // the paper build: latency 1, as until 2026-10-03
 `else
-		.PIPE_IN(1)                // pipelined: latency 5
+	.PIPE_IN(1)                // pipelined: latency 5
 `endif
-	)sf
-	(
-		.clock(clk),
-		.rst(rst),
-		.in(event_bt),
-		.out(shaper_out)
-	);
-end
-endgenerate
+)sf
+(
+	.clock(clk),
+	.rst(rst),
+	.in(event_bt),
+	.out(shaper_out)
+);
 `elsif USE_SHAPER_LEGACY
 // Legacy shaper: the parallel IIR sections HITS was born with (the default
-// until 2026-10-01). Selected by USE_SHAPER_LEGACY. It has no phase.
-generate
-if (PHASE_ON) begin : erro_phase_legacy
-	ERROR_the_legacy_shaper_has_no_phase e_ph ();
-end
-endgenerate
+// until 2026-10-01). Selected by USE_SHAPER_LEGACY.
 shaper_fenics
 #(
 	.BITS_IN(ENG_OUT_BITS),
@@ -350,35 +250,17 @@ shaper_fenics
 // from a 14-pole transfer function of the FENICS front end. Zero DC gain is
 // imposed rather than fitted, so it cannot produce a baseline sag the real
 // front end does not have. Needs a reset, like the other two.
-generate
-if (PHASE_ON) begin : g_phase
-	shaper_fenics_f34_phase
-	#(
-		.BITS_IN(ENG_OUT_BITS),
-		.G_OUT_LOG(10),
-		.MEM_PH(MEM_PH_F34)
-	)sf
-	(
-		.clock(clk),
-		.rst(rst),
-		.in(event_bt),
-		.phase(ph_idx),
-		.out(shaper_out)
-	);
-end else begin : g_base
-	shaper_fenics_f34
-	#(
-		.BITS_IN(ENG_OUT_BITS),
-		.G_OUT_LOG(10)
-	)sf
-	(
-		.clock(clk),
-		.rst(rst),
-		.in(event_bt),
-		.out(shaper_out)
-	);
-end
-endgenerate
+shaper_fenics_f34
+#(
+	.BITS_IN(ENG_OUT_BITS),
+	.G_OUT_LOG(10)
+)sf
+(
+	.clock(clk),
+	.rst(rst),
+	.in(event_bt),
+	.out(shaper_out)
+);
 `endif
 
 
