@@ -26,8 +26,8 @@
 // energy_seg_default.mif), with the other generators the three tables
 // energy_icdf_paper_*. -DUSE_ENERGY_TABLES forces the tables.
 // -DUSE_ENERGY_LORENZETTI loads energy_seg_lorenzetti.mif (the spectrum of the
-// revised paper, from Lorenzetti) with its occupancy: OCC_LSB = 506 and the
-// occupancy input held at 127, P(deposit) = 65530/65536 (regression build paper_r1).
+// revised paper, from Lorenzetti) with its occupancy: 127 in the top 7 bits and
+// 506 in the low 9, P(deposit) = 65530/65536 (regression build paper_r1).
 //
 // Phase (F34 and CSA): -DUSE_PHASE0=<n> sets the fixed phase PHASE0 (n steps of
 // 0.390625 ns) and -DUSE_PHASE_SIGMA_PS=<ps> the jitter per hit SIGMA_PS of
@@ -57,11 +57,17 @@ module simulador_tb;
     reg clk = 1'b0;
     reg rst = 1'b1;
 // macros, not localparams: a parameter of the testbench would land in the VCD
+// The occupancy of hits is 16 bits (probability occupancy/65536). The testbench keeps
+// a 7-bit variable for the top bits and adds the 9 low bits at the port: the variable
+// lands in the VCD, and a 7-bit one keeps the goldens (the frozen paper one among them)
+// as they were when the input had 7 bits.
 `ifdef USE_ENERGY_LORENZETTI
-  `define OCC_A 7'd127   // with OCC_LSB 506: P(deposit) of the Lorenzetti spectrum
+  `define OCC_A 7'd127   // with OCC_LOW 506: 65530/65536, P(deposit) of the Lorenzetti spectrum
   `define OCC_B 7'd127
+  `define OCC_LOW 9'd506
 `else
-  `define OCC_A 7'd25    // 25/127 ~ 20%, then 80/127
+  `define OCC_LOW 9'd0
+  `define OCC_A 7'd25    // 25/128 (19.5%), then 80/128 (62.5%)
   `define OCC_B 7'd80
 `endif
     reg [6:0] occupancy = `OCC_A;
@@ -89,7 +95,6 @@ module simulador_tb;
         .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_paper_2.mif"}),
 `ifdef USE_ENERGY_LORENZETTI
         .MEM_SEG   ({RTL_DIR, "/energy/energy_seg_lorenzetti.mif"}),
-        .OCC_LSB   (506),
 `else
         .MEM_SEG   ({RTL_DIR, "/energy/energy_seg_default.mif"}),
 `endif
@@ -116,7 +121,7 @@ module simulador_tb;
     (
         .clk(clk),
         .rst(rst),
-        .occupancy(occupancy),
+        .occupancy({occupancy, `OCC_LOW}),
         .offset(offset),
         .hits_out(hits_out),
         .bt_mask_out(bt_mask_out),

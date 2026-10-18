@@ -722,8 +722,8 @@ set_global_assignment -name VERILOG_FILE sw_converter.v
 # Energy: segmented inverse CDF (energy_seg.v, ROM energy_seg_default.mif) by default with xoshiro.
 # USE_ENERGY_TABLES uses the three tables instead (the default until 2026-10-08).
 #set_global_assignment -name VERILOG_MACRO "USE_ENERGY_TABLES=1"
-# USE_ENERGY_LORENZETTI loads energy_seg_lorenzetti.mif with OCC_LSB = 506 (set the
-# 7-bit occupancy to 127 from the HPS: 16-bit threshold 65530/65536). With USE_SHAPER_CSA_CR4RC it is the paper_r1 build
+# USE_ENERGY_LORENZETTI loads energy_seg_lorenzetti.mif and puts 506 in the low 9 bits
+# of the occupancy (set the top 7 bits to 127 from the HPS: 65530/65536). With USE_SHAPER_CSA_CR4RC it is the paper_r1 build
 # (the revised paper).
 #set_global_assignment -name VERILOG_MACRO "USE_ENERGY_LORENZETTI=1"
 # ADC: rounds to the nearest count by default; USE_ADC_FLOOR truncates (as until 2026-10-03).

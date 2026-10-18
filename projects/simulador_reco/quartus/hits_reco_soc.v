@@ -79,7 +79,7 @@ sim
 (
 	.clk(clk_40), 
 	.rst(~KEY[0]),
-	.occupancy(occupancy),
+	.occupancy({occupancy, 9'd0}),   // 7 bits from the switches: the top of the 16-bit occupancy
 	.hits_out(),
 	.bt_mask_out(bt_mask_out),
 	.energy_out(), 

@@ -57,7 +57,6 @@ module hits_reco
 #(
 	parameter RNG_TYPE = "xoshiro",   // random generator of the simulator (rtl/random/rng.v)
 	parameter RAND_BITS_HITS = 7,
-	parameter OCC_LSB = 0,                 // see rtl/hits/hit_generator.v
 	parameter OCC_BYPASS = 0,
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
 	parameter BUNCH_POS = 3564,
@@ -140,7 +139,7 @@ module hits_reco
 )
 (
 	input clk, rst,
-	input [RAND_BITS_HITS-1:0] occupancy,
+	input [15:0] occupancy,                // hit probability occupancy/65536 (rtl/hits/hit_generator.v)
 	input signed [ENG_OUT_BITS-1:0] offset,
 	output hits_out, bt_mask_out,
 	output [ENG_OUT_BITS-1:0] energy_out, event_bt, event_all,
@@ -158,7 +157,6 @@ hits
 #(
 	.RNG_TYPE(RNG_TYPE),
 	.RAND_BITS_HITS(RAND_BITS_HITS),
-	.OCC_LSB(OCC_LSB),
 	.OCC_BYPASS(OCC_BYPASS),
 	.BUNCH_MEM(BUNCH_MEM),
 	.BUNCH_POS(BUNCH_POS),

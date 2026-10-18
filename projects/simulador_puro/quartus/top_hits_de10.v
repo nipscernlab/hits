@@ -3,7 +3,7 @@
 // ADC output, shaper_clip, which is what Signal Tap captures.
 //
 // The runtime inputs are FIXED here (no ARM): the 16-bit occupancy is
-// 65530/65536 (the 7-bit input at 127 plus OCC_LSB = 506, the deposit
+// 65530/65536 (127 in the top 7 bits and 506 in the low 9, the deposit
 // probability of the Lorenzetti spectrum) and the pedestal 146 ADC, the values of projects/simulador_puro/aurora/simulador_tb.v with
 // USE_ENERGY_LORENZETTI. With the macros of hits_de10.qsf
 // (USE_SHAPER_CSA_CR4RC + USE_ENERGY_LORENZETTI) this is the paper_r1 build,
@@ -47,7 +47,6 @@ module top_hits_de10 (
         .MEM_ENG2  ({RTL, "/energy/energy_icdf_paper_2.mif"}),
 `ifdef USE_ENERGY_LORENZETTI
         .MEM_SEG   ({RTL, "/energy/energy_seg_lorenzetti.mif"}),
-        .OCC_LSB   (506),
 `else
         .MEM_SEG   ({RTL, "/energy/energy_seg_default.mif"}),
 `endif
@@ -57,7 +56,7 @@ module top_hits_de10 (
         .MEM_NOISE2({RTL, "/noise/noise_s4_icdf2.mif"})
     ) sim (
         .clk(clk40), .rst(rst),
-        .occupancy(7'd127),
+        .occupancy(16'd65530),
         .offset(13'sd146),
         .hits_out(hits_out), .bt_mask_out(bt_mask_out),
         .energy_out(energy_out), .event_bt(event_bt), .event_all(event_all),

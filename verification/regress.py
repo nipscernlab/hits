@@ -85,7 +85,7 @@ BUILDS = {
                       "simulador_tb_golden_paper.vcd"),
     # THE HITS OF THE REVISED PAPER (revision R1 of the Sensors Journal paper):
     # the current default with the CSA/CR-4RC shaper and the Lorenzetti energy
-    # spectrum (energy_seg_lorenzetti.mif, OCC_LSB 506). To be frozen once the
+    # spectrum (energy_seg_lorenzetti.mif, occupancy 65530/65536). To be frozen once the
     # paper numbers close.
     "paper_r1":      ("simulador", ["USE_SHAPER_CSA_CR4RC", "USE_ENERGY_LORENZETTI"],
                       "simulador_tb_golden_paper_r1.vcd"),

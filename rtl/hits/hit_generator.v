@@ -2,21 +2,18 @@
 
 // Hit draw per bunch crossing, gated by the bunch-train mask.
 //
-// Occupancy (since 2026-10-09): the runtime input `occupancy` keeps its
-// RAND_BITS (7) bits from the HPS, hit probability occupancy/128 as before.
-// With the xoshiro generator the draw is 16 bits wide: the threshold is
-// {occupancy, OCC_LSB}, where OCC_LSB (9 bits, a synthesis parameter, default
-// 0) refines it to 1/65536, for cells whose occupancy goes with an energy ROM
-// (P(E > 0) of the cell, e.g. 0.99954). With OCC_LSB = 0 the hits are bit for
-// bit the 7-bit ones: the 7-bit word is the top of the 16-bit one, and the
-// threshold ends in 9 zeros. OCC_BYPASS = 1 makes every filled bunch crossing a
-// hit (cells with occupancy 1), whatever `occupancy` says. The other generators
-// keep the 7-bit draw and ignore OCC_LSB.
+// Occupancy: the runtime input `occupancy` is 16 bits, hit probability
+// occupancy/65536 per filled bunch crossing (since 2026-10-18; before, a 7-bit
+// input and the 9 low bits in the synthesis parameter OCC_LSB, the same
+// threshold {occupancy7, OCC_LSB}, so the hits are bit for bit the same). With
+// the xoshiro generator the draw is 16 bits wide. The other generators draw
+// RAND_BITS (7) bits and compare them with the top 7 bits of `occupancy`, so
+// their resolution is 1/128. OCC_BYPASS = 1 makes every filled bunch crossing a
+// hit (cells with occupancy 1), whatever `occupancy` says.
 module hit_generator
 #(
 	parameter RNG_TYPE = "xoshiro",       // rng kind, see rtl/random/rng.v
-	parameter RAND_BITS = 7,
-	parameter OCC_LSB = 0,                // 9 low bits of the 16-bit occupancy (xoshiro only)
+	parameter RAND_BITS = 7,              // draw width of the round_robin and leap generators
 	parameter OCC_BYPASS = 0,             // 1: hit on every bunch crossing (occupancy 1)
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
 	parameter BUNCH_POS = 3564,
@@ -27,7 +24,7 @@ module hit_generator
 )
 (
 	input clk, rst,
-	input [RAND_BITS-1:0] occupancy,
+	input [15:0] occupancy,
 	output hits_out, hits_orig, bt_mask_out
 );
 
@@ -57,10 +54,9 @@ rng
 wire [DRAW_BITS-1:0] threshold;
 generate
 if (FINE) begin : fine
-	wire [8:0] lsb = OCC_LSB;
-	assign threshold = {occupancy, lsb};
-end else begin : coarse
 	assign threshold = occupancy;
+end else begin : coarse
+	assign threshold = occupancy[15:16-RAND_BITS];
 end
 endgenerate
 

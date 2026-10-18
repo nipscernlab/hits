@@ -84,8 +84,7 @@ module hits
 	// 2026-09-28), "round_robin" (the SBCCI 2025 bank) or "leap" (one
 	// leap-forward LFSR per rng); see rtl/random/rng.v. Each has its own goldens.
 	parameter RNG_TYPE = "xoshiro",
-	parameter RAND_BITS_HITS = 7,
-	parameter OCC_LSB = 0,                 // 9 low bits of the 16-bit occupancy (xoshiro), see rtl/hits/hit_generator.v
+	parameter RAND_BITS_HITS = 7,          // draw width of the round_robin and leap hit generators (1/128 resolution)
 	parameter OCC_BYPASS = 0,              // 1: hit on every filled bunch crossing (cells with occupancy 1)
 	// xoshiro states {s3, s2, s1, s0} of the hit, energy and noise generators (RNG_TYPE "xoshiro" only). The defaults
 	// are one seed and its 2^64 and 2 x 2^64 jumps; another channel takes the next jumps (rtl/random/xoshiro_jump.py),
@@ -154,7 +153,7 @@ module hits
 )
 (
 	input clk, rst,
-	input [RAND_BITS_HITS-1:0] occupancy,
+	input [15:0] occupancy,                // hit probability occupancy/65536 per filled bunch crossing
 	input signed [ENG_OUT_BITS-1:0] offset,
 	output hits_out, bt_mask_out,
 	output [ENG_OUT_BITS-1:0] energy_out, event_bt, event_all,
@@ -170,7 +169,6 @@ hit_generator
 #(
 	.RNG_TYPE(RNG_TYPE),
 	.RAND_BITS(RAND_BITS_HITS),
-	.OCC_LSB(OCC_LSB),
 	.OCC_BYPASS(OCC_BYPASS),
 	.BUNCH_MEM(BUNCH_MEM),
 	.BUNCH_POS(BUNCH_POS),

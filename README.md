@@ -93,8 +93,8 @@ macro is set, the wrapper in `reconstrucao/` instantiates the PZC.
 | ADC quantization | round to nearest, truncate | macro `USE_ADC_FLOOR` (truncate) | round (since 2026-10-03) |
 | CSA + CR-4RC pipeline | on, off | macro `USE_SHAPER_NO_PIPE` (off) | on (input register since 2026-10-03; full pipeline, latency 5, since 2026-10-14) |
 | Reconstruction technique | PZC, adaptive baseline estimator | macro `USE_BASELINE_EST` (only in `reconstrucao/` builds) | none yet (no macro builds the PZC) |
-| Occupancy, pedestal | 0..127 (hit probability occupancy/128), 13-bit offset | runtime inputs `occupancy`, `offset`; on the board, from the HPS (`./change_occupancy`) | set by the testbench / HPS |
-| Fine occupancy (xoshiro) | `OCC_LSB` 0..511: the 16-bit threshold is {occupancy, OCC_LSB} (step 1/65536); `OCC_BYPASS` = 1: a hit on every filled bunch crossing | synthesis parameters of `hits` | `OCC_LSB` = 0 (hits identical to the 7-bit draw), no bypass |
+| Occupancy, pedestal | 16-bit occupancy (hit probability occupancy/65536; the round_robin and leap generators use its top 7 bits), 13-bit offset | runtime inputs `occupancy`, `offset`; on the board with the ARM, the top 7 bits from the HPS (`./change_occupancy`) | set by the testbench / HPS |
+| Occupancy bypass | `OCC_BYPASS` = 1: a hit on every filled bunch crossing | synthesis parameter of `hits` | no bypass |
 | Pulse phase (F34, CSA + CR-4RC) | fixed phase `PHASE0` (−32..31 steps of 0.390625 ns); Gaussian jitter per hit `SIGMA_PS` (ps, no cut) | synthesis parameters of `hits`; in `simulador_tb.v`, `-DUSE_PHASE0=<n>` and `-DUSE_PHASE_SIGMA_PS=<ps>` | none (`PHASE0` = 0, `SIGMA_PS` = 0: the shaper of before, bit for bit; since 2026-10-17) |
 
 A macro is passed with `-D` (Icarus) or `VERILOG_MACRO` (Quartus `.qsf`), or by
@@ -151,6 +151,8 @@ outputs):
 - **Fine occupancy and bypass** (2026-10-09): with xoshiro the hit draw is 16 bits,
   threshold {occupancy, `OCC_LSB`}; the 7 bits from the HPS keep their meaning
   (occupancy/128) and, with `OCC_LSB` = 0, the hits are bit for bit the old ones.
+  Since 2026-10-18 the occupancy input itself is 16 bits and `OCC_LSB` is gone: the
+  same threshold, given whole.
   `OCC_BYPASS` = 1 hits every filled bunch crossing. The energy ROM is the
   spectrum of bunch crossings WITH a deposit; the occupancy carries P(deposit).
 - **Default energy is now a segmented inverse CDF** (2026-10-08, `energy_seg.v`):
@@ -496,7 +498,7 @@ this repository.
 
 On the board, `projects/simulador_puro/quartus/` is the simulator alone on the
 DE10-Nano: no HPS, no Qsys, no reconstruction technique, the 16-bit occupancy
-(65530/65536: input 127 plus OCC_LSB 506) and pedestal 146 fixed in the top, reset released synchronously, and the
+(65530/65536) and pedestal 146 fixed in the top, reset released synchronously, and the
 `paper_r1` macros already set in `hits_de10.qsf`. It compiles with Quartus
 Prime Lite 24.1 (at 741d8f5: 804 ALMs, 1191 registers, 7 M10K, 23 DSP, 1 PLL,
 79.0 MHz worst corner for the 40 MHz clock). After the reset its `shaper_clip`

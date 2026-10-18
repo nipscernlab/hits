@@ -63,7 +63,7 @@ module sim_pulsos_tb;
     (
         .clk(clk),
         .rst(rst),
-        .occupancy(occupancy),
+        .occupancy({occupancy, 9'd0}),     // the 7-bit variable is the top of the 16-bit occupancy
         .offset(offset),
         .hits_out(hits_out),
         .bt_mask_out(bt_mask_out),

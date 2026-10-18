@@ -324,16 +324,21 @@ assign LED[0] = led_level;
 	// "round_robin" + the USE_SHAPER_CSA_CR4RC, USE_NOISE_SIGMA8, USE_ADC_FLOOR and
 	// USE_SHAPER_NO_PIPE macros (see the .qsf).
 	parameter RNG_TYPE = "xoshiro";
+	// low 9 bits of the 16-bit occupancy of the core (the HPS register has room for 7)
+`ifdef USE_ENERGY_LORENZETTI
+	localparam [8:0] OCC_LOW = 9'd506;
+`else
+	localparam [8:0] OCC_LOW = 9'd0;
+`endif
   
   hits_reco 
 	#(
 		.PZC_M_FACTOR(PZC_M_FACTOR),
 `ifdef USE_ENERGY_LORENZETTI
 		// the revised paper's spectrum (paper_r1 with USE_SHAPER_CSA_CR4RC):
-		// set the 7-bit occupancy to 127 from the HPS: with OCC_LSB the 16-bit
-		// threshold is 65530/65536, P(deposit)
+		// set the 7-bit occupancy to 127 from the HPS: with the 9 low bits at 506
+		// (OCC_LOW below) the 16-bit occupancy is 65530/65536, P(deposit)
 		.MEM_SEG("energy_seg_lorenzetti.mif"),
-		.OCC_LSB(506),
 `endif
 		.RNG_TYPE(RNG_TYPE)
 		)
@@ -341,7 +346,7 @@ assign LED[0] = led_level;
 	(
 		.clk(clk_40), 
 		.rst(rst_40),
-		.occupancy(occupancy),
+		.occupancy({occupancy, OCC_LOW}),   // the HPS writes the top 7 bits of the 16-bit occupancy
 		.offset(offset),	
 		.hits_out(),
 		.bt_mask_out(bt_mask_out),
