@@ -2,11 +2,11 @@
 # With the two macros below it is the paper_r1 build (the revised paper).
 set_global_assignment -name FAMILY "Cyclone V"
 set_global_assignment -name DEVICE 5CSEBA6U23I7
-set_global_assignment -name TOP_LEVEL_ENTITY top_simulador_de10
-set_global_assignment -name SDC_FILE simulador_de10.sdc
-set_global_assignment -name VERILOG_FILE top_simulador_de10.v
+set_global_assignment -name TOP_LEVEL_ENTITY top_hits_de10
+set_global_assignment -name SDC_FILE hits_de10.sdc
+set_global_assignment -name VERILOG_FILE top_hits_de10.v
 set_global_assignment -name VERILOG_FILE pll_40mhz_de10.v
-set_global_assignment -name VERILOG_FILE ../../../rtl/hits_simulator.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/hits.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/adc/adc.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/energy/energy_generator.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/energy/energy_icdf.v

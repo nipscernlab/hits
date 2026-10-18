@@ -3,7 +3,7 @@
 `noise_generator.v` draws one noise sample per 25 ns clock and the simulator
 adds it to the shaper output, before the ADC (`shaper_corrupted`). `noise_out`
 is in units of 2^-10 ADC count. There are two ways to draw it, chosen by the
-`NOISE_TYPE` parameter (set in `hits_simulator.v` from the generator and the
+`NOISE_TYPE` parameter (set in `hits.v` from the generator and the
 macros):
 
 | `NOISE_TYPE` | how | used by |
@@ -53,7 +53,7 @@ thresholds (1007/1007), same shape, same tail: computed over the three tables,
 sigma 3.9959 against 3.9958 for `noise_s8`/2, kurtosis 2.9849 against 2.9848,
 and the same P(|x| > 3, 4, 5, 6 sigma). The format is the `MEM_NOISE_BITS` /
 `MEM_NOISE_FRAC` parameters of `noise_icdf.v`, set next to the table names in
-`hits_simulator.v`. `noise_s8` keeps its 16 bits because the paper build is
+`hits.v`. `noise_s8` keeps its 16 bits because the paper build is
 frozen bit for bit.
 
 Until 2026-10-01 `noise_s4` had 16-bit entries at 2^-10 ADC (6 M10K). The

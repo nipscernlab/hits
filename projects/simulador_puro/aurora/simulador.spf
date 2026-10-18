@@ -12,12 +12,12 @@
     "basePath": "C:\\nipscern\\hits\\projects\\simulador_puro\\aurora",
     "folders": [],
     "processors": [],
-    "topLevelFile": "..\\..\\..\\rtl\\hits_simulator.v",
+    "topLevelFile": "..\\..\\..\\rtl\\hits.v",
     "testbenchFile": "simulador_tb.v",
     "synthesizableFiles": [
       {
-        "name": "hits_simulator.v",
-        "path": "..\\..\\..\\rtl\\hits_simulator.v",
+        "name": "hits.v",
+        "path": "..\\..\\..\\rtl\\hits.v",
         "isTopLevel": true
       },
       {

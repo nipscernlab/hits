@@ -13,7 +13,7 @@
 //                             three that passes PractRand (default since
 //                             2026-09-28)
 //
-// RNG_TYPE comes down from hits_simulator, so the whole simulator uses one
+// RNG_TYPE comes down from hits, so the whole simulator uses one
 // kind. WARNING: each kind has its OWN goldens in verification/ (README).
 //
 // Both kinds have the same ports and the same output timing: rand_out is 0 in

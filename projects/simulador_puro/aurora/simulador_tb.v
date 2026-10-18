@@ -1,17 +1,17 @@
 // simulador_tb.v — testbench of the HITS SIMULATOR ALONE, for Aurora (Icarus
 // Verilog + GTKWave/Surfer), with no ARM/PLL/Qsys.
 //
-// The DUT is hits_simulator (rtl/) and nothing else: the chain ends at the
+// The DUT is hits (rtl/) and nothing else: the chain ends at the
 // ADC quantization, `shaper_clip`. No reconstruction technique is compiled or
 // instantiated here; those are tested by projects/simulador_reco/aurora/ (sim_pulsos_tb.v).
 // Aurora project: simulador.spf in this folder, which lists only rtl/ files.
 //
 // Shaper: chosen where the simulator chooses it, the `define lines at the top
-// of rtl/hits_simulator.v (default: shaper_fenics_f34, the FENICS Phase-II
+// of rtl/hits.v (default: shaper_fenics_f34, the FENICS Phase-II
 // pulse). Commit rtl/ with them commented; the regression passes the macro
-// with -D. Two shapers at once stop the compilation in hits_simulator.v.
+// with -D. Two shapers at once stop the compilation in hits.v.
 //
-// Random generator: the RNG_TYPE parameter of rtl/hits_simulator.v
+// Random generator: the RNG_TYPE parameter of rtl/hits.v
 // ("xoshiro" by default, "round_robin" or "leap"). The regression builds the
 // others with -DUSE_RNG_ROUND_ROBIN / -DUSE_RNG_LEAP, which this testbench turns
 // into the parameter: a macro, not a parameter of the testbench, so it stays
@@ -31,7 +31,7 @@
 //
 // Phase (F34 and CSA): -DUSE_PHASE0=<n> sets the fixed phase PHASE0 (n steps of
 // 0.390625 ns) and -DUSE_PHASE_SIGMA_PS=<ps> the jitter per hit SIGMA_PS of
-// hits_simulator (regression builds *_phase and *_jitter). Without them: no phase,
+// hits (regression builds *_phase and *_jitter). Without them: no phase,
 // the shaper of before.
 //
 // - 40 MHz clock (25 ns period), like a collider bunch clock;
@@ -73,7 +73,7 @@ module simulador_tb;
     wire [11:0] shaper_clip;                 // THE simulator output (ADC sample)
     wire signed [16:0] noise_out;
 
-    hits_simulator
+    hits
     #(
 `ifdef USE_RNG_LEAP
   `ifdef USE_RNG_ROUND_ROBIN

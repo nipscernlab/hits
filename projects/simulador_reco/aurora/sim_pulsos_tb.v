@@ -1,4 +1,4 @@
-// sim_pulsos_tb.v — testbench of the core+PZC test wrapper (FPGA_Simulator_v1_PZC)
+// sim_pulsos_tb.v — testbench of the core+PZC test wrapper (hits_reco)
 // for Aurora (Icarus Verilog + GTKWave), with no ARM/PLL/Qsys.
 // Aurora project: sim_pulsos.spf in this folder — the simulated RTL is the
 // ORIGINAL source: the simulator core in rtl/ plus the PZC-under-test in
@@ -45,7 +45,7 @@ module sim_pulsos_tb;
     wire signed [12:0] pedestal_out;
     wire signed [28:0] pzc_out;
 
-    FPGA_Simulator_v1_PZC
+    hits_reco
     #(
         .BUNCH_MEM ({RTL_DIR, "/hits/bunch_train_mask.mif"}),
         .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_paper_0.mif"}),

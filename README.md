@@ -22,7 +22,7 @@ Fora, Brazil).
 ## The signal chain
 
 One sample per 25 ns clock. Every box is a folder of `rtl/`; the top that wires
-them is `rtl/hits_simulator.v`.
+them is `rtl/hits.v`.
 
 ```
              occupancy (7 bits, from the HPS)
@@ -42,7 +42,7 @@ them is `rtl/hits_simulator.v`.
                                    (optional, not the simulator) reconstrucao/<technique> --> pzc_out
 ```
 
-Outputs of `hits_simulator`, all on the same clock:
+Outputs of `hits`, all on the same clock:
 
 | Signal | What it is |
 |---|---|
@@ -86,7 +86,7 @@ macro is set, the wrapper in `reconstrucao/` instantiates the PZC.
 
 | Choice | Options | How to choose | Default |
 |---|---|---|---|
-| Random generator | `"xoshiro"`, `"round_robin"`, `"leap"` | `RNG_TYPE` parameter of `hits_simulator` (on the board: `de10_nano_soc_ghrd.v`); in `simulador_tb.v`, `-DUSE_RNG_ROUND_ROBIN` or `-DUSE_RNG_LEAP` | `"xoshiro"` |
+| Random generator | `"xoshiro"`, `"round_robin"`, `"leap"` | `RNG_TYPE` parameter of `hits` (on the board: `de10_nano_soc_ghrd.v`); in `simulador_tb.v`, `-DUSE_RNG_ROUND_ROBIN` or `-DUSE_RNG_LEAP` | `"xoshiro"` |
 | Pulse shape | F34 (FENICS Phase II), legacy, CSA + CR-4RC | macro `USE_SHAPER_LEGACY` or `USE_SHAPER_CSA_CR4RC` | F34 (since 2026-10-01) |
 | Energy spectrum | segmented inverse CDF (ROM `MEM_SEG`), the three tables | macro `USE_ENERGY_TABLES`; the round_robin and leap generators always use the tables; in `simulador_tb.v`, `-DUSE_ENERGY_LORENZETTI` loads `energy_seg_lorenzetti.mif` with its occupancy (`OCC_LSB` 506) | segmented, ROM `energy_seg_default.mif` (since 2026-10-08) |
 | Noise | Gaussian (segmented inverse CDF), the sigma = 4 tables, the sigma = 8 tables | macro `USE_NOISE_TABLES` or `USE_NOISE_SIGMA8`; the round_robin and leap generators always use the tables | Gaussian, sigma = 4 (since 2026-10-02) |
@@ -94,8 +94,8 @@ macro is set, the wrapper in `reconstrucao/` instantiates the PZC.
 | CSA + CR-4RC pipeline | on, off | macro `USE_SHAPER_NO_PIPE` (off) | on (input register since 2026-10-03; full pipeline, latency 5, since 2026-10-14) |
 | Reconstruction technique | PZC, adaptive baseline estimator | macro `USE_BASELINE_EST` (only in `reconstrucao/` builds) | none yet (no macro builds the PZC) |
 | Occupancy, pedestal | 0..127 (hit probability occupancy/128), 13-bit offset | runtime inputs `occupancy`, `offset`; on the board, from the HPS (`./change_occupancy`) | set by the testbench / HPS |
-| Fine occupancy (xoshiro) | `OCC_LSB` 0..511: the 16-bit threshold is {occupancy, OCC_LSB} (step 1/65536); `OCC_BYPASS` = 1: a hit on every filled bunch crossing | synthesis parameters of `hits_simulator` | `OCC_LSB` = 0 (hits identical to the 7-bit draw), no bypass |
-| Pulse phase (F34, CSA + CR-4RC) | fixed phase `PHASE0` (−32..31 steps of 0.390625 ns); Gaussian jitter per hit `SIGMA_PS` (ps, no cut) | synthesis parameters of `hits_simulator`; in `simulador_tb.v`, `-DUSE_PHASE0=<n>` and `-DUSE_PHASE_SIGMA_PS=<ps>` | none (`PHASE0` = 0, `SIGMA_PS` = 0: the shaper of before, bit for bit; since 2026-10-17) |
+| Fine occupancy (xoshiro) | `OCC_LSB` 0..511: the 16-bit threshold is {occupancy, OCC_LSB} (step 1/65536); `OCC_BYPASS` = 1: a hit on every filled bunch crossing | synthesis parameters of `hits` | `OCC_LSB` = 0 (hits identical to the 7-bit draw), no bypass |
+| Pulse phase (F34, CSA + CR-4RC) | fixed phase `PHASE0` (−32..31 steps of 0.390625 ns); Gaussian jitter per hit `SIGMA_PS` (ps, no cut) | synthesis parameters of `hits`; in `simulador_tb.v`, `-DUSE_PHASE0=<n>` and `-DUSE_PHASE_SIGMA_PS=<ps>` | none (`PHASE0` = 0, `SIGMA_PS` = 0: the shaper of before, bit for bit; since 2026-10-17) |
 
 A macro is passed with `-D` (Icarus) or `VERILOG_MACRO` (Quartus `.qsf`), or by
 uncommenting its `` `define `` line; details in the sections below. Each
@@ -109,7 +109,7 @@ knew the repo then, this is where things went:
 
 | At `paper-jsen-2026` | Now |
 |---|---|
-| `rtl/FPGA_Simulator_v1.v` | `rtl/hits_simulator.v` (module `hits_simulator`) |
+| `rtl/FPGA_Simulator_v1.v` | `rtl/hits.v` (module `hits`) |
 | `rtl/Hits_Bunch_train.v`, `rtl/hits_positions.v` | `rtl/hits/hit_generator.v`, `rtl/hits/hit_draw.v` |
 | `rtl/bunch_train_mask.v` + `.mif` | `rtl/hits/` |
 | `rtl/energy_collisions.v`, `rtl/energy_distribution.v` | `rtl/energy/energy_generator.v`, `rtl/energy/energy_icdf.v` |
@@ -119,7 +119,7 @@ knew the repo then, this is where things went:
 | `rtl/random_number_generator.v`, `rtl/select_rand.v`, `rtl/rand_LFSR.v` | `rtl/random/rng_round_robin.v` + `lfsr42.v`, chosen through `rtl/random/rng.v` |
 | `rtl/filtros/` | `rtl/shaper/` |
 | `rtl/clip_shaper.v` | `rtl/adc/adc.v` |
-| `rtl_test/` | `reconstrucao/pzc/`, `reconstrucao/estimador_baseline/` and the wrapper `reconstrucao/FPGA_Simulator_v1_PZC.v` |
+| `rtl_test/` | `reconstrucao/pzc/`, `reconstrucao/estimador_baseline/` and the wrapper `reconstrucao/hits_reco.v` |
 | `projects/aurora/` (simulator + PZC) | `projects/simulador_reco/aurora/`; the simulator alone is `projects/simulador_puro/aurora/` |
 | `projects/quartus/` (board with the ARM) | `projects/simulador_reco/quartus/`; the simulator alone on the board is `projects/simulador_puro/quartus/` |
 | comparing VCDs by hand | `python verification/regress.py`, also run by CI and by the pre-commit hook |
@@ -186,7 +186,7 @@ To get the paper's behaviour on today's code, use the `paper` build (see
 ## Repository layout
 
 ```
-rtl/                  THE SIMULATOR, one subfolder per stage (top: hits_simulator.v)
+rtl/                  THE SIMULATOR, one subfolder per stage (top: hits.v)
 rtl/random/           Pseudo-random generators (three kinds, chosen by RNG_TYPE), used by every stage that draws
 rtl/hits/             Hit draw + bunch-train mask
 rtl/energy/           Energy amplitude (segmented inverse CDF; the 3 tables remain)
@@ -210,7 +210,7 @@ verification/         Regression baseline: golden VCD + comparison script
 
 ## How it works
 
-The synthesizable simulator core (`rtl/hits_simulator.v`) chains the stages
+The synthesizable simulator core (`rtl/hits.v`) chains the stages
 below, one sample per 25 ns clock cycle, ending at the digitized ADC sample.
 Each `.mif` memory lives next to the module that reads it.
 
@@ -226,7 +226,7 @@ Each `.mif` memory lives next to the module that reads it.
 ### Random generators (`rtl/random/`)
 
 Which one is built is chosen by the **`RNG_TYPE` parameter** of
-`rtl/hits_simulator.v`, which comes down to every generator of the simulator:
+`rtl/hits.v`, which comes down to every generator of the simulator:
 
 | Generator | `RNG_TYPE` | Simulator (ALMs) | PractRand, 10-bit words | Description |
 |---|---|---|---|---|
@@ -247,7 +247,7 @@ noise sign) also passes to 16 GB: PractRand flagged "unusual" (its mildest
 level, p ~ 1e-5) at 2, 4 and 8 GB and nothing at 16 GB, the pattern of chance
 rather than of a defect, which grows with the sample.
 
-Change the default in `rtl/hits_simulator.v`, or pass `.RNG_TYPE("leap")` where
+Change the default in `rtl/hits.v`, or pass `.RNG_TYPE("leap")` where
 it is instantiated. ⚠️ **Each generator has its own goldens**: the sequences
 differ, only the statistics agree. The regression builds the leap kind with
 `-DUSE_RNG_ROUND_ROBIN` or `-DUSE_RNG_LEAP`, which `simulador_tb.v` turns into the parameter.
@@ -270,7 +270,7 @@ earlier pulses does not cross a reset (the legacy one gained it on 2026-09-26).
 
 ### Selecting the shaper
 
-Either uncomment the `` `define `` at the top of `rtl/hits_simulator.v`, or
+Either uncomment the `` `define `` at the top of `rtl/hits.v`, or
 define the macro externally and leave the file untouched (the `` `define ``
 lines ship commented out, so an external define always wins):
 
@@ -292,7 +292,7 @@ builds produce different pulses, which is the whole point.
 
 Each shaper reproduces the pulse sampled at one phase (F34: 1.4128 ns after the
 bunch crossing; CSA + CR-4RC: 10.1 ns). Two synthesis parameters of
-`hits_simulator` move it, for the F34 and the CSA + CR-4RC shapers:
+`hits` move it, for the F34 and the CSA + CR-4RC shapers:
 
 - `PHASE0`: a fixed phase for the whole channel, in steps of 25/64 = 0.390625 ns
   (−32..31, so −12.5 to +12.1 ns); positive = the pulse arrives later;
@@ -328,7 +328,7 @@ downstream stages validated with the synthesized pulse train, one subfolder
 each. Today there are two, `pzc/` (pole-zero cancellation, `pzc_ped_track.v`)
 and `estimador_baseline/` (adaptive baseline estimator, selected by the
 `USE_BASELINE_EST` macro). There is no default technique yet; with no macro the
-wrapper builds the PZC. The `reconstrucao/FPGA_Simulator_v1_PZC.v` wrapper
+wrapper builds the PZC. The `reconstrucao/hits_reco.v` wrapper
 composes the core with the technique under test. How to add a new technique:
 [`reconstrucao/README.md`](reconstrucao/README.md).
 
@@ -340,8 +340,8 @@ shaper compiles but is silently mis-anchored (see the SHAPER COMBINATIONS
 warning in the wrapper header). Its golden is `est` in the table of
 *Regression check*.
 
-Top-level modules: `rtl/hits_simulator.v` (the simulator core, no
-reconstruction), `reconstrucao/FPGA_Simulator_v1_PZC.v` (core plus the technique
+Top-level modules: `rtl/hits.v` (the simulator core, no
+reconstruction), `reconstrucao/hits_reco.v` (core plus the technique
 under test, the top used in simulation and on the board), and
 `projects/simulador_reco/quartus/de10_nano_soc_ghrd.v` (board top, entity `DE10_NANO_SoC_GHRD`:
 connected to the HPS via Qsys, it takes `occupancy` and `offset` from bits [6:0]
@@ -370,7 +370,7 @@ Aurora build from 2026-07-17 or newer (older builds ran the simulation from
 Aurora's temp dir and cannot resolve the relative paths).
 
 **Shaper** (both projects): the `` `define `` lines at the top of
-`rtl/hits_simulator.v`, see *Selecting the shaper*.
+`rtl/hits.v`, see *Selecting the shaper*.
 
 **Technique** (`projects/simulador_reco/aurora/` only): `projects/simulador_reco/aurora/simulacao.v` is the
 menu, `USE_BASELINE_EST` or (no line) the PZC; it can also pick the shaper for
@@ -497,7 +497,7 @@ this repository.
 On the board, `projects/simulador_puro/quartus/` is the simulator alone on the
 DE10-Nano: no HPS, no Qsys, no reconstruction technique, the 16-bit occupancy
 (65530/65536: input 127 plus OCC_LSB 506) and pedestal 146 fixed in the top, reset released synchronously, and the
-`paper_r1` macros already set in `simulador_de10.qsf`. It compiles with Quartus
+`paper_r1` macros already set in `hits_de10.qsf`. It compiles with Quartus
 Prime Lite 24.1 (at 741d8f5: 804 ALMs, 1191 registers, 7 M10K, 23 DSP, 1 PLL,
 79.0 MHz worst corner for the 40 MHz clock). After the reset its `shaper_clip`
 must equal the simulation bit for bit; Signal Tap captures it.

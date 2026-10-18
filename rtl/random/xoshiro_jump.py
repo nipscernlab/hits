@@ -13,7 +13,7 @@ constants are not taken on faith.
 Prints SEED0..SEED3 for each stage, in the order rng_xoshiro.v takes them
 (SEED0 = s0, ..., SEED3 = s3). With "canais", channel k gets the jumps 3k, 3k+1
 and 3k+2 (hit, energy, noise) as the 128-bit XO_SEED_HIT, XO_SEED_ENERGY and
-XO_SEED_NOISE parameters of hits_simulator ({s3, s2, s1, s0}); channel 0 is the
+XO_SEED_NOISE parameters of hits ({s3, s2, s1, s0}); channel 0 is the
 default.
 
 The phase draw (2026-10-17) is a fourth stream per channel. Putting it in the

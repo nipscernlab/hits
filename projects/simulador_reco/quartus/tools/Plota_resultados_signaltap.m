@@ -44,14 +44,14 @@ end
 disp('As variáveis foram carregadas no workspace!');
 
 
-eng_truth = FPGA_Simulator_v1_PZC_sim_event_bt_12__0_(10:end);
-snl_fpga = FPGA_Simulator_v1_PZC_sim_shaper_out_29__0_(10:end);
-pzc_fpga = FPGA_Simulator_v1_PZC_sim_pzc_out_28__0_(10:end);
-bt_mask_fpga = FPGA_Simulator_v1_PZC_sim_bt_mask_out(10:end);
-pedestal_fpga = FPGA_Simulator_v1_PZC_sim_pedestal_out_12__0_(10:end);
-shaper_clip_fpga = FPGA_Simulator_v1_PZC_sim_shaper_clip_11__0_(10:end);
+eng_truth = hits_reco_sim_event_bt_12__0_(10:end);
+snl_fpga = hits_reco_sim_shaper_out_29__0_(10:end);
+pzc_fpga = hits_reco_sim_pzc_out_28__0_(10:end);
+bt_mask_fpga = hits_reco_sim_bt_mask_out(10:end);
+pedestal_fpga = hits_reco_sim_pedestal_out_12__0_(10:end);
+shaper_clip_fpga = hits_reco_sim_shaper_clip_11__0_(10:end);
 
-shaper_uns = FPGA_Simulator_v1_PZC_sim_pzc_ped_track_pzc_zero_in_12__0_(10:end);
+shaper_uns = hits_reco_sim_pzc_ped_track_pzc_zero_in_12__0_(10:end);
 
 snl_fpga = snl_fpga(3:end)/(2^10);
 shaper_clip_fpga = shaper_clip_fpga(3:end);

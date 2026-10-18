@@ -77,8 +77,8 @@
 //
 // The pole-zero cancellation (PZC) is NOT part of the simulator: it is a
 // downstream reconstruction stage under test. It lives in reconstrucao/pzc/ and
-// is composed with this core by the FPGA_Simulator_v1_PZC wrapper.
-module hits_simulator
+// is composed with this core by the hits_reco wrapper.
+module hits
 #(
 	// pseudo-random generator: "xoshiro" (xoshiro128**, default since
 	// 2026-09-28), "round_robin" (the SBCCI 2025 bank) or "leap" (one

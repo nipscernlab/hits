@@ -127,8 +127,8 @@ CONGELADOS = {
 
 # where a choice can be left on by hand; the builds pass their own macros
 # with -D, so every one of these must be committed with the lines commented
-ESCOLHAS = ("projects/simulador_reco/aurora/simulacao.v", "rtl/hits_simulator.v",
-            "reconstrucao/FPGA_Simulator_v1_PZC.v")
+ESCOLHAS = ("projects/simulador_reco/aurora/simulacao.v", "rtl/hits.v",
+            "reconstrucao/hits_reco.v")
 
 # builds run serially and every artifact is deleted before and after each one
 # (a stale tb.vvp once produced a false OK -- F15 lesson, 2026-07-21)

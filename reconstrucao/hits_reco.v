@@ -53,7 +53,7 @@
 //
 // It keeps the exact port interface of the standalone top it replaced, so the
 // board top (de10_nano_soc_ghrd.v) and the testbench are unchanged.
-module FPGA_Simulator_v1_PZC
+module hits_reco
 #(
 	parameter RNG_TYPE = "xoshiro",   // random generator of the simulator (rtl/random/rng.v)
 	parameter RAND_BITS_HITS = 7,
@@ -76,7 +76,7 @@ module FPGA_Simulator_v1_PZC
 	parameter RAND_BITS_NOISE = 10,
 	parameter NOISE_OUT_BITS = 17,
 	parameter MEM_NOISE_SIZE = 2**10,
-`ifdef USE_NOISE_SIGMA8                  // see rtl/hits_simulator.v
+`ifdef USE_NOISE_SIGMA8                  // see rtl/hits.v
 	parameter MEM_NOISE0 = "noise_s8_icdf0.mif",
 	parameter MEM_NOISE1 = "noise_s8_icdf1.mif",
 	parameter MEM_NOISE2 = "noise_s8_icdf2.mif",
@@ -91,7 +91,7 @@ module FPGA_Simulator_v1_PZC
 `endif
 	parameter MEM_NOISE0_THRESH = 1007,
 	parameter MEM_NOISE1_THRESH = 1007,
-`ifdef USE_NOISE_SIGMA8                  // see rtl/hits_simulator.v
+`ifdef USE_NOISE_SIGMA8                  // see rtl/hits.v
 	parameter NOISE_TYPE = "tables",
 `elsif USE_NOISE_TABLES
 	parameter NOISE_TYPE = "tables",
@@ -154,7 +154,7 @@ module FPGA_Simulator_v1_PZC
 
 
 // HITS simulator core (rtl/) — everything up to the digitized ADC sample.
-hits_simulator
+hits
 #(
 	.RNG_TYPE(RNG_TYPE),
 	.RAND_BITS_HITS(RAND_BITS_HITS),

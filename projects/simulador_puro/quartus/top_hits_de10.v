@@ -1,11 +1,11 @@
-// top_simulador_de10.v -- the HITS SIMULATOR ALONE on the DE10-Nano (Cyclone V),
+// top_hits_de10.v -- the HITS SIMULATOR ALONE on the DE10-Nano (Cyclone V),
 // with no HPS, no Qsys and no reconstruction technique: the chain ends at the
 // ADC output, shaper_clip, which is what Signal Tap captures.
 //
 // The runtime inputs are FIXED here (no ARM): the 16-bit occupancy is
 // 65530/65536 (the 7-bit input at 127 plus OCC_LSB = 506, the deposit
 // probability of the Lorenzetti spectrum) and the pedestal 146 ADC, the values of projects/simulador_puro/aurora/simulador_tb.v with
-// USE_ENERGY_LORENZETTI. With the macros of simulador_de10.qsf
+// USE_ENERGY_LORENZETTI. With the macros of hits_de10.qsf
 // (USE_SHAPER_CSA_CR4RC + USE_ENERGY_LORENZETTI) this is the paper_r1 build,
 // and the samples after the reset must equal the paper_r1 golden bit for bit.
 //
@@ -15,7 +15,7 @@
 //
 // LED0 blinks (clk40 alive), LED1 = PLL locked, LED2 = parity of shaper_clip
 // (keeps the chain from being optimized away), LED3 = reset active.
-module top_simulador_de10 (
+module top_hits_de10 (
     input  wire       FPGA_CLK1_50,
     input  wire       KEY0,
     output wire [3:0] LED
@@ -39,7 +39,7 @@ module top_simulador_de10 (
     wire [11:0] shaper_clip;
     wire signed [16:0] noise_out;
 
-    hits_simulator
+    hits
     #(
         .BUNCH_MEM ({RTL, "/hits/bunch_train_mask.mif"}),
         .MEM_ENG0  ({RTL, "/energy/energy_icdf_paper_0.mif"}),

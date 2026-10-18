@@ -325,7 +325,7 @@ assign LED[0] = led_level;
 	// USE_SHAPER_NO_PIPE macros (see the .qsf).
 	parameter RNG_TYPE = "xoshiro";
   
-  FPGA_Simulator_v1_PZC 
+  hits_reco 
 	#(
 		.PZC_M_FACTOR(PZC_M_FACTOR),
 `ifdef USE_ENERGY_LORENZETTI

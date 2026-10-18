@@ -1,4 +1,4 @@
-module FPGA_Simulator_v1_PZC_SOC(
+module hits_reco_soc(
 	//////////// CLOCK //////////
 	input 		          		FPGA_CLK1_50,
 	input 		          		FPGA_CLK2_50,
@@ -71,7 +71,7 @@ sw_converter swc
 
 
 
-FPGA_Simulator_v1_PZC 
+hits_reco 
 #(
 	.PZC_M_FACTOR(PZC_M_FACTOR)
 	)

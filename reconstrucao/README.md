@@ -7,7 +7,7 @@ one subfolder per technique, plus the wrapper that joins the simulator to the
 technique under test.
 
 ```
-FPGA_Simulator_v1_PZC.v    wrapper: simulator core (rtl/) + ONE technique, chosen by macro
+hits_reco.v    wrapper: simulator core (rtl/) + ONE technique, chosen by macro
 pzc/                       pole-zero cancellation + pedestal tracking (built when no macro is set)
   pzc_ped_track.v
 estimador_baseline/        adaptive baseline estimator (USE_BASELINE_EST)
@@ -18,16 +18,16 @@ estimador_baseline/        adaptive baseline estimator (USE_BASELINE_EST)
 
 ## The wrapper
 
-`FPGA_Simulator_v1_PZC.v` instantiates the simulator core and exactly one
+`hits_reco.v` instantiates the simulator core and exactly one
 technique, selected at synthesis time by a macro (see its header). Whatever the
 technique, its result goes out on `pzc_out` and its baseline estimate on
 `pedestal_out`, so the testbench and the board top do not change between
 techniques.
 
-The module keeps the name `FPGA_Simulator_v1_PZC` even though it no longer
+The module keeps the name `hits_reco` even though it no longer
 holds only the PZC: the board top (`projects/simulador_reco/quartus/de10_nano_soc_ghrd.v`)
 instantiates it by that name, and the SignalTap assignments in the `.qsf` refer
-to its hierarchy (`FPGA_Simulator_v1_PZC:sim|...`).
+to its hierarchy (`hits_reco:sim|...`).
 
 ⚠️ The techniques do not share an output scale. The PZC delivers a gain of
 `PZC_M_FACTOR+1` = 455, the estimator delivers ADC counts. Divide before
