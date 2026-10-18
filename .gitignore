@@ -21,8 +21,8 @@ c5_pin_model_dump.txt
 # --- Simulation artifacts (Aurora / Icarus Verilog) ---
 .aurora-wave/
 .aurora-missing-files.log
-projects/simulador_reco/aurora/testbench/
-projects/simulador_puro/aurora/testbench/
+projects/hits_reco/aurora/testbench/
+projects/hits/aurora/testbench/
 .aurora/
 *.vcd
 *.vvp
@@ -30,3 +30,6 @@ projects/simulador_puro/aurora/testbench/
 
 # --- Python ---
 __pycache__/
+
+# --- Manual (docs/) ---
+docs/_build/

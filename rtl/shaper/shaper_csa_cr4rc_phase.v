@@ -90,8 +90,8 @@ localparam signed [27:0] T1 =  28'sd1545777;
 localparam signed [27:0] T2 =  28'sd16631;
 localparam signed [27:0] T3 =  28'sd154;
 
-localparam signed [SC:0] MEIO_SC = 1 <<< (SC - 1);
-localparam signed [F:0]  MEIO_F  = 1 <<< (F - 1);
+localparam signed [SC:0] HALF_SC = 1 <<< (SC - 1);
+localparam signed [F:0]  HALF_F  = 1 <<< (F - 1);
 
 reg signed [BITS_IN-1:0] x1 = 0, x2 = 0, x3 = 0;   // FIR delay line
 reg signed [WY-1:0] y0 = 0, y1 = 0, y2 = 0;        // IIR section states
@@ -104,17 +104,17 @@ if (PIPE_IN == 0) begin : comb
 	wire signed [BC+BITS_IN+12:0] fir =
 		T0 * x0 + T1 * x1 + T2 * x2 + T3 * x3;
 	wire signed [SC+WY+1:0] p0 = Q0 * y0, p1 = Q1 * y1, p2 = Q2 * y2;
-	wire signed [WY-1:0] y0n = R0 * x0 + ((p0 + MEIO_SC) >>> SC);
-	wire signed [WY-1:0] y1n = R1 * x0 + ((p1 + MEIO_SC) >>> SC);
-	wire signed [WY-1:0] y2n = R2 * x0 + ((p2 + MEIO_SC) >>> SC);
-	wire signed [WS-1:0] soma = y0n + y1n + y2n + ((fir <<< (F - BC)));
+	wire signed [WY-1:0] y0n = R0 * x0 + ((p0 + HALF_SC) >>> SC);
+	wire signed [WY-1:0] y1n = R1 * x0 + ((p1 + HALF_SC) >>> SC);
+	wire signed [WY-1:0] y2n = R2 * x0 + ((p2 + HALF_SC) >>> SC);
+	wire signed [WS-1:0] total = y0n + y1n + y2n + ((fir <<< (F - BC)));
 	always @(posedge clock or posedge rst)
 		if (rst) begin
 			x1 <= 0; x2 <= 0; x3 <= 0; y0 <= 0; y1 <= 0; y2 <= 0; acc <= 0;
 		end else begin
 			x1 <= x0; x2 <= x1; x3 <= x2;
 			y0 <= y0n; y1 <= y1n; y2 <= y2n;
-			acc <= (soma + MEIO_F) >>> F;
+			acc <= (total + HALF_F) >>> F;
 		end
 end else begin : pipe
 	// POLYPHASE (F07): T0..T3, R1, R2 of the phase of each hit come from MEM_PH (64 phases,
@@ -150,7 +150,7 @@ end else begin : pipe
 			fir <= g1 + f0;
 			y0 <= n0 >>> SC; y1 <= n1 >>> SC; y2 <= n2 >>> SC;
 			s01 <= y0 + y1;
-			s2f <= y2 + (fir <<< (F - BC)) + MEIO_F;
+			s2f <= y2 + (fir <<< (F - BC)) + HALF_F;
 			acc <= (s01 + s2f) >>> F;
 		end
 end

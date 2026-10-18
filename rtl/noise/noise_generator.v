@@ -33,7 +33,7 @@ module noise_generator
 
 generate
 if (NOISE_TYPE == "gauss") begin : gauss
-	if (RNG_TYPE != "xoshiro") begin : erro
+	if (RNG_TYPE != "xoshiro") begin : error
 		ERROR_noise_generator_NOISE_TYPE_gauss_needs_RNG_TYPE_xoshiro e ();
 	end
 	// the same generator and seeds as the xoshiro table path; the word is the

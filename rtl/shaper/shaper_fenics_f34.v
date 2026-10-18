@@ -23,7 +23,7 @@
 // The naive delta form is unusable here: its DC gain depends on d1+d2, which
 // is itself a cancellation (+4.75e-5 and -4.75e-5 for the 1.053 ms pair).
 //
-// ROUNDING: every product shift adds MEIO = 2**(W_COEF-1) and every output
+// ROUNDING: every product shift adds HALF = 2**(W_COEF-1) and every output
 // shift adds half an LSB. A plain arithmetic shift is FLOOR, so a state
 // parked just below zero would emit -1 LSB on every sample. Measured in
 // steady state the difference is ~1e-10 of peak, so this is fixed-point
@@ -60,7 +60,7 @@ localparam integer N_DELAY = 3;    // shared delay of the slow sections
 // transient. A single uniform width overflows the tau = 10.1 ms section (the
 // largest EX) at small BITS_IN, while wasting bits on the fast ones. In the
 // HITS simulator BITS_IN is 13, which is exactly where that bites.
-localparam signed [W_COEF:0] MEIO = 1 <<< (W_COEF-1);
+localparam signed [W_COEF:0] HALF = 1 <<< (W_COEF-1);
 
 // ---------------------------------------------------------- FIR head -----
 localparam signed [B_C+1:0] TAP00 = 0;
@@ -150,11 +150,11 @@ localparam signed [W_COEF+1:0] G_L0 = -272629760;
 localparam integer WS_L0 = BITS_IN + EX_L0 + 4;
 localparam integer WP_L0 = WS_L0 + W_COEF + 2;
 reg  signed [WS_L0-1:0] acc_L0 = 0;
-wire signed [WP_L0-1:0] tgt_L0 = (G_L0 * (xs_r <<< EX_L0) + MEIO) >>> W_COEF;
+wire signed [WP_L0-1:0] tgt_L0 = (G_L0 * (xs_r <<< EX_L0) + HALF) >>> W_COEF;
 reg  signed [WP_L0-1:0] tgt_L0_r = 0;   // pipeline stage 1
 always @(posedge clock or posedge rst)
 	if (rst) tgt_L0_r <= 0; else tgt_L0_r <= tgt_L0;
-wire signed [WP_L0-1:0] inc_L0 = (K_L0 * (tgt_L0_r - acc_L0) + MEIO) >>> W_COEF;
+wire signed [WP_L0-1:0] inc_L0 = (K_L0 * (tgt_L0_r - acc_L0) + HALF) >>> W_COEF;
 always @(posedge clock or posedge rst)
 	if (rst) acc_L0 <= 0; else acc_L0 <= acc_L0 + inc_L0;
 wire signed [BITS_IN+16:0] out_L0 =
@@ -168,11 +168,11 @@ localparam signed [W_COEF+1:0] G_L1 = -2139095040;
 localparam integer WS_L1 = BITS_IN + EX_L1 + 4;
 localparam integer WP_L1 = WS_L1 + W_COEF + 2;
 reg  signed [WS_L1-1:0] acc_L1 = 0;
-wire signed [WP_L1-1:0] tgt_L1 = (G_L1 * (xs_r <<< EX_L1) + MEIO) >>> W_COEF;
+wire signed [WP_L1-1:0] tgt_L1 = (G_L1 * (xs_r <<< EX_L1) + HALF) >>> W_COEF;
 reg  signed [WP_L1-1:0] tgt_L1_r = 0;   // pipeline stage 1
 always @(posedge clock or posedge rst)
 	if (rst) tgt_L1_r <= 0; else tgt_L1_r <= tgt_L1;
-wire signed [WP_L1-1:0] inc_L1 = (K_L1 * (tgt_L1_r - acc_L1) + MEIO) >>> W_COEF;
+wire signed [WP_L1-1:0] inc_L1 = (K_L1 * (tgt_L1_r - acc_L1) + HALF) >>> W_COEF;
 always @(posedge clock or posedge rst)
 	if (rst) acc_L1 <= 0; else acc_L1 <= acc_L1 + inc_L1;
 wire signed [BITS_IN+16:0] out_L1 =
@@ -195,11 +195,11 @@ reg  signed [WP_L2-1:0] ph_L2_r = 0, pl_L2_r = 0;
 always @(posedge clock or posedge rst)
 	if (rst) begin ph_L2_r <= 0; pl_L2_r <= 0; end
 	else     begin ph_L2_r <= ph_L2; pl_L2_r <= pl_L2; end
-wire signed [WP_L2-1:0] tgt_L2 = (ph_L2_r + pl_L2_r + MEIO) >>> W_COEF;
+wire signed [WP_L2-1:0] tgt_L2 = (ph_L2_r + pl_L2_r + HALF) >>> W_COEF;
 reg  signed [WP_L2-1:0] tgt_L2_r = 0;   // pipeline stage 1
 always @(posedge clock or posedge rst)
 	if (rst) tgt_L2_r <= 0; else tgt_L2_r <= tgt_L2;
-wire signed [WP_L2-1:0] inc_L2 = (K_L2 * (tgt_L2_r - acc_L2) + MEIO) >>> W_COEF;
+wire signed [WP_L2-1:0] inc_L2 = (K_L2 * (tgt_L2_r - acc_L2) + HALF) >>> W_COEF;
 always @(posedge clock or posedge rst)
 	if (rst) acc_L2 <= 0; else acc_L2 <= acc_L2 + inc_L2;
 wire signed [BITS_IN+16:0] out_L2 =
@@ -216,18 +216,18 @@ localparam integer WS_A0 = BITS_IN + EX_A0 + 4;
 localparam integer WP_A0 = WS_A0 + W_COEF + 2;
 reg  signed [WS_A0-1:0] u_A0 = 0, v_A0 = 0;
 wire signed [WP_A0-1:0] xn_A0 = xs_r <<< EX_A0;
-wire signed [WP_A0-1:0] fa_A0 = (RA_A0*xn_A0 + MEIO) >>> W_COEF;
-wire signed [WP_A0-1:0] fb_A0 = (RB_A0*xn_A0 + MEIO) >>> W_COEF;
+wire signed [WP_A0-1:0] fa_A0 = (RA_A0*xn_A0 + HALF) >>> W_COEF;
+wire signed [WP_A0-1:0] fb_A0 = (RB_A0*xn_A0 + HALF) >>> W_COEF;
 reg  signed [WP_A0-1:0] fa_A0_r = 0, fb_A0_r = 0;   // pipeline stage 1
 always @(posedge clock or posedge rst)
 	if (rst) begin fa_A0_r <= 0; fb_A0_r <= 0; end
 	else     begin fa_A0_r <= fa_A0; fb_A0_r <= fb_A0; end
 // Feedback sum as a 2-level tree (2026-10-02): (u - C*u) + (fa - S*v).
 // Same integer result as the serial chain; shorter loop path.
-wire signed [WP_A0-1:0] cu_A0 = (C_A0*u_A0 + MEIO) >>> W_COEF;
-wire signed [WP_A0-1:0] cv_A0 = (C_A0*v_A0 + MEIO) >>> W_COEF;
-wire signed [WP_A0-1:0] su_A0 = (S_A0*u_A0 + MEIO) >>> W_COEF;
-wire signed [WP_A0-1:0] sv_A0 = (S_A0*v_A0 + MEIO) >>> W_COEF;
+wire signed [WP_A0-1:0] cu_A0 = (C_A0*u_A0 + HALF) >>> W_COEF;
+wire signed [WP_A0-1:0] cv_A0 = (C_A0*v_A0 + HALF) >>> W_COEF;
+wire signed [WP_A0-1:0] su_A0 = (S_A0*u_A0 + HALF) >>> W_COEF;
+wire signed [WP_A0-1:0] sv_A0 = (S_A0*v_A0 + HALF) >>> W_COEF;
 wire signed [WP_A0-1:0] un_A0 = (u_A0 - cu_A0) + (fa_A0_r - sv_A0);
 wire signed [WP_A0-1:0] vn_A0 = (v_A0 - cv_A0) + (fb_A0_r + su_A0);
 always @(posedge clock or posedge rst) begin
@@ -248,18 +248,18 @@ localparam integer WS_A1 = BITS_IN + EX_A1 + 4;
 localparam integer WP_A1 = WS_A1 + W_COEF + 2;
 reg  signed [WS_A1-1:0] u_A1 = 0, v_A1 = 0;
 wire signed [WP_A1-1:0] xn_A1 = xs_r <<< EX_A1;
-wire signed [WP_A1-1:0] fa_A1 = (RA_A1*xn_A1 + MEIO) >>> W_COEF;
-wire signed [WP_A1-1:0] fb_A1 = (RB_A1*xn_A1 + MEIO) >>> W_COEF;
+wire signed [WP_A1-1:0] fa_A1 = (RA_A1*xn_A1 + HALF) >>> W_COEF;
+wire signed [WP_A1-1:0] fb_A1 = (RB_A1*xn_A1 + HALF) >>> W_COEF;
 reg  signed [WP_A1-1:0] fa_A1_r = 0, fb_A1_r = 0;   // pipeline stage 1
 always @(posedge clock or posedge rst)
 	if (rst) begin fa_A1_r <= 0; fb_A1_r <= 0; end
 	else     begin fa_A1_r <= fa_A1; fb_A1_r <= fb_A1; end
 // Feedback sum as a 2-level tree (2026-10-02): (u - C*u) + (fa - S*v).
 // Same integer result as the serial chain; shorter loop path.
-wire signed [WP_A1-1:0] cu_A1 = (C_A1*u_A1 + MEIO) >>> W_COEF;
-wire signed [WP_A1-1:0] cv_A1 = (C_A1*v_A1 + MEIO) >>> W_COEF;
-wire signed [WP_A1-1:0] su_A1 = (S_A1*u_A1 + MEIO) >>> W_COEF;
-wire signed [WP_A1-1:0] sv_A1 = (S_A1*v_A1 + MEIO) >>> W_COEF;
+wire signed [WP_A1-1:0] cu_A1 = (C_A1*u_A1 + HALF) >>> W_COEF;
+wire signed [WP_A1-1:0] cv_A1 = (C_A1*v_A1 + HALF) >>> W_COEF;
+wire signed [WP_A1-1:0] su_A1 = (S_A1*u_A1 + HALF) >>> W_COEF;
+wire signed [WP_A1-1:0] sv_A1 = (S_A1*v_A1 + HALF) >>> W_COEF;
 wire signed [WP_A1-1:0] un_A1 = (u_A1 - cu_A1) + (fa_A1_r - sv_A1);
 wire signed [WP_A1-1:0] vn_A1 = (v_A1 - cv_A1) + (fb_A1_r + su_A1);
 always @(posedge clock or posedge rst) begin
@@ -279,7 +279,7 @@ wire signed [BITS_IN+16:0] out_A1 =
 // Every term is delayed by exactly one sample, so the SHAPE IS UNCHANGED:
 // out_new[n] = out_old[n-1]: +1 sample (3 -> 4; stage 1 above made it 5).
 // Anything aligned downstream shifts with it: golden VCDs, and the anchor
-// alignment of the baseline estimator (EST_LATENCIA, EST_IA_INIT).
+// alignment of the baseline estimator (EST_LATENCY, EST_IA_INIT).
 reg signed [BITS_IN+16:0] fir_out_r, out_L0_r, out_L1_r, out_L2_r, out_A0_r, out_A1_r;
 always @(posedge clock or posedge rst) begin
 	if (rst) begin
@@ -302,7 +302,7 @@ end
 // PIPELINE STAGE 3 (2026-10-01): the final sum is registered too, so the
 // path 'components -> sum -> noise -> ADC clip' is split. +1 sample:
 // Shape unchanged, as for the other stages (total latency: see stage 0).
-wire signed [BITS_IN+16:0] soma = fir_out_r
+wire signed [BITS_IN+16:0] total = fir_out_r
 	+ out_L0_r
 	+ out_L1_r
 	+ out_L2_r
@@ -310,7 +310,7 @@ wire signed [BITS_IN+16:0] soma = fir_out_r
 	+ out_A1_r;
 reg  signed [BITS_IN+16:0] out_r = 0;
 always @(posedge clock or posedge rst)
-	if (rst) out_r <= 0; else out_r <= soma;
+	if (rst) out_r <= 0; else out_r <= total;
 assign out = out_r;
 
 endmodule

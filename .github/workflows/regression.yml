@@ -1,0 +1,23 @@
+# Golden regression on every pull request and every push to main.
+# The job "regression" is the status check required by the protection of main:
+# no branch gets in unless every build is bit-identical to its golden (HITS alone
+# and HITS + a reconstruction technique).
+name: regression
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  golden:
+    name: regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Icarus Verilog
+        run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends iverilog
+      - name: Simulator version
+        run: iverilog -V | head -1
+      - name: Regression (every build with a golden)
+        run: python3 verification/regress.py

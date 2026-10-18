@@ -8,11 +8,11 @@
 #
 # It tests the WORKING TREE, not only what is staged: a broken edit left out
 # of the commit still blocks it. The real gate is the CI check
-# regressao-golden, required to merge into main; this hook only catches the
+# regression, required to merge into main; this hook only catches the
 # error before it leaves the machine.
 # Skipping it (git commit --no-verify) is possible, and the CI will still run.
 
-if ! git diff --cached --name-only | grep -qE '^(rtl|reconstrucao|projects/simulador_reco/aurora|projects/simulador_puro/aurora|verification)/'; then
+if ! git diff --cached --name-only | grep -qE '^(rtl|reconstruction|projects/hits_reco/aurora|projects/hits/aurora|verification)/'; then
     exit 0
 fi
 

@@ -76,7 +76,7 @@
 // ADC range). The digitized sample `shaper_clip` IS the simulator output.
 //
 // The pole-zero cancellation (PZC) is NOT part of the simulator: it is a
-// downstream reconstruction stage under test. It lives in reconstrucao/pzc/ and
+// downstream reconstruction stage under test. It lives in reconstruction/pzc/ and
 // is composed with this core by the hits_reco wrapper.
 module hits
 #(
@@ -261,7 +261,7 @@ if (SIGMA_PS != 0) begin : jitter
 		if (rst) idx <= 32 + PHASE0;
 		else idx <= (i_ph < 0) ? 6'd0 : (i_ph > 63) ? 6'd63 : i_ph[5:0];
 	assign ph_idx = idx;
-end else begin : fixa
+end else begin : fixed
 	assign ph_idx = 32 + PHASE0;
 end
 endgenerate

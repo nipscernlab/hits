@@ -30,7 +30,7 @@ module energy_generator
 
 generate
 if (ENERGY_TYPE == "seg") begin : seg
-	if (RNG_TYPE != "xoshiro") begin : erro
+	if (RNG_TYPE != "xoshiro") begin : error
 		ERROR_energy_generator_ENERGY_TYPE_seg_needs_RNG_TYPE_xoshiro e ();
 	end
 	// the same generator and seeds as the xoshiro table path; the word is the

@@ -1,0 +1,113 @@
+// hits_reco_tb.v — testbench of the core+PZC test wrapper (hits_reco)
+// for Aurora (Icarus Verilog + GTKWave), with no ARM/PLL/Qsys.
+// Aurora project: hits_reco.spf in this folder — the simulated RTL is the
+// ORIGINAL source: the simulator core in rtl/ plus the PZC-under-test in
+// reconstruction/ (both shared by the Quartus and Aurora projects, no copies):
+// edit the .v -> simulate -> commit.
+//
+// WHICH technique and shaper run is chosen in choices.v (next to this file,
+// compiled first). The simulator ALONE, up to the ADC quantization, has its
+// own project and testbench: projects/hits/aurora/.
+//
+// - 40 MHz clock (25 ns period), like a collider bunch clock;
+// - short reset at the start;
+// - occupancy starts at 25/127 and steps to 80/127 halfway through
+//   (reproduces the SignalTap test of the ENMC 2024 paper, now in GTKWave);
+// - offset (pedestal) = 146 ADC;
+// - 3 full bunch-train orbits (3 x 3564 slots) + margin;
+// - the .mif files are loaded by $readmemb through RTL_DIR, RELATIVE to this
+//   folder: the simulation must run with cwd = projects/hits_reco/aurora (Aurora does
+//   that since 2026-07-17; on the command line, cd here first — see README).
+
+`timescale 1ns/100ps
+
+module hits_reco_tb;
+
+    localparam RTL_DIR = "../../../rtl";
+    // path of the estimator ROM through a `define (a macro does not land in the VCD; a new
+    // localparam would enter the dump and break the comparison with the older goldens)
+    `define EST_DIR "../../../reconstruction/baseline_estimator"
+
+    localparam ORBIT    = 3564;             // 25 ns slots per orbit
+    localparam N_ORBITS = 3;
+    localparam N_CYCLES  = ORBIT*N_ORBITS + 200;
+
+    reg clk = 1'b0;
+    reg rst = 1'b1;
+    reg [6:0] occupancy = 7'd25;             // 25/127 ~ 20%
+    reg signed [12:0] offset = 13'sd146;     // pedestal in ADC counts
+
+    wire hits_out, bt_mask_out;
+    wire [12:0] energy_out, event_bt, event_all;
+    wire signed [29:0] shaper_out, shaper_corrupted;
+    wire [11:0] shaper_clip;
+    wire signed [16:0] noise_out;
+    wire signed [12:0] pedestal_out;
+    wire signed [28:0] pzc_out;
+
+    hits_reco
+    #(
+        .BUNCH_MEM ({RTL_DIR, "/hits/bunch_train_mask.mif"}),
+        .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_paper_0.mif"}),
+        .MEM_ENG1  ({RTL_DIR, "/energy/energy_icdf_paper_1.mif"}),
+        .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_paper_2.mif"}),
+        .MEM_SEG   ({RTL_DIR, "/energy/energy_seg_default.mif"}),
+        .MEM_GAUSS ({RTL_DIR, "/noise/noise_gauss_s4.mif"}),
+        .MEM_NOISE0({RTL_DIR, "/noise/noise_s4_icdf0.mif"}),
+        .MEM_NOISE1({RTL_DIR, "/noise/noise_s4_icdf1.mif"}),
+        .MEM_NOISE2({RTL_DIR, "/noise/noise_s4_icdf2.mif"}),
+        // only the USE_BASELINE_EST build reads this ROM; without the path $readmemh
+        // failed silently and the f34_est golden froze outputs full of X (2026-09-14)
+        .EST_RECIP_MEM({`EST_DIR, "/recip.mem"})
+    ) dut
+    (
+        .clk(clk),
+        .rst(rst),
+        .occupancy({occupancy, 9'd0}),     // the 7-bit variable is the top of the 16-bit occupancy
+        .offset(offset),
+        .hits_out(hits_out),
+        .bt_mask_out(bt_mask_out),
+        .energy_out(energy_out),
+        .event_bt(event_bt),
+        .event_all(event_all),
+        .shaper_out(shaper_out),
+        .shaper_corrupted(shaper_corrupted),
+        .shaper_clip(shaper_clip),
+        .noise_out(noise_out),
+        .pedestal_out(pedestal_out),
+        .pzc_out(pzc_out)
+    );
+
+    // 40 MHz clock
+    always #12.5 clk = ~clk;
+
+    initial begin
+        $dumpfile("hits_reco_tb.vcd");
+        // testbench scope only: clk/rst/occupancy/offset + every DUT output
+        // (to dive into the hierarchy, use Aurora's Wave Configuration,
+        // which overrides this dumpvars)
+        $dumpvars(1, hits_reco_tb);
+
+        // reset for 4 cycles
+        // Stimulus changes on a clock edge use NONBLOCKING assignments: with
+        // `rst = 0` every always block saw rst as 0 or as 1 at that edge
+        // depending on Icarus's process order, so part of the design left
+        // reset one edge before the rest -- a state the hardware never
+        // produces, and one that any restructuring of the RTL could flip.
+        repeat (4) @(posedge clk);
+        rst <= 1'b0;
+
+        // 1st half: low occupancy (25/127)
+        repeat (N_CYCLES/2) @(posedge clk);
+
+        // 2nd half: high occupancy (80/127) — watch the hit density change
+        occupancy <= 7'd80;
+        $display("t=%0t ns: occupancy 25 -> 80", $time);
+
+        repeat (N_CYCLES/2) @(posedge clk);
+
+        $display("end: %0d cycles (%0d orbits)", N_CYCLES, N_ORBITS);
+        $finish;
+    end
+
+endmodule
