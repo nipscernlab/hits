@@ -34,7 +34,7 @@ Table 1: the builds of the regression and their goldens (in `verification/`).
 | `sim_energy_tables` | core | `USE_ENERGY_TABLES` | `hits_tb_golden_energy_tables.vcd` |
 | `sim_round_robin` | core | `USE_RNG_ROUND_ROBIN` | `hits_tb_golden_round_robin.vcd` |
 | `sim_round_robin_legacy` | core | `USE_RNG_ROUND_ROBIN USE_SHAPER_LEGACY` | `hits_tb_golden_round_robin_legacy.vcd` |
-| `paper` | core | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC USE_NOISE_SIGMA8 USE_ADC_FLOOR USE_SHAPER_NO_PIPE` | `hits_tb_golden_paper.vcd` (frozen) |
+| `paper` | core | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC USE_NOISE_SIGMA8 USE_ADC_FLOOR USE_SHAPER_NO_PIPE USE_OCC_PAPER` | `hits_tb_golden_paper.vcd` (frozen) |
 | `paper_r1` | core | `USE_SHAPER_CSA_CR4RC USE_ENERGY_LORENZETTI` | `hits_tb_golden_paper_r1.vcd` |
 | `sim_leap` | core | `USE_RNG_LEAP` | `hits_tb_golden_leap.vcd` |
 | `sim_leap_legacy` | core | `USE_RNG_LEAP USE_SHAPER_LEGACY` | `hits_tb_golden_leap_legacy.vcd` |

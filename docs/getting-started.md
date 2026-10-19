@@ -31,7 +31,7 @@ waveform.
 
 The testbench runs three full bunch-train orbits (3 × 3564 bunch crossings). It
 changes the occupancy, the probability of a hit in each filled bunch crossing
-([The signal chain](signal-chain.md#stages) explains it), from 19.5% to 62.5%
+([The signal chain](signal-chain.md#stages) explains it), from 25% to 75%
 halfway through, so the change in hit density shows in the
 waveform.
 

@@ -14,7 +14,8 @@ a truncating ADC.
 
 Its behavior on the current code is the `paper` build: `RNG_TYPE` =
 `"round_robin"` with the macros `USE_SHAPER_CSA_CR4RC`, `USE_NOISE_SIGMA8`,
-`USE_ADC_FLOOR` and `USE_SHAPER_NO_PIPE`.
+`USE_ADC_FLOOR` and `USE_SHAPER_NO_PIPE`. Its testbench macro `USE_OCC_PAPER`
+keeps the occupancies its golden was made with, 19.5% and then 62.5%.
 
 ```sh
 python verification/regress.py paper

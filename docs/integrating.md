@@ -14,7 +14,7 @@ hits #(
 ) sim (
     .clk              (clk_40),   // one cycle per bunch crossing
     .rst              (rst),
-    .occupancy        (16'd12800),// 19.5% of the filled bunch crossings
+    .occupancy        (16'd16384),// 25% of the filled bunch crossings
     .offset           (13'sd146), // pedestal, ADC counts
     .hits_out         (),
     .bt_mask_out      (),

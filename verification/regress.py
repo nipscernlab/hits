@@ -80,7 +80,7 @@ BUILDS = {
     # FROZEN (see FROZEN).
     "paper":         ("core", ["USE_RNG_ROUND_ROBIN", "USE_SHAPER_CSA_CR4RC",
                                     "USE_NOISE_SIGMA8", "USE_ADC_FLOOR",
-                                    "USE_SHAPER_NO_PIPE"],
+                                    "USE_SHAPER_NO_PIPE", "USE_OCC_PAPER"],
                       "hits_tb_golden_paper.vcd"),
     # THE HITS OF THE REVISED PAPER (revision R1 of the Sensors Journal paper):
     # the current default with the CSA/CR-4RC shaper and the Lorenzetti energy

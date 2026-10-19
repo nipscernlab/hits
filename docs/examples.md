@@ -10,7 +10,7 @@ show one way of using the core, and each can be copied and changed.
 AURORA project `hits.spf`. The testbench instantiates `hits`
 alone, so the simulation ends at the ADC sample `shaper_clip`. It runs three
 orbits (10 892 cycles) with the pedestal at 146 ADC counts and the occupancy at
-19.5%, then 62.5% from the middle of the run. With
+25%, then 75% from the middle of the run. With
 `-DUSE_ENERGY_LORENZETTI` the occupancy stays at 99.991%,
 as the Lorenzetti spectrum requires.
 

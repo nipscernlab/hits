@@ -36,8 +36,9 @@
 //
 // - 40 MHz clock (25 ns period), like a collider bunch clock;
 // - short reset at the start;
-// - occupancy starts at 25/127 and steps to 80/127 halfway through (held at
-//   127 with USE_ENERGY_LORENZETTI);
+// - occupancy starts at 25% and steps to 75% halfway through (25/128 and
+//   80/128 with USE_OCC_PAPER, the frozen paper build; held at 65530/65536
+//   with USE_ENERGY_LORENZETTI);
 // - offset (pedestal) = 146 ADC;
 // - 3 full bunch-train orbits (3 x 3564 slots) + margin;
 // - the .mif files are loaded through RTL_DIR, RELATIVE to this folder: the
@@ -65,10 +66,14 @@ module hits_tb;
   `define OCC_A 7'd127   // with OCC_LOW 506: 65530/65536, P(deposit) of the Lorenzetti spectrum
   `define OCC_B 7'd127
   `define OCC_LOW 9'd506
-`else
+`elsif USE_OCC_PAPER      // regression build paper: the occupancies its frozen golden was made with
   `define OCC_LOW 9'd0
   `define OCC_A 7'd25    // 25/128 (19.5%), then 80/128 (62.5%)
   `define OCC_B 7'd80
+`else
+  `define OCC_LOW 9'd0
+  `define OCC_A 7'd32    // 32/128 (25%), then 96/128 (75%)
+  `define OCC_B 7'd96
 `endif
     reg [6:0] occupancy = `OCC_A;
     reg signed [12:0] offset = 13'sd146;     // pedestal in ADC counts
@@ -152,10 +157,10 @@ module hits_tb;
         repeat (4) @(posedge clk);
         rst <= 1'b0;
 
-        // 1st half: low occupancy (25/127)
+        // 1st half: low occupancy (OCC_A)
         repeat (N_CYCLES/2) @(posedge clk);
 
-        // 2nd half: high occupancy (80/127) — watch the hit density change
+        // 2nd half: high occupancy (OCC_B) — watch the hit density change
         occupancy <= `OCC_B;
         $display("t=%0t ns: occupancy %0d -> %0d", $time, `OCC_A, `OCC_B);
 
