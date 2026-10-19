@@ -8,6 +8,8 @@
 // USE_ENERGY_LORENZETTI. With the macros of hits_de10.qsf
 // (USE_SHAPER_CSA_CR4RC + USE_ENERGY_LORENZETTI) this is the paper_r1 build,
 // and the samples after the reset must equal the paper_r1 golden bit for bit.
+// The phase of the pulse is off; the macros USE_PHASE0 and USE_PHASE_SIGMA_PS
+// (the same as in hits_tb.v) turn it on.
 //
 // Reset: KEY0 (0 when pressed) or the PLL not locked. It is asserted at once
 // and RELEASED SYNCHRONOUSLY, two clk40 edges later: every block leaves reset
@@ -51,6 +53,15 @@ module top_hits_de10 (
         .MEM_SEG   ({RTL, "/energy/energy_seg_default.mif"}),
 `endif
         .MEM_GAUSS ({RTL, "/noise/noise_gauss_s4.mif"}),
+`ifdef USE_PHASE0                // fixed phase: VERILOG_MACRO "USE_PHASE0=<steps of 0.390625 ns>"
+        .PHASE0    (`USE_PHASE0),
+`endif
+`ifdef USE_PHASE_SIGMA_PS        // jitter per hit: VERILOG_MACRO "USE_PHASE_SIGMA_PS=<ps>"
+        .SIGMA_PS  (`USE_PHASE_SIGMA_PS),
+`endif
+        .MEM_GAUSS_PHASE({RTL, "/noise/noise_gauss_s4.mif"}),
+        .MEM_PH_F34({RTL, "/shaper/shaper_fenics_f34_phase.mif"}),
+        .MEM_PH_CSA({RTL, "/shaper/shaper_csa_cr4rc_phase.mif"}),
         .MEM_NOISE0({RTL, "/noise/noise_s4_icdf0.mif"}),
         .MEM_NOISE1({RTL, "/noise/noise_s4_icdf1.mif"}),
         .MEM_NOISE2({RTL, "/noise/noise_s4_icdf2.mif"})

@@ -10,9 +10,9 @@ Versions follow [Semantic Versioning](https://semver.org/): a change that alters
 the output of an existing build, or removes an option, increases the major
 number; a new option that leaves every existing build as it was increases the
 minor number; a fix that changes no output increases the patch number. The
-version is in the file `VERSION` at the root, which this manual reads. Each
-major version has a branch `release/<major>.x`, where its releases and fixes are
-made; `main` carries the next major version with the suffix `-dev`.
+version is in the file `VERSION` at the root, which this manual reads. Releases
+are made from `main`, which carries the next version with the suffix `-dev`; a
+branch `release/<major>.x` is opened only if an older major version needs a fix.
 
 Table 1 shows the releases planned so far.
 
@@ -20,9 +20,11 @@ Table 1: releases of HITS.
 
 | Version | What it is | Source |
 |---|---|---|
-| 1.0.0 | the HITS of the submitted paper | the tag `paper-jsen-2026`, with a manual of its own |
-| 2.0.0 | the HITS of the revised paper | the branch `release/2.x` when the numbers of the revision are final and the golden of `paper_r1` is frozen |
-| 3.0.0 | adds the phase of the pulse: a fixed phase and a jitter per hit | `main`, after 2.0.0 |
+| 1.0.0 | the first release: the HITS of the revised paper, with the phase of the pulse | `main` when the revised paper is resubmitted, on the same commit as the tag `paper-jsen-2026-r1` |
+
+The versions of the papers are kept by their tags, not as releases:
+`paper-jsen-2026` is the code of the submitted paper and `paper-jsen-2026-r1`
+the code of the revision ([Papers](../papers.md)).
 
 The release `linux-image-v1` is not a version of HITS: it holds the operating
 system image of the board with the ARM processor.

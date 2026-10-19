@@ -40,7 +40,9 @@ board with a phase-locked loop (PLL), holds the occupancy at 99.991% and the ped
 button KEY0, releasing the reset in step with the clock. Its `.qsf` sets the
 macros `USE_SHAPER_CSA_CR4RC` and `USE_ENERGY_LORENZETTI`: this is the
 configuration of the revised paper, and after the reset the ADC samples must
-equal the simulation of that build bit for bit. Four LEDs show that the clock
+equal the simulation of that build bit for bit. The phase of the pulse is off;
+adding the macro `USE_PHASE0=<n>` or `USE_PHASE_SIGMA_PS=<ps>` to the `.qsf`
+turns on a fixed phase or a jitter per hit, as in the testbench. Four LEDs show that the clock
 runs, that the PLL locked, the parity of `shaper_clip` (which keeps the chain
 from being removed by synthesis) and the reset.
 

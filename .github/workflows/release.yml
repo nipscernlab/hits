@@ -1,4 +1,4 @@
-# Release of HITS: pushing a tag v<version> (git tag v2.0.0 && git push origin v2.0.0)
+# Release of HITS: pushing a tag v<version> (git tag v1.0.0 && git push origin v1.0.0)
 # checks the version, the regression and the manual, and only then builds the two
 # archives, creates the release and publishes the manual (docs/develop/releases.md).
 #

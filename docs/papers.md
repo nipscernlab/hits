@@ -51,3 +51,8 @@ python verification/regress.py paper_r1
 Its golden is not frozen yet; it will be when the numbers of the revision are
 final. The DE10-Nano example of [Examples](examples.md#synthesis-in-quartus-the-de10-nano)
 is this build on the board.
+
+The revision also presents the phase of the pulse (`PHASE0` and `SIGMA_PS`),
+switched off in `paper_r1`: with both at zero the circuit is the one of before,
+bit for bit. When the revision is resubmitted, its commit gets the tag
+`paper-jsen-2026-r1` and is the release 1.0.0.
