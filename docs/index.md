@@ -55,6 +55,8 @@ files and the release process.
   project with the hard processor system.
 - [Releases](develop/releases.md): versions, what goes into a release and the
   checks a release has to pass.
+- [The configuration bus](develop/config-bus.md): the design, still a draft, of
+  the registers through which a processor configures HITS at run time.
 
 ```{toctree}
 :hidden:
@@ -85,4 +87,5 @@ develop/generated-files
 develop/reconstruction
 develop/board-with-arm
 develop/releases
+develop/config-bus
 ```
