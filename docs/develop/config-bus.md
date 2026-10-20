@@ -162,30 +162,26 @@ word synthesized; one register serves every vector, since one is loaded at a
 time. Writing the pieces straight into memories with a narrower write port
 would avoid it; which costs less is measured in the implementation.
 
-## An example in C±
+## An example
 
-A SAPHO program that stops the simulation, loads a new bunch-train mask, sets
-the occupancy to 25% and runs again:
+The writes a controller makes to stop the simulation, load a new bunch-train
+mask, set the occupancy to 25% and run again. Each line is one write: `addr`
+and `wdata` for one cycle with `wr` = 1. Any controller produces the same
+sequence; how it does so is the business of its adapter.
 
-```c
-#define R_CONTROL   2
-#define R_OCCUPANCY 3
-#define R_MEM_SEL   9
-#define R_MEM_ADDR  10
-#define R_MEM_DATA  11
+Table 5: loading a mask and setting the occupancy.
 
-int mask[223] "mask.txt";        // the new mask, 16 crossings per line
+| Step | `addr` | `wdata` | Effect |
+|---|---|---|---|
+| 1 | 2 (`CONTROL`) | 0 | stop: `hits` held in reset |
+| 2 | 9 (`MEM_SEL`) | 0 | the next words go to the bunch-train mask |
+| 3 | 10 (`MEM_ADDR`) | 0 | starting at crossing 0 |
+| 4 to 226 | 11 (`MEM_DATA`) | the mask, 16 crossings per word | 223 writes, the address moving by itself |
+| 227 | 3 (`OCCUPANCY`) | 16384 | 25% |
+| 228 | 2 (`CONTROL`) | 1 | run, from the beginning |
 
-void main()
-{
-    out(R_CONTROL, 0);           // stop: hits held in reset
-    out(R_MEM_SEL, 0);           // the bunch-train mask
-    out(R_MEM_ADDR, 0);
-    for (int k = 0; k < 223; k++) out(R_MEM_DATA, mask[k]);
-    out(R_OCCUPANCY, 16384);     // 25%
-    out(R_CONTROL, 1);           // run, from the beginning
-}
-```
+A controller can first read `ID` (address 0) to check that it talks to HITS,
+and `CAPS` (address 1) to learn which vectors exist.
 
 ## What stays at synthesis
 
