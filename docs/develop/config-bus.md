@@ -40,8 +40,8 @@ memories). Two modules use it:
   processor or many channels in one chip.
 - `hits_bus` drives them from the register core and has the interface below.
 
-Which of the two is the recommended top is decided once the cost of the bus is
-measured.
+`hits_bus` is the recommended top (decided on 2026-10-21, once the cost was
+measured: about 2% of the logic, Table 6); `hits` is the lean variant.
 
 ## The interface
 
