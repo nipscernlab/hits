@@ -18,7 +18,7 @@
 // Measured on that model (exact counts over the 2^31 values of u): magnitude
 // error below half an output LSB (2^-5 ADC), Gaussian tail up to the largest
 // value, 6.34 sigma; the old tables stop at 6.48 sigma with 120x too much
-// probability above 6 sigma (rtl/noise/README.md).
+// probability above 6 sigma (rtl/components/noise/README.md).
 //
 // Pipeline (no latency constraint in HITS, so every large block is registered):
 //   1 leading-zero count   2 normalize + ROM read   3 c2*t   4 (+c1)*t

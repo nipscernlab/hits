@@ -1,7 +1,7 @@
 `timescale 1ns/100ps
 
 // Pseudo-random word generator of the simulator: picks one implementation by
-// the RNG_TYPE parameter, the way the shaper is picked among rtl/shaper/.
+// the RNG_TYPE parameter, the way the shaper is picked among rtl/components/shaper/.
 //
 //   "round_robin"           : rng_round_robin.v - 7 LFSRs read in round robin,
 //                             the generator of the SBCCI 2025 paper

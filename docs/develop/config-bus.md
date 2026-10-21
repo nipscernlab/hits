@@ -28,20 +28,20 @@ with less hardware wins.
    Avalon-MM for the ARM processor of the DE10-Nano, AXI4-Lite for Zynq. The
    core is the same for all of them.
 
-## Three modules
+## The modules
 
-The simulator itself is `hits_core`: the circuit of `hits`, with what the bus
-can change taken out of the parameters and into inputs (the hit options, the
-length of the orbit, the phase of the jitter, and a write port into the
-memories). Two modules use it:
+The circuit is `hits_core` (`rtl/hits/hits_core.v`), with what the bus can
+change taken out of the parameters and into inputs (the hit options, the length
+of the orbit, the phase of the jitter, and a write port into the memories). The
+top `hits` (`rtl/hits.v`) drives those inputs from the register core `hits_cfg`
+(`rtl/hits/hits_cfg.v`) and has the interface below.
 
-- `hits` ties those inputs to its parameters. Its interface, its parameters
-  and the circuit it builds are the ones of before, for a board with no
-  processor or many channels in one chip.
-- `hits_bus` drives them from the register core and has the interface below.
-
-`hits_bus` is the recommended top (decided on 2026-10-21, once the cost was
-measured: about 2% of the logic, Table 6); `hits` is the lean variant.
+Until 2026-10-21 that top was `hits_bus`, and `hits` was a lean variant that
+tied the inputs to its parameters. Once the cost was measured (about 2% of the
+logic, Table 6) the bus became the only top and the lean variant was removed. A
+design that wants every value fixed leaves the bus idle, or instantiates
+`hits_core` with the inputs tied to constants, as the testbench of the simulator
+does.
 
 ## The interface
 
@@ -215,12 +215,12 @@ and `CAPS` (address 1) to learn which vectors exist.
 
 ## What it costs
 
-Measured on 2026-10-21 by `projects/hits_bus/quartus/bus_cost.py`: `hits` and
-`hits_bus` compiled the same way in Quartus for the Cyclone V of the DE10-Nano,
+Measured on 2026-10-21 by `projects/hits_bus/quartus/bus_cost.py`, before the
+renaming: the lean `hits` and `hits_bus` (today's `hits`) compiled the same way in Quartus for the Cyclone V of the DE10-Nano,
 out of context with every port on a virtual pin, so the bus stays driven and
 nothing of it is optimized away.
 
-Table 6: `hits` against `hits_bus` (the fixed phase and the jitter not built).
+Table 6: the lean `hits` against `hits_bus` (the fixed phase and the jitter not built).
 
 | Configuration | Top | ALMs | Registers | M10K | DSP | Fmax |
 |---|---|---|---|---|---|---|

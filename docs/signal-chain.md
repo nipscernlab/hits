@@ -51,7 +51,7 @@ with the peak of a pulse at 2^10 times its energy in ADC counts.
 counts, drawn by a segmented inverse CDF that is correct out to 6.34 σ. The
 noise tables of the first paper, with σ = 4 and σ = 8, remain as options. Why σ
 is 4 counts, and where the noise model came from, is in
-[`rtl/noise/README.md`](https://github.com/nipscernlab/hits/blob/main/rtl/noise/README.md).
+[`rtl/components/noise/README.md`](https://github.com/nipscernlab/hits/blob/main/rtl/components/noise/README.md).
 
 `adc/` adds the pedestal (`offset`), drops the fixed-point scale rounding to the
 nearest count, and saturates the result to 0..4095.

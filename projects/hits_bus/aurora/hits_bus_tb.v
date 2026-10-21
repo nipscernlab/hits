@@ -1,12 +1,12 @@
-// hits_bus_tb.v -- testbench of the configuration bus (rtl/hits_bus.v, rtl/hits_cfg.v).
+// hits_bus_tb.v -- testbench of the configuration bus (rtl/hits.v, rtl/hits/hits_cfg.v).
 //
 // Two simulators run side by side, released from reset on the same edge:
-//   ref  hits, built with a configuration of its own: the mask testdata/mask_3000.mif and an
+//   ref  hits_core with its configuration inputs tied to constants, built with a configuration of its own: the mask testdata/mask_3000.mif and an
 //        orbit of 3000, the Lorenzetti energy ROM, the sigma = 4 Gaussian, occupancy 40000
 //        and pedestal 100; with TB_JITTER, SIGMA_PS = 3000 ps and PHASE0 = +5 (the table of 64
 //        phases is loaded too); with TB_PHASE, the fixed phase PHASE0 = +8 (the dut starts with
 //        the set of phase 0 and gets the set of phase +8 through the bus);
-//   dut  hits_bus, whose memories all start with every bit at 1 (testdata/ones_*.mif). The testbench
+//   dut  hits, whose memories all start with every bit at 1 (testdata/ones_*.mif). The testbench
 //        stops it (RUN = 0), loads the same configuration through the bus, and runs it.
 // Every output is compared on every cycle; any difference prints ERROR (which fails the
 // regression). Halfway through, the occupancy changes in both on the same edge, to check
@@ -30,10 +30,10 @@ module hits_bus_tb;
     // a word of the phase table: 192 bits in 12 pieces (CSA), 210 in 14 (F34)
 `ifdef USE_SHAPER_CSA_CR4RC
     localparam PH_W = 192, PH_PIECES = 12;
-    `define PH_MIF "/shaper/shaper_csa_cr4rc_phase.mif"
+    `define PH_MIF "/components/shaper/shaper_csa_cr4rc_phase.mif"
 `else
     localparam PH_W = 210, PH_PIECES = 14;
-    `define PH_MIF "/shaper/shaper_fenics_f34_phase.mif"
+    `define PH_MIF "/components/shaper/shaper_fenics_f34_phase.mif"
 `endif
 
 `ifdef TB_JITTER
@@ -81,19 +81,19 @@ module hits_bus_tb;
     wire [11:0] d_clip;
     wire signed [16:0] d_noise;
 
-    hits_bus #(
+    hits #(
         .BUNCH_MEM ("testdata/ones_mask.mif"),
-        .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_paper_0.mif"}),
-        .MEM_ENG1  ({RTL_DIR, "/energy/energy_icdf_paper_1.mif"}),
-        .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_paper_2.mif"}),
+        .MEM_ENG0  ({RTL_DIR, "/components/energy/energy_icdf_paper_0.mif"}),
+        .MEM_ENG1  ({RTL_DIR, "/components/energy/energy_icdf_paper_1.mif"}),
+        .MEM_ENG2  ({RTL_DIR, "/components/energy/energy_icdf_paper_2.mif"}),
         .MEM_SEG   ("testdata/ones_70.mif"),
         .MEM_GAUSS ("testdata/ones_46.mif"),
         .MEM_GAUSS_PHASE("testdata/ones_46.mif"),
         .MEM_PH_F34("testdata/ones_210.mif"),
         .MEM_PH_CSA("testdata/ones_192.mif"),
-        .MEM_NOISE0({RTL_DIR, "/noise/noise_s4_icdf0.mif"}),
-        .MEM_NOISE1({RTL_DIR, "/noise/noise_s4_icdf1.mif"}),
-        .MEM_NOISE2({RTL_DIR, "/noise/noise_s4_icdf2.mif"})
+        .MEM_NOISE0({RTL_DIR, "/components/noise/noise_s4_icdf0.mif"}),
+        .MEM_NOISE1({RTL_DIR, "/components/noise/noise_s4_icdf1.mif"}),
+        .MEM_NOISE2({RTL_DIR, "/components/noise/noise_s4_icdf2.mif"})
 `ifdef TB_JITTER
         , .PHASE_SHAPER(1), .JITTER(1)
 `elsif TB_PHASE
@@ -116,25 +116,28 @@ module hits_bus_tb;
     wire [11:0] r_clip;
     wire signed [16:0] r_noise;
 
-    hits #(
+    hits_core #(
         .BUNCH_MEM ("testdata/mask_3000.mif"),
         .BUNCH_POS (3000),
-        .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_paper_0.mif"}),
-        .MEM_ENG1  ({RTL_DIR, "/energy/energy_icdf_paper_1.mif"}),
-        .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_paper_2.mif"}),
-        .MEM_SEG   ({RTL_DIR, "/energy/energy_seg_lorenzetti.mif"}),
-        .MEM_GAUSS ({RTL_DIR, "/noise/noise_gauss_s4.mif"}),
-        .MEM_GAUSS_PHASE({RTL_DIR, "/noise/noise_gauss_s4.mif"}),
-        .MEM_PH_F34({RTL_DIR, "/shaper/shaper_fenics_f34_phase.mif"}),
-        .MEM_PH_CSA({RTL_DIR, "/shaper/shaper_csa_cr4rc_phase.mif"}),
-        .MEM_NOISE0({RTL_DIR, "/noise/noise_s4_icdf0.mif"}),
-        .MEM_NOISE1({RTL_DIR, "/noise/noise_s4_icdf1.mif"}),
-        .MEM_NOISE2({RTL_DIR, "/noise/noise_s4_icdf2.mif"}),
+        .MEM_ENG0  ({RTL_DIR, "/components/energy/energy_icdf_paper_0.mif"}),
+        .MEM_ENG1  ({RTL_DIR, "/components/energy/energy_icdf_paper_1.mif"}),
+        .MEM_ENG2  ({RTL_DIR, "/components/energy/energy_icdf_paper_2.mif"}),
+        .MEM_SEG   ({RTL_DIR, "/components/energy/energy_seg_lorenzetti.mif"}),
+        .MEM_GAUSS ({RTL_DIR, "/components/noise/noise_gauss_s4.mif"}),
+        .MEM_GAUSS_PHASE({RTL_DIR, "/components/noise/noise_gauss_s4.mif"}),
+        .MEM_PH_F34({RTL_DIR, "/components/shaper/shaper_fenics_f34_phase.mif"}),
+        .MEM_PH_CSA({RTL_DIR, "/components/shaper/shaper_csa_cr4rc_phase.mif"}),
+        .MEM_NOISE0({RTL_DIR, "/components/noise/noise_s4_icdf0.mif"}),
+        .MEM_NOISE1({RTL_DIR, "/components/noise/noise_s4_icdf1.mif"}),
+        .MEM_NOISE2({RTL_DIR, "/components/noise/noise_s4_icdf2.mif"}),
         .PHASE0    (`PHASE_REF),
         .SIGMA_PS  (`SIGMA_REF)
     ) reference (
         .clk(clk), .rst(rst | dut.core_rst),     // released on the same edge as the dut
         .occupancy(r_occupancy), .offset(13'sd100),
+        .occ_bypass(1'b0), .train_active(1'b1), .orbit_last(12'd2999),
+        .phase0(`PHASE_REF), .sigma_k(`K_REF),
+        .mem_we(1'b0), .mem_sel(3'd0), .mem_addr(12'd0), .mem_wdata(210'd0),
         .hits_out(r_hits), .bt_mask_out(r_mask),
         .energy_out(r_energy), .event_bt(r_ebt), .event_all(r_eall),
         .shaper_out(r_shaper), .shaper_corrupted(r_corr),
@@ -149,8 +152,8 @@ module hits_bus_tb;
     initial begin
         $readmemb({RTL_DIR, `PH_MIF}, ph);
         $readmemb("testdata/mask_3000.mif", mask);
-        $readmemb({RTL_DIR, "/energy/energy_seg_lorenzetti.mif"}, eng);
-        $readmemb({RTL_DIR, "/noise/noise_gauss_s4.mif"}, gss);
+        $readmemb({RTL_DIR, "/components/energy/energy_seg_lorenzetti.mif"}, eng);
+        $readmemb({RTL_DIR, "/components/noise/noise_gauss_s4.mif"}, gss);
     end
 
     // ---------------------------------------------------------------- comparison
@@ -283,7 +286,7 @@ module hits_bus_tb;
         bus_read(4'd2, v); if (v !== 16'd1) begin $display("ERROR: STATUS %h", v); errors = errors + 1; end
 
         $display("compared %0d cycles: %0d differences", cycles, errors);
-        if (errors == 0) $display("hits_bus = hits, bit for bit");
+        if (errors == 0) $display("hits through the bus = hits_core with constants, bit for bit");
         $finish;
     end
 

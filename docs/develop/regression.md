@@ -20,8 +20,8 @@ from a broken run would otherwise bless it.
 The builds come in two groups. The `core` builds compile only `rtl/` and the
 testbench of the simulator alone, and stop at the ADC sample. The `bus` builds
 test the configuration bus ([The configuration bus](config-bus.md)): the
-testbench loads through the bus, into a `hits_bus` whose memories start with
-every bit at 1, the configuration a `hits` next to it gets from its parameters,
+testbench loads through the bus, into a `hits` whose memories start with
+every bit at 1, the configuration a `hits_core` next to it gets as constants,
 checks every memory word and register, and compares the outputs of the two on
 every cycle; any difference prints an error. Table 1 lists the builds.
 

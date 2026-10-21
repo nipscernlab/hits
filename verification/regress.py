@@ -10,7 +10,7 @@ Two groups of builds, so a failure says WHAT broke:
   core            HITS ALONE, up to the ADC quantization (projects/hits/aurora/,
                   hits_tb.v, only rtl/ is compiled). If one fails, the CORE changed.
   bus             the configuration bus (projects/hits_bus/aurora/, hits_bus_tb.v):
-                  hits_bus loaded through the bus against a hits built with the same
+                  hits loaded through the bus against a hits_core built with the same
                   configuration, compared word by word and cycle by cycle.
 
 Exit 0 only if EVERY requested build is bit-identical to its golden AND no
@@ -45,12 +45,12 @@ VERIF = os.path.join(ROOT, "verification")
 PROJECTS = {
     "core": (os.path.join(ROOT, "projects", "hits", "aurora"),
                   "hits_tb.v", "hits_tb", "hits_tb.vcd",
-                  ("rtl/*.v", "rtl/*/*.v")),
-    # the configuration bus (hits_bus): a self-checking testbench that loads through the
-    # bus what a hits next to it gets from its parameters, and compares both
+                  ("rtl/*.v", "rtl/hits/*.v", "rtl/components/*/*.v")),
+    # the configuration bus: a self-checking testbench that loads through the bus of hits
+    # what a hits_core next to it gets as constants, and compares both
     "bus": (os.path.join(ROOT, "projects", "hits_bus", "aurora"),
             "hits_bus_tb.v", "hits_bus_tb", "hits_bus_tb.vcd",
-            ("rtl/*.v", "rtl/*/*.v")),
+            ("rtl/*.v", "rtl/hits/*.v", "rtl/components/*/*.v")),
 }
 
 # name: (project, macros, golden)
@@ -286,7 +286,7 @@ def main():
                   "which only goes up to the ADC quantization.")
         elif groups == {"bus"}:
             print("Only builds of the configuration bus failed: the core is intact, "
-                  "hits_bus, hits_cfg or their testbench changed.")
+                  "hits, hits_cfg or their testbench changed.")
         print("regression: %d/%d builds FAILED: %s"
               % (len(failed), len(requested), ", ".join(n for n, _ in failed)))
         sys.exit(1)

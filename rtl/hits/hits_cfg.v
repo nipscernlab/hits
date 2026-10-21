@@ -16,7 +16,7 @@
 module hits_cfg
 #(
 	parameter BUNCH_POS = 3564,            // size of the mask memory, the longest orbit
-	parameter [15:0] CAPS = 16'h1000,      // what was synthesized, see hits_bus.v
+	parameter [15:0] CAPS = 16'h1000,      // what was synthesized, see rtl/hits.v
 	parameter integer PH_PIECES = 12,      // 16-bit pieces of a phase word: 12 (CSA, 192 bits), 14 (F34, 210)
 	// values at power-up and after rst
 	parameter [15:0] OCCUPANCY_INIT = 16'd0,

@@ -54,7 +54,7 @@
 // board top (de10_nano_soc_ghrd.v) and the testbench are unchanged.
 module hits_reco
 #(
-	parameter RNG_TYPE = "xoshiro",   // random generator of the simulator (rtl/random/rng.v)
+	parameter RNG_TYPE = "xoshiro",   // random generator of the simulator (rtl/components/random/rng.v)
 	parameter RAND_BITS_HITS = 7,
 	parameter OCC_BYPASS = 0,
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
@@ -138,7 +138,7 @@ module hits_reco
 )
 (
 	input clk, rst,
-	input [15:0] occupancy,                // hit probability occupancy/65536 (rtl/hits/hit_generator.v)
+	input [15:0] occupancy,                // hit probability occupancy/65536 (rtl/components/hit_generation/hit_generator.v)
 	input signed [ENG_OUT_BITS-1:0] offset,
 	output hits_out, bt_mask_out,
 	output [ENG_OUT_BITS-1:0] energy_out, event_bt, event_all,
@@ -151,15 +151,18 @@ module hits_reco
 );
 
 
-// HITS simulator core (rtl/) — everything up to the digitized ADC sample.
-hits
+// HITS simulator core (rtl/hits/hits_core.v) — everything up to the digitized ADC
+// sample, with its configuration inputs tied to the parameters of this wrapper (the
+// variant hits with everything fixed, which did this before 2026-10-21, is gone).
+// No phase: PHASE0 and SIGMA_PS keep their defaults, 0.
+localparam integer ORBIT_LAST = BUNCH_POS - 1;
+
+hits_core
 #(
 	.RNG_TYPE(RNG_TYPE),
 	.RAND_BITS_HITS(RAND_BITS_HITS),
-	.OCC_BYPASS(OCC_BYPASS),
 	.BUNCH_MEM(BUNCH_MEM),
 	.BUNCH_POS(BUNCH_POS),
-	.BUNCH_TRAIN_ACTIVE(BUNCH_TRAIN_ACTIVE),
 	.RAND_BITS_ENG(RAND_BITS_ENG),
 	.ENG_OUT_BITS(ENG_OUT_BITS),
 	.CLIP_OUT_BITS(CLIP_OUT_BITS),
@@ -189,6 +192,15 @@ hits
 	.rst(rst),
 	.occupancy(occupancy),
 	.offset(offset),
+	.occ_bypass(OCC_BYPASS != 0),
+	.train_active(BUNCH_TRAIN_ACTIVE != 0),
+	.orbit_last(ORBIT_LAST[$clog2(BUNCH_POS)-1:0]),
+	.phase0(6'sd0),
+	.sigma_k(16'd0),
+	.mem_we(1'b0),
+	.mem_sel(3'd0),
+	.mem_addr(12'd0),
+	.mem_wdata(210'd0),
 	.hits_out(hits_out),
 	.bt_mask_out(bt_mask_out),
 	.energy_out(energy_out),

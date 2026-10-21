@@ -2,13 +2,14 @@
 
 // hits_core: the HITS simulator with its configuration exposed (2026-10-20).
 //
-// The same circuit as hits, with what can change at run time taken out of the
+// The circuit of HITS, with what can change at run time taken out of the
 // parameters and into inputs: the hit options, the length of the orbit, the phase
 // of the jitter and a write port into the memories (bunch-train mask, energy
-// spectrum, noise and jitter Gaussians). hits wraps it with those inputs tied to
-// its parameters, so it builds the circuit of before; hits_bus drives them from the
-// configuration bus (docs/develop/config-bus.md). The macros that select the
-// shaper, the noise, the energy and the ADC are described in hits.v.
+// spectrum, noise and jitter Gaussians). hits (rtl/hits.v) drives them from the
+// configuration bus (docs/develop/config-bus.md); tied to constants, they give the
+// circuit of the variant with everything fixed (the testbench
+// projects/hits/aurora/hits_tb.v does this). The macros that select the shaper, the
+// noise, the energy and the ADC are described in rtl/hits.v.
 //
 // The full front-end signal chain of the calorimeter readout, one sample per
 // 25 ns clock cycle: pseudo-random hit generation gated by the bunch-train
@@ -23,11 +24,11 @@ module hits_core
 #(
 	// pseudo-random generator: "xoshiro" (xoshiro128**, default since
 	// 2026-09-28), "round_robin" (the SBCCI 2025 bank) or "leap" (one
-	// leap-forward LFSR per rng); see rtl/random/rng.v. Each has its own goldens.
+	// leap-forward LFSR per rng); see rtl/components/random/rng.v. Each has its own goldens.
 	parameter RNG_TYPE = "xoshiro",
 	parameter RAND_BITS_HITS = 7,          // draw width of the round_robin and leap hit generators (1/128 resolution)
 	// xoshiro states {s3, s2, s1, s0} of the hit, energy and noise generators (RNG_TYPE "xoshiro" only). The defaults
-	// are one seed and its 2^64 and 2 x 2^64 jumps; another channel takes the next jumps (rtl/random/xoshiro_jump.py),
+	// are one seed and its 2^64 and 2 x 2^64 jumps; another channel takes the next jumps (rtl/components/random/xoshiro_jump.py),
 	// so no two streams overlap.
 	parameter [127:0] XO_SEED_HIT    = {32'd3049884771, 32'd209805534, 32'd363409739, 32'd461934351},
 	parameter [127:0] XO_SEED_ENERGY = {32'd4067956920, 32'd127929272, 32'd1539352703, 32'd1284247703},
@@ -83,11 +84,12 @@ module hits_core
 	parameter integer PHASE0 = 0,          // fixed phase, in steps of 0.390625 ns, -32..31 (reset value of the index)
 	parameter integer SIGMA_PS = 0,        // jitter per hit: delta ~ N(0, SIGMA_PS ps), no cut
 	                                       // (Gaussian tail to 6.34 sigma), saturated at -32..31
-	// what is built: the *_phase shaper, and the jitter draw. hits derives both from PHASE0
-	// and SIGMA_PS; hits_bus sets them, the values then coming from the inputs phase0, sigma_k.
+	// what is built: the *_phase shaper, and the jitter draw. By default both come from
+	// PHASE0 and SIGMA_PS; hits passes its own, the values then coming from the inputs
+	// phase0, sigma_k.
 	parameter PHASE_SHAPER = (PHASE0 != 0) || (SIGMA_PS != 0),
 	parameter JITTER = (SIGMA_PS != 0),
-	// xoshiro state of the phase draw: the LONG jump (2^96) of XO_SEED_HIT (rtl/random/xoshiro_jump.py)
+	// xoshiro state of the phase draw: the LONG jump (2^96) of XO_SEED_HIT (rtl/components/random/xoshiro_jump.py)
 	parameter [127:0] XO_SEED_PHASE  = {32'd3324829296, 32'd1325001476, 32'd2724274168, 32'd176110054},
 	// the Gaussian source of the draw: the sigma = 4 ADC noise ROM, read as 4096 z (2^-10 ADC)
 	parameter MEM_GAUSS_PHASE = "noise_gauss_s4.mif",

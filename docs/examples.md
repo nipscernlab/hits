@@ -16,7 +16,7 @@ as the Lorenzetti spectrum requires.
 
 ```sh
 cd projects/hits/aurora
-iverilog -s hits_tb -o tb.vvp ../../../rtl/*.v ../../../rtl/*/*.v hits_tb.v
+iverilog -s hits_tb -o tb.vvp ../../../rtl/*.v ../../../rtl/hits/*.v ../../../rtl/components/*/*.v hits_tb.v
 vvp tb.vvp                  # writes hits_tb.vcd
 ```
 

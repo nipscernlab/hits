@@ -1,5 +1,9 @@
 """What the configuration bus costs: hits against hits_bus, synthesized the same way.
 
+A record of the measure of 2026-10-21 (bus_cost.txt): it needs a tree where both tops
+exist, as commit 4f70075. Since then hits_bus is hits and the lean hits is gone, so on
+today's tree it does not run.
+
 Each top is compiled out of context in Quartus for the Cyclone V of the DE10-Nano
 (5CSEBA6U23I7), every port on a virtual pin and a 25 ns clock, so the bus stays driven
 from outside and nothing of it can be optimized away. Two configurations: the default

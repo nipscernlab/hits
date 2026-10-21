@@ -7,8 +7,8 @@ its own 2^64-long stretch of the 2^128 - 1 cycle. The script also checks the
 jump against the transition matrix raised to 2^64 (GF(2) squaring), so the
 constants are not taken on faith.
 
-    python rtl/random/xoshiro_jump.py [N]          # N jumped states (default 2)
-    python rtl/random/xoshiro_jump.py channels C     # the XO_SEED_* parameters of C channels
+    python rtl/components/random/xoshiro_jump.py [N]          # N jumped states (default 2)
+    python rtl/components/random/xoshiro_jump.py channels C     # the XO_SEED_* parameters of C channels
 
 Prints SEED0..SEED3 for each stage, in the order rng_xoshiro.v takes them
 (SEED0 = s0, ..., SEED3 = s3). With "channels", channel k gets the jumps 3k, 3k+1
@@ -26,7 +26,7 @@ stream never meets them. Checked against the matrix raised to 2^96.
 import sys
 
 M = 0xFFFFFFFF
-HIT_SEED = [461934351, 363409739, 209805534, 3049884771]  # rtl/hits/hit_generator.v
+HIT_SEED = [461934351, 363409739, 209805534, 3049884771]  # rtl/components/hit_generation/hit_generator.v
 JUMP = [0x8764000B, 0xF542D2D3, 0x6FA035C3, 0x77F2DB5B]
 LONG_JUMP = [0xB523952E, 0x0B6F099F, 0xCCF5A0EF, 0x1C580662]
 

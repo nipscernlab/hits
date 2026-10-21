@@ -1,4 +1,4 @@
-# Electronic noise of the simulator (`rtl/noise/`)
+# Electronic noise of the simulator (`rtl/components/noise/`)
 
 `noise_generator.v` draws one noise sample per 25 ns clock and the simulator
 adds it to the shaper output, before the ADC (`shaper_corrupted`). `noise_out`

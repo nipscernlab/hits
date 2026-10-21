@@ -2,7 +2,8 @@
 // with no HPS, no Qsys and no reconstruction technique: the chain ends at the
 // ADC output, shaper_clip, which is what Signal Tap captures.
 //
-// The runtime inputs are FIXED here (no ARM): the 16-bit occupancy is
+// The configuration is FIXED here (no ARM): the bus of hits is left idle, so the
+// values at power-up stay. The 16-bit occupancy is
 // 65530/65536 (127 in the top 7 bits and 506 in the low 9, the deposit
 // probability of the Lorenzetti spectrum) and the pedestal 146 ADC, the values of projects/hits/aurora/hits_tb.v with
 // USE_ENERGY_LORENZETTI. With the macros of hits_de10.qsf
@@ -43,32 +44,34 @@ module top_hits_de10 (
 
     hits
     #(
-        .BUNCH_MEM ({RTL, "/hits/bunch_train_mask.mif"}),
-        .MEM_ENG0  ({RTL, "/energy/energy_icdf_paper_0.mif"}),
-        .MEM_ENG1  ({RTL, "/energy/energy_icdf_paper_1.mif"}),
-        .MEM_ENG2  ({RTL, "/energy/energy_icdf_paper_2.mif"}),
+        .BUNCH_MEM ({RTL, "/components/hit_generation/bunch_train_mask.mif"}),
+        .MEM_ENG0  ({RTL, "/components/energy/energy_icdf_paper_0.mif"}),
+        .MEM_ENG1  ({RTL, "/components/energy/energy_icdf_paper_1.mif"}),
+        .MEM_ENG2  ({RTL, "/components/energy/energy_icdf_paper_2.mif"}),
 `ifdef USE_ENERGY_LORENZETTI
-        .MEM_SEG   ({RTL, "/energy/energy_seg_lorenzetti.mif"}),
+        .MEM_SEG   ({RTL, "/components/energy/energy_seg_lorenzetti.mif"}),
 `else
-        .MEM_SEG   ({RTL, "/energy/energy_seg_default.mif"}),
+        .MEM_SEG   ({RTL, "/components/energy/energy_seg_default.mif"}),
 `endif
-        .MEM_GAUSS ({RTL, "/noise/noise_gauss_s4.mif"}),
+        .MEM_GAUSS ({RTL, "/components/noise/noise_gauss_s4.mif"}),
 `ifdef USE_PHASE0                // fixed phase: VERILOG_MACRO "USE_PHASE0=<steps of 0.390625 ns>"
         .PHASE0    (`USE_PHASE0),
 `endif
 `ifdef USE_PHASE_SIGMA_PS        // jitter per hit: VERILOG_MACRO "USE_PHASE_SIGMA_PS=<ps>"
         .SIGMA_PS  (`USE_PHASE_SIGMA_PS),
 `endif
-        .MEM_GAUSS_PHASE({RTL, "/noise/noise_gauss_s4.mif"}),
-        .MEM_PH_F34({RTL, "/shaper/shaper_fenics_f34_phase.mif"}),
-        .MEM_PH_CSA({RTL, "/shaper/shaper_csa_cr4rc_phase.mif"}),
-        .MEM_NOISE0({RTL, "/noise/noise_s4_icdf0.mif"}),
-        .MEM_NOISE1({RTL, "/noise/noise_s4_icdf1.mif"}),
-        .MEM_NOISE2({RTL, "/noise/noise_s4_icdf2.mif"})
+        .MEM_GAUSS_PHASE({RTL, "/components/noise/noise_gauss_s4.mif"}),
+        .MEM_PH_F34({RTL, "/components/shaper/shaper_fenics_f34_phase.mif"}),
+        .MEM_PH_CSA({RTL, "/components/shaper/shaper_csa_cr4rc_phase.mif"}),
+        .MEM_NOISE0({RTL, "/components/noise/noise_s4_icdf0.mif"}),
+        .MEM_NOISE1({RTL, "/components/noise/noise_s4_icdf1.mif"}),
+        .MEM_NOISE2({RTL, "/components/noise/noise_s4_icdf2.mif"}),
+        .OCCUPANCY_INIT(16'd65530),
+        .PEDESTAL_INIT(13'd146)
     ) sim (
         .clk(clk40), .rst(rst),
-        .occupancy(16'd65530),
-        .offset(13'sd146),
+        // the configuration bus, idle
+        .addr(4'd0), .wdata(16'd0), .wr(1'b0), .rd(1'b0), .rdata(),
         .hits_out(hits_out), .bt_mask_out(bt_mask_out),
         .energy_out(energy_out), .event_bt(event_bt), .event_all(event_all),
         .shaper_out(shaper_out), .shaper_corrupted(shaper_corrupted),

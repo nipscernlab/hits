@@ -59,7 +59,7 @@ Outputs of `hits`, all on the same clock:
 
 ```sh
 cd projects/hits/aurora
-iverilog -s hits_tb -o tb.vvp ../../../rtl/*.v ../../../rtl/*/*.v hits_tb.v
+iverilog -s hits_tb -o tb.vvp ../../../rtl/*.v ../../../rtl/hits/*.v ../../../rtl/components/*/*.v hits_tb.v
 vvp tb.vvp                  # writes hits_tb.vcd: open it in GTKWave or Surfer
 ```
 
@@ -105,15 +105,15 @@ knew the repo then, this is where things went:
 | At `paper-jsen-2026` | Now |
 |---|---|
 | `rtl/FPGA_Simulator_v1.v` | `rtl/hits.v` (module `hits`) |
-| `rtl/Hits_Bunch_train.v`, `rtl/hits_positions.v` | `rtl/hits/hit_generator.v`, `rtl/hits/hit_draw.v` |
-| `rtl/bunch_train_mask.v` + `.mif` | `rtl/hits/` |
-| `rtl/energy_collisions.v`, `rtl/energy_distribution.v` | `rtl/energy/energy_generator.v`, `rtl/energy/energy_icdf.v` |
-| `rtl/<cell>_PART1..3.mif` (at the paper tag) | `rtl/energy/energy_icdf_paper_0..2.mif` (same content) |
-| `rtl/noise_collisions.v`, `rtl/noise_distribution.v` | `rtl/noise/noise_generator.v`, `rtl/noise/noise_icdf.v` |
-| `rtl/NOISE_PART1..3.mif` | `rtl/noise/noise_s8_icdf0..2.mif` (same content; no longer the default) |
-| `rtl/random_number_generator.v`, `rtl/select_rand.v`, `rtl/rand_LFSR.v` | `rtl/random/rng_round_robin.v` + `lfsr42.v`, chosen through `rtl/random/rng.v` |
-| `rtl/filtros/` | `rtl/shaper/` |
-| `rtl/clip_shaper.v` | `rtl/adc/adc.v` |
+| `rtl/Hits_Bunch_train.v`, `rtl/hits_positions.v` | `rtl/components/hit_generation/hit_generator.v`, `rtl/components/hit_generation/hit_draw.v` |
+| `rtl/bunch_train_mask.v` + `.mif` | `rtl/components/hit_generation/` |
+| `rtl/energy_collisions.v`, `rtl/energy_distribution.v` | `rtl/components/energy/energy_generator.v`, `rtl/components/energy/energy_icdf.v` |
+| `rtl/<cell>_PART1..3.mif` (at the paper tag) | `rtl/components/energy/energy_icdf_paper_0..2.mif` (same content) |
+| `rtl/noise_collisions.v`, `rtl/noise_distribution.v` | `rtl/components/noise/noise_generator.v`, `rtl/components/noise/noise_icdf.v` |
+| `rtl/NOISE_PART1..3.mif` | `rtl/components/noise/noise_s8_icdf0..2.mif` (same content; no longer the default) |
+| `rtl/random_number_generator.v`, `rtl/select_rand.v`, `rtl/rand_LFSR.v` | `rtl/components/random/rng_round_robin.v` + `lfsr42.v`, chosen through `rtl/components/random/rng.v` |
+| `rtl/filtros/` | `rtl/components/shaper/` |
+| `rtl/clip_shaper.v` | `rtl/components/adc/adc.v` |
 | `rtl_test/` | `projects/hits_reco/quartus/reconstruction/` (PZC, baseline estimator and the wrapper `hits_reco.v`) |
 | `projects/aurora/` (simulator + PZC) | removed on 2026-10-21 (tag `last-with-reconstruction`); the simulator alone is `projects/hits/aurora/` |
 | `projects/quartus/` (board with the ARM) | `projects/hits_reco/quartus/`; the simulator alone on the board is `projects/hits/quartus/` |
@@ -135,13 +135,13 @@ outputs):
   of the paper: the round robin fails the PractRand battery. Same statistics,
   different sequences.
 - **Default noise is now sigma = 4 ADC** (2026-09-29), not 8: the Phase-II ADC
-  scale doubles the full range. Why, in [`rtl/noise/README.md`](rtl/noise/README.md).
+  scale doubles the full range. Why, in [`rtl/components/noise/README.md`](rtl/components/noise/README.md).
 - **Default noise is now a true Gaussian** (2026-10-02, `noise_gauss.v`): the three
   tables stopped at 6.48 sigma with 120x too much probability above 6 sigma; the
   Gaussian is correct up to 6.34 sigma. The tables remain (`USE_NOISE_TABLES`).
 - **xoshiro seeds by jump** (2026-10-14): the energy and noise generators start from
   the hit generator's seed jumped 2^64 and 2 x 2^64 steps, so the three streams
-  provably never overlap (`rtl/random/xoshiro_jump.py` prints and checks them). Same
+  provably never overlap (`rtl/components/random/xoshiro_jump.py` prints and checks them). Same
   statistics, other sequences; the round-robin and leap builds, and `paper`, are unchanged.
 - **Fine occupancy and bypass** (2026-10-09): with xoshiro the hit draw is 16 bits,
   threshold {occupancy, `OCC_LSB`}; the 7 bits from the HPS keep their meaning
@@ -183,16 +183,17 @@ To get the paper's behaviour on today's code, use the `paper` build (see
 ## Repository layout
 
 ```
-rtl/                  THE SIMULATOR, one subfolder per stage (top: hits.v)
-rtl/random/           Pseudo-random generators (three kinds, chosen by RNG_TYPE), used by every stage that draws
-rtl/hits/             Hit draw + bunch-train mask
-rtl/energy/           Energy amplitude (segmented inverse CDF; the 3 tables remain)
-rtl/shaper/           Pulse shapers: three shapes, selectable at synthesis time (see below)
-rtl/noise/            Electronic noise (Gaussian by segmented inverse CDF, or 3 inverse-CDF tables)
-rtl/adc/              Pedestal, quantization and saturation: the simulator output
+rtl/hits.v                       THE SIMULATOR, its top: hits_core + the configuration bus
+rtl/hits/                        hits_core.v (the circuit) and hits_cfg.v (the registers of the bus)
+rtl/components/random/           Pseudo-random generators (three kinds, chosen by RNG_TYPE), used by every stage that draws
+rtl/components/hit_generation/   Hit draw + bunch-train mask
+rtl/components/energy/           Energy amplitude (segmented inverse CDF; the 3 tables remain)
+rtl/components/shaper/           Pulse shapers: three shapes, selectable at synthesis time (see below)
+rtl/components/noise/            Electronic noise (Gaussian by segmented inverse CDF, or 3 inverse-CDF tables)
+rtl/components/adc/              Pedestal, quantization and saturation: the simulator output
 projects/hits/          The simulator alone, up to the ADC (what the paper describes)
 projects/hits/aurora/   Aurora project (simulation)
-projects/hits/quartus/  Quartus project for the DE10-Nano: no HPS, no Qsys, occupancy and pedestal fixed in the top
+projects/hits/quartus/  Quartus project for the DE10-Nano: no HPS, no Qsys, the bus idle, occupancy and pedestal fixed in the top
 projects/hits/vivado/   Vivado example: hits_vivado.tcl synthesizes the core out of context for any part (default xc7z010clg400-1)
 projects/hits_reco/quartus/  Quartus project for the DE10-Nano SoC (FPGA + ARM/HPS, Qsys, SignalTap): simulator + reconstruction technique
 projects/hits_reco/quartus/reconstruction/  Reconstruction techniques built by this board (PZC, baseline estimator) and the wrapper hits_reco.v
@@ -213,10 +214,10 @@ Each `.mif` memory lives next to the module that reads it.
 | `hits/` | `hit_generator.v`, `hit_draw.v`, `bunch_train_mask.v` + `.mif` | Bernoulli hit draw per bunch crossing (`rand < occupancy`), gated by the bunch-train mask (3564 slots) |
 | `energy/` | `energy_generator.v`, `energy_seg.v` + `energy_seg_default.mif` (default); `energy_icdf.v` + `energy_icdf_paper_0..2.mif` (the tables) | Energy amplitude per bunch crossing, in whole ADC counts. By default a segmented inverse CDF of one 32-bit xoshiro word: octaves of probability from both ends of the CDF, 8 segments per octave, a degree-2 polynomial per segment (512-word ROM, 464 used), no staircase and a tail down to 2^-32 of probability. The spectrum is the ROM (`MEM_SEG`); the default one is a placeholder (mean 34 ADC, 99% below 156 ADC) until a documented spectrum replaces it. The three-table inverse CDF of the paper (multi-memory approach) stays for the other generators and the paper build (`USE_ENERGY_TABLES` forces it). |
 | `shaper/` | one of the three `shaper_*.v` (see *Shaper filters* below), or the `*_phase.v` version of F34 / CSA + CR-4RC with its `*_phase.mif` (see *Pulse phase*) | the analog pulse shape of the front end |
-| `noise/` | `noise_generator.v`, `noise_gauss.v` + `noise_gauss_s4.mif` (default); `noise_icdf.v` + `noise_s4_icdf0..2.mif` / `noise_s8_*` (the tables) | Gaussian electronic noise, sigma = 4 ADC at 12 bits (the Phase-II scale; 8 before 2026-09-29). By default a segmented inverse CDF of one 32-bit xoshiro word (polynomial per segment, correct tail up to 6.34 sigma); the three-table inverse CDF stays for the other generators and the paper build. Why that level, how the tables deviate in the tail, and where the double-Gaussian noise model came from: [`rtl/noise/README.md`](rtl/noise/README.md) |
+| `noise/` | `noise_generator.v`, `noise_gauss.v` + `noise_gauss_s4.mif` (default); `noise_icdf.v` + `noise_s4_icdf0..2.mif` / `noise_s8_*` (the tables) | Gaussian electronic noise, sigma = 4 ADC at 12 bits (the Phase-II scale; 8 before 2026-09-29). By default a segmented inverse CDF of one 32-bit xoshiro word (polynomial per segment, correct tail up to 6.34 sigma); the three-table inverse CDF stays for the other generators and the paper build. Why that level, how the tables deviate in the tail, and where the double-Gaussian noise model came from: [`rtl/components/noise/README.md`](rtl/components/noise/README.md) |
 | `adc/` | `adc.v` | pedestal offset, quantization to integer ADC counts (rounded to the nearest count since 2026-10-03; truncated before, 0.5 count low on average) and saturation to the 12-bit range; its output `shaper_clip` is the simulated readout |
 
-### Random generators (`rtl/random/`)
+### Random generators (`rtl/components/random/`)
 
 Which one is built is chosen by the **`RNG_TYPE` parameter** of
 `rtl/hits.v`, which comes down to every generator of the simulator:
@@ -245,7 +246,7 @@ it is instantiated. ⚠️ **Each generator has its own goldens**: the sequences
 differ, only the statistics agree. The regression builds the leap kind with
 `-DUSE_RNG_ROUND_ROBIN` or `-DUSE_RNG_LEAP`, which `hits_tb.v` turns into the parameter.
 
-### Shaper filters (`rtl/shaper/`)
+### Shaper filters (`rtl/components/shaper/`)
 
 Which one is built is a **synthesis-time choice**: F34 unless the
 `USE_SHAPER_LEGACY` or `USE_SHAPER_CSA_CR4RC` macro is set (see *Selecting the
@@ -301,7 +302,7 @@ read hit by hit from a ROM of 64 phases (`*_phase.mif`). The head is in transpos
 form, so each hit keeps its own phase; the IIR sections are unchanged. At
 phase 0 both give the base shaper output bit for bit. The jitter draw is its own
 xoshiro word (`XO_SEED_PHASE`, the long jump of `XO_SEED_HIT`, from
-`rtl/random/xoshiro_jump.py`) through the Gaussian of `noise_gauss.v`; the phase
+`rtl/components/random/xoshiro_jump.py`) through the Gaussian of `noise_gauss.v`; the phase
 step makes sigma about 0.6% larger at sigma = 1 ns. `USE_SHAPER_LEGACY` and
 `USE_SHAPER_NO_PIPE` have no phase and stop the compilation if one is set.
 
@@ -324,8 +325,9 @@ no longer simulates them. Their testbench and goldens are at the tag
 `last-with-reconstruction`; see
 [`projects/hits_reco/quartus/reconstruction/README.md`](projects/hits_reco/quartus/reconstruction/README.md).
 
-Top-level modules: `rtl/hits.v` (the simulator core, no
-reconstruction) and
+Top-level modules: `rtl/hits.v` (the simulator with its configuration bus, no
+reconstruction; the board with the ARM uses its circuit, `rtl/hits/hits_core.v`,
+with the configuration tied to constants) and
 `projects/hits_reco/quartus/de10_nano_soc_ghrd.v` (board top, entity `DE10_NANO_SoC_GHRD`:
 connected to the HPS via Qsys, it takes `occupancy` and `offset` from bits [6:0]
 and [19:7] of the HPS-to-FPGA register).
@@ -359,7 +361,7 @@ With Icarus Verilog directly (`-D` to choose):
 
 ```sh
 cd projects/hits/aurora        # the simulator alone
-iverilog -s hits_tb -o tb.vvp ../../../rtl/*.v ../../../rtl/*/*.v hits_tb.v
+iverilog -s hits_tb -o tb.vvp ../../../rtl/*.v ../../../rtl/hits/*.v ../../../rtl/components/*/*.v hits_tb.v
 vvp tb.vvp                          # writes hits_tb.vcd here
 ```
 

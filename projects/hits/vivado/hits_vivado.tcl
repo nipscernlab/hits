@@ -31,12 +31,12 @@ foreach a $argv {
     }
 }
 
-foreach f [glob [file join $rtl * *.mif]] { file copy -force $f [pwd] }
+foreach f [glob [file join $rtl components * *.mif]] { file copy -force $f [pwd] }
 set fd [open clk.xdc w]
 puts $fd "create_clock -name clk -period 25.000 \[get_ports clk\]"
 close $fd
 
-read_verilog [concat [glob [file join $rtl *.v]] [glob [file join $rtl * *.v]]]
+read_verilog [concat [glob [file join $rtl *.v]] [glob [file join $rtl hits *.v]] [glob [file join $rtl components * *.v]]]
 read_xdc -mode out_of_context clk.xdc
 set opts [list -top hits -part $part -mode out_of_context]
 if {[llength $defines]}  { lappend opts -verilog_define $defines }

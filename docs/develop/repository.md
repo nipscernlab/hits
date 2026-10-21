@@ -10,7 +10,7 @@ Table 1: what is product and what is development.
 
 | Path | Kind | What it is |
 |---|---|---|
-| `rtl/` | product | the simulator: `hits.v` (its top, a wrapper with the configuration tied to its parameters), `hits_core.v` (the circuit) and one folder per stage, with the memory files next to the modules that read them |
+| `rtl/` | product | the simulator: `hits.v` (its top, with the configuration bus), `hits/` (`hits_core.v`, the circuit, and `hits_cfg.v`, the registers of the bus) and `components/`, one folder per stage, with the memory files next to the modules that read them |
 | `projects/hits/aurora/` | product, example | testbench and AURORA project of the simulator alone |
 | `projects/hits/quartus/` | product, example | the simulator alone on the DE10-Nano |
 | `projects/hits/vivado/` | product, example | out-of-context synthesis in Vivado |

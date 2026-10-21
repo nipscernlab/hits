@@ -15,12 +15,12 @@
 // BUNCH_TRAIN_ACTIVE, BUNCH_POS-1, no write).
 module hit_generator
 #(
-	parameter RNG_TYPE = "xoshiro",       // rng kind, see rtl/random/rng.v
+	parameter RNG_TYPE = "xoshiro",       // rng kind, see rtl/components/random/rng.v
 	parameter RAND_BITS = 7,              // draw width of the round_robin and leap generators
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
 	parameter BUNCH_POS = 3564,
 	// xoshiro state {s3, s2, s1, s0} (the other generators keep their own seeds); one channel's three generators are
-	// jumped 2^64 apart, see rtl/random/xoshiro_jump.py
+	// jumped 2^64 apart, see rtl/components/random/xoshiro_jump.py
 	parameter [127:0] XO_SEED = {32'd3049884771, 32'd209805534, 32'd363409739, 32'd461934351}
 )
 (

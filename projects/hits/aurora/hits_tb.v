@@ -1,17 +1,19 @@
 // hits_tb.v — testbench of the HITS SIMULATOR ALONE, for Aurora (Icarus
 // Verilog + GTKWave/Surfer), with no ARM/PLL/Qsys.
 //
-// The DUT is hits (rtl/) and nothing else: the chain ends at the
-// ADC quantization, `shaper_clip`. No reconstruction technique is compiled or
-// instantiated here.
+// The DUT is hits_core (rtl/hits/hits_core.v), the circuit of hits without the
+// configuration bus, with its configuration inputs tied to constants: what can change
+// at run time is fixed here, and the occupancy and the offset are driven by the
+// testbench. The chain ends at the ADC quantization, `shaper_clip`. No reconstruction
+// technique is compiled or instantiated here.
 // Aurora project: hits.spf in this folder, which lists only rtl/ files.
 //
-// Shaper: chosen where the simulator chooses it, the `define lines at the top
-// of rtl/hits.v (default: shaper_fenics_f34, the FENICS Phase-II
-// pulse). Commit rtl/ with them commented; the regression passes the macro
-// with -D. Two shapers at once stop the compilation in hits.v.
+// Shaper: chosen by the macros described at the top of rtl/hits.v (default:
+// shaper_fenics_f34, the FENICS Phase-II pulse). Commit rtl/ with the `define
+// lines there commented; the regression passes the macro with -D. Two shapers at
+// once stop the compilation in hits_core.v.
 //
-// Random generator: the RNG_TYPE parameter of rtl/hits.v
+// Random generator: the RNG_TYPE parameter of hits_core
 // ("xoshiro" by default, "round_robin" or "leap"). The regression builds the
 // others with -DUSE_RNG_ROUND_ROBIN / -DUSE_RNG_LEAP, which this testbench turns
 // into the parameter: a macro, not a parameter of the testbench, so it stays
@@ -31,7 +33,8 @@
 //
 // Phase (F34 and CSA): -DUSE_PHASE0=<n> sets the fixed phase PHASE0 (n steps of
 // 0.390625 ns) and -DUSE_PHASE_SIGMA_PS=<ps> the jitter per hit SIGMA_PS of
-// hits (regression builds *_phase and *_jitter). Without them: no phase,
+// hits_core, and the inputs phase0 and sigma_k with them (regression builds *_phase
+// and *_jitter). Without them: no phase,
 // the shaper of before.
 //
 // - 40 MHz clock (25 ns period), like a collider bunch clock;
@@ -84,43 +87,43 @@ module hits_tb;
     wire [11:0] shaper_clip;                 // THE simulator output (ADC sample)
     wire signed [16:0] noise_out;
 
-    hits
+    hits_core
     #(
 `ifdef USE_RNG_LEAP
   `ifdef USE_RNG_ROUND_ROBIN
         .ERROR_USE_RNG_LEAP_and_USE_RNG_ROUND_ROBIN_together_pick_one(1),
   `endif
-        .RNG_TYPE("leap"),        // regression builds sim_leap*; see rtl/random/rng.v
+        .RNG_TYPE("leap"),        // regression builds sim_leap*; see rtl/components/random/rng.v
 `elsif USE_RNG_ROUND_ROBIN
         .RNG_TYPE("round_robin"), // regression builds sim_round_robin*
 `endif
-        .BUNCH_MEM ({RTL_DIR, "/hits/bunch_train_mask.mif"}),
-        .MEM_ENG0  ({RTL_DIR, "/energy/energy_icdf_paper_0.mif"}),
-        .MEM_ENG1  ({RTL_DIR, "/energy/energy_icdf_paper_1.mif"}),
-        .MEM_ENG2  ({RTL_DIR, "/energy/energy_icdf_paper_2.mif"}),
+        .BUNCH_MEM ({RTL_DIR, "/components/hit_generation/bunch_train_mask.mif"}),
+        .MEM_ENG0  ({RTL_DIR, "/components/energy/energy_icdf_paper_0.mif"}),
+        .MEM_ENG1  ({RTL_DIR, "/components/energy/energy_icdf_paper_1.mif"}),
+        .MEM_ENG2  ({RTL_DIR, "/components/energy/energy_icdf_paper_2.mif"}),
 `ifdef USE_ENERGY_LORENZETTI
-        .MEM_SEG   ({RTL_DIR, "/energy/energy_seg_lorenzetti.mif"}),
+        .MEM_SEG   ({RTL_DIR, "/components/energy/energy_seg_lorenzetti.mif"}),
 `else
-        .MEM_SEG   ({RTL_DIR, "/energy/energy_seg_default.mif"}),
+        .MEM_SEG   ({RTL_DIR, "/components/energy/energy_seg_default.mif"}),
 `endif
-        .MEM_GAUSS ({RTL_DIR, "/noise/noise_gauss_s4.mif"}),
+        .MEM_GAUSS ({RTL_DIR, "/components/noise/noise_gauss_s4.mif"}),
 `ifdef USE_PHASE0                // regression builds *_phase: -DUSE_PHASE0=<steps of 0.390625 ns>
         .PHASE0    (`USE_PHASE0),
 `endif
 `ifdef USE_PHASE_SIGMA_PS        // regression builds *_jitter: -DUSE_PHASE_SIGMA_PS=<ps>
         .SIGMA_PS  (`USE_PHASE_SIGMA_PS),
 `endif
-        .MEM_GAUSS_PHASE({RTL_DIR, "/noise/noise_gauss_s4.mif"}),
-        .MEM_PH_F34({RTL_DIR, "/shaper/shaper_fenics_f34_phase.mif"}),
-        .MEM_PH_CSA({RTL_DIR, "/shaper/shaper_csa_cr4rc_phase.mif"}),
+        .MEM_GAUSS_PHASE({RTL_DIR, "/components/noise/noise_gauss_s4.mif"}),
+        .MEM_PH_F34({RTL_DIR, "/components/shaper/shaper_fenics_f34_phase.mif"}),
+        .MEM_PH_CSA({RTL_DIR, "/components/shaper/shaper_csa_cr4rc_phase.mif"}),
 `ifdef USE_NOISE_SIGMA8          // regression build paper
-        .MEM_NOISE0({RTL_DIR, "/noise/noise_s8_icdf0.mif"}),
-        .MEM_NOISE1({RTL_DIR, "/noise/noise_s8_icdf1.mif"}),
-        .MEM_NOISE2({RTL_DIR, "/noise/noise_s8_icdf2.mif"})
+        .MEM_NOISE0({RTL_DIR, "/components/noise/noise_s8_icdf0.mif"}),
+        .MEM_NOISE1({RTL_DIR, "/components/noise/noise_s8_icdf1.mif"}),
+        .MEM_NOISE2({RTL_DIR, "/components/noise/noise_s8_icdf2.mif"})
 `else
-        .MEM_NOISE0({RTL_DIR, "/noise/noise_s4_icdf0.mif"}),
-        .MEM_NOISE1({RTL_DIR, "/noise/noise_s4_icdf1.mif"}),
-        .MEM_NOISE2({RTL_DIR, "/noise/noise_s4_icdf2.mif"})
+        .MEM_NOISE0({RTL_DIR, "/components/noise/noise_s4_icdf0.mif"}),
+        .MEM_NOISE1({RTL_DIR, "/components/noise/noise_s4_icdf1.mif"}),
+        .MEM_NOISE2({RTL_DIR, "/components/noise/noise_s4_icdf2.mif"})
 `endif
     ) dut
     (
@@ -128,6 +131,25 @@ module hits_tb;
         .rst(rst),
         .occupancy({occupancy, `OCC_LOW}),
         .offset(offset),
+        // the configuration, fixed: what hits takes from its parameters at power-up.
+        // Expressions, not localparams of the testbench, so they stay out of the VCD.
+        .occ_bypass(1'b0),
+        .train_active(1'b1),
+        .orbit_last(12'd3563),                  // an orbit of 3564 positions
+`ifdef USE_PHASE0
+        .phase0(`USE_PHASE0),
+`else
+        .phase0(6'sd0),
+`endif
+`ifdef USE_PHASE_SIGMA_PS                       // K = (SIGMA_PS*4096 + 3125)/6250, as hits computes it
+        .sigma_k((`USE_PHASE_SIGMA_PS * 4096 + 3125) / 6250),
+`else
+        .sigma_k(16'd0),
+`endif
+        .mem_we(1'b0),
+        .mem_sel(3'd0),
+        .mem_addr(12'd0),
+        .mem_wdata(210'd0),
         .hits_out(hits_out),
         .bt_mask_out(bt_mask_out),
         .energy_out(energy_out),

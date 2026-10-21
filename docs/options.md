@@ -81,7 +81,7 @@ stages use their tables.
 The xoshiro seeds are the parameters `XO_SEED_HIT`, `XO_SEED_ENERGY` and
 `XO_SEED_NOISE` (and `XO_SEED_PHASE` for the jitter). The defaults are one seed
 and its jumps of 2^64 and 2 × 2^64 steps. Several channels in one design must not
-share streams: `python rtl/random/xoshiro_jump.py channels C` prints the four
+share streams: `python rtl/components/random/xoshiro_jump.py channels C` prints the four
 seeds of each of C channels, and checks the jump constants against the
 transition matrix of the generator.
 

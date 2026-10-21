@@ -9,7 +9,7 @@
 //                          leap generators and the paper build use these.
 module noise_generator
 #(
-	parameter RNG_TYPE = "xoshiro",       // rng kind, see rtl/random/rng.v
+	parameter RNG_TYPE = "xoshiro",       // rng kind, see rtl/components/random/rng.v
 	parameter NOISE_TYPE = "gauss",       // "gauss" or "tables", see above
 	parameter MEM_GAUSS = "noise_gauss_s4.mif",
 	parameter RAND_BITS = 10,
@@ -22,7 +22,7 @@ module noise_generator
 	parameter MEM_NOISE_FRAC = 5,
 	parameter MEM_NOISE0_THRESH = 1007,    // noise_s4 and noise_s8 alike (an earlier 2 ADC set used 1014/1018)
 	parameter MEM_NOISE1_THRESH = 1007,
-	// xoshiro state {s3, s2, s1, s0}: the hit generator's seed jumped 2 x 2^64 (rtl/random/xoshiro_jump.py)
+	// xoshiro state {s3, s2, s1, s0}: the hit generator's seed jumped 2 x 2^64 (rtl/components/random/xoshiro_jump.py)
 	parameter [127:0] XO_SEED = {32'd373898742, 32'd3231469901, 32'd777179928, 32'd1405228594}
 )
 (
@@ -48,7 +48,7 @@ if (NOISE_TYPE == "gauss") begin : gauss
 		.RNG_TYPE(RNG_TYPE),
 		.RAND_OUT_SIZE(32),
 		// XO_SEED, by default the hit generator's state jumped 2 x 2^64 steps (xoshiro128 jump),
-		// so the three stages provably never overlap (2026-10-14; seeds from rtl/random/xoshiro_jump.py)
+		// so the three stages provably never overlap (2026-10-14; seeds from rtl/components/random/xoshiro_jump.py)
 		.SEED0({10'd0, XO_SEED[31:0]}),
 		.SEED1({10'd0, XO_SEED[63:32]}),
 		.SEED2({10'd0, XO_SEED[95:64]}),
@@ -94,7 +94,7 @@ if (RNG_TYPE == "xoshiro") begin : per_stage
 		.RNG_TYPE(RNG_TYPE),
 		.RAND_OUT_SIZE(3*RAND_BITS+1),
 		// XO_SEED, by default the hit generator's state jumped 2 x 2^64 steps (xoshiro128 jump),
-		// so the three stages provably never overlap (2026-10-14; seeds from rtl/random/xoshiro_jump.py)
+		// so the three stages provably never overlap (2026-10-14; seeds from rtl/components/random/xoshiro_jump.py)
 		.SEED0({10'd0, XO_SEED[31:0]}),
 		.SEED1({10'd0, XO_SEED[63:32]}),
 		.SEED2({10'd0, XO_SEED[95:64]}),
