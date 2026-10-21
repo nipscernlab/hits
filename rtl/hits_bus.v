@@ -107,14 +107,17 @@ module hits_bus
 localparam integer K_SIG = (SIGMA_PS * 4096 + 3125) / 6250;
 `ifdef USE_SHAPER_CSA_CR4RC
 localparam [1:0] CAPS_SHAPER = 2'd1;
+localparam integer PH_PIECES = 12;      // a phase word: 192 bits
 `elsif USE_SHAPER_LEGACY
 localparam [1:0] CAPS_SHAPER = 2'd2;
+localparam integer PH_PIECES = 12;      // (no phase)
 `else
 localparam [1:0] CAPS_SHAPER = 2'd0;
+localparam integer PH_PIECES = 14;      // a phase word: 210 bits
 `endif
-// CAPS: 15:12 protocol version 1; 3 jitter; 2 fixed phase by a loaded set of coefficients
-// (not yet); 1:0 the shaper (0 F34, 1 CSA + CR-4RC, 2 legacy)
-localparam [15:0] CAPS = {4'd1, 8'd0, (JITTER != 0), 1'b0, CAPS_SHAPER};
+// CAPS: 15:12 protocol version 1; 3 jitter (the table of 64 phases); 2 fixed phase by one
+// loaded set of coefficients; 1:0 the shaper (0 F34, 1 CSA + CR-4RC, 2 legacy)
+localparam [15:0] CAPS = {4'd1, 8'd0, (JITTER != 0), (PHASE_SHAPER != 0 && JITTER == 0), CAPS_SHAPER};
 
 wire core_rst;
 wire [15:0] occupancy;
@@ -126,12 +129,13 @@ wire [15:0] sigma_k;
 wire mem_we;
 wire [2:0] mem_sel;
 wire [11:0] mem_addr;
-wire [69:0] mem_wdata;
+wire [16*PH_PIECES-1:0] mem_wdata;
 
 hits_cfg
 #(
 	.BUNCH_POS(BUNCH_POS),
 	.CAPS(CAPS),
+	.PH_PIECES(PH_PIECES),
 	.OCCUPANCY_INIT(OCCUPANCY_INIT),
 	.PEDESTAL_INIT(PEDESTAL_INIT),
 	.OCC_BYPASS_INIT(OCC_BYPASS),

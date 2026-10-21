@@ -3,7 +3,9 @@
 // Two simulators run side by side, released from reset on the same edge:
 //   ref  hits, built with a configuration of its own: the mask testdata/mask_3000.mif and an
 //        orbit of 3000, the Lorenzetti energy ROM, the sigma = 4 Gaussian, occupancy 40000
-//        and pedestal 100 (with TB_JITTER: CSA shaper, SIGMA_PS = 3000 ps, PHASE0 = +5);
+//        and pedestal 100; with TB_JITTER, SIGMA_PS = 3000 ps and PHASE0 = +5 (the table of 64
+//        phases is loaded too); with TB_PHASE, the fixed phase PHASE0 = +8 (the dut starts with
+//        the set of phase 0 and gets the set of phase +8 through the bus);
 //   dut  hits_bus, whose memories all start with every bit at 1 (testdata/ones_*.mif). The testbench
 //        stops it (RUN = 0), loads the same configuration through the bus, and runs it.
 // Every output is compared on every cycle; any difference prints ERROR (which fails the
@@ -11,7 +13,8 @@
 // that a scalar takes effect on the next cycle. At the end it reads ID, CAPS and STATUS.
 //
 // The .mif files are loaded through RTL_DIR and testdata/, RELATIVE to this folder: run
-// with cwd = projects/hits_bus/aurora. Compile with -DUSE_SHAPER_CSA_CR4RC for TB_JITTER.
+// with cwd = projects/hits_bus/aurora. Builds of the regression: bus (F34), bus_phase (F34,
+// TB_PHASE), bus_phase_csa and bus_jitter (-DUSE_SHAPER_CSA_CR4RC with TB_PHASE, TB_JITTER).
 
 `timescale 1ns/100ps
 
@@ -24,14 +27,30 @@ module hits_bus_tb;
     reg rst = 1'b1;
     always #12.5 clk = ~clk;
 
+    // a word of the phase table: 192 bits in 12 pieces (CSA), 210 in 14 (F34)
+`ifdef USE_SHAPER_CSA_CR4RC
+    localparam PH_W = 192, PH_PIECES = 12;
+    `define PH_MIF "/shaper/shaper_csa_cr4rc_phase.mif"
+`else
+    localparam PH_W = 210, PH_PIECES = 14;
+    `define PH_MIF "/shaper/shaper_fenics_f34_phase.mif"
+`endif
+
 `ifdef TB_JITTER
   `define SIGMA_REF 3000
   `define PHASE_REF 5
   `define K_REF     1966                       // floor((3000*4096 + 3125)/6250)
+  `define PHASE0_REG 5
+`elsif TB_PHASE
+  `define SIGMA_REF 0
+  `define PHASE_REF 8
+  `define K_REF     0
+  `define PHASE0_REG 0                         // the fixed phase comes from the set, not from PHASE0
 `else
   `define SIGMA_REF 0
   `define PHASE_REF 0
   `define K_REF     0
+  `define PHASE0_REG 0
 `endif
 
     // ---------------------------------------------------------------- the bus
@@ -70,13 +89,15 @@ module hits_bus_tb;
         .MEM_SEG   ("testdata/ones_70.mif"),
         .MEM_GAUSS ("testdata/ones_46.mif"),
         .MEM_GAUSS_PHASE("testdata/ones_46.mif"),
-        .MEM_PH_F34({RTL_DIR, "/shaper/shaper_fenics_f34_phase.mif"}),
-        .MEM_PH_CSA({RTL_DIR, "/shaper/shaper_csa_cr4rc_phase.mif"}),
+        .MEM_PH_F34("testdata/ones_210.mif"),
+        .MEM_PH_CSA("testdata/ones_192.mif"),
         .MEM_NOISE0({RTL_DIR, "/noise/noise_s4_icdf0.mif"}),
         .MEM_NOISE1({RTL_DIR, "/noise/noise_s4_icdf1.mif"}),
         .MEM_NOISE2({RTL_DIR, "/noise/noise_s4_icdf2.mif"})
 `ifdef TB_JITTER
         , .PHASE_SHAPER(1), .JITTER(1)
+`elsif TB_PHASE
+        , .PHASE_SHAPER(1), .JITTER(0)              // PHASE0 = 0: it starts with the set of phase 0
 `endif
     ) dut (
         .clk(clk), .rst(rst),
@@ -124,7 +145,9 @@ module hits_bus_tb;
     reg [0:0]  mask [0:2999];
     reg [69:0] eng  [0:511];
     reg [45:0] gss  [0:255];
+    reg [PH_W-1:0] ph [0:63];
     initial begin
+        $readmemb({RTL_DIR, `PH_MIF}, ph);
         $readmemb("testdata/mask_3000.mif", mask);
         $readmemb({RTL_DIR, "/energy/energy_seg_lorenzetti.mif"}, eng);
         $readmemb({RTL_DIR, "/noise/noise_gauss_s4.mif"}, gss);
@@ -174,6 +197,14 @@ module hits_bus_tb;
             for (k = 0; k < 3; k = k + 1) bus_write(4'd11, ({2'd0, gss[n]} >> (16 * k)));
         bus_write(4'd7, `PHASE_REF);                    // PHASE0
         bus_write(4'd8, `K_REF);                        // SIGMA
+        bus_write(4'd9, 16'd4);                         // the table of the 64 phases
+        bus_write(4'd10, 16'd0);
+        for (n = 0; n < 64; n = n + 1)
+            for (k = 0; k < PH_PIECES; k = k + 1) bus_write(4'd11, ({{(16*PH_PIECES-PH_W){1'b0}}, ph[n]} >> (16 * k)));
+`elsif TB_PHASE
+        bus_write(4'd9, 16'd5);                         // the one set of the fixed phase
+        bus_write(4'd10, 16'd0);
+        for (k = 0; k < PH_PIECES; k = k + 1) bus_write(4'd11, ({{(16*PH_PIECES-PH_W){1'b0}}, ph[32 + `PHASE_REF]} >> (16 * k)));
 `endif
         bus_write(4'd6, 16'd3000);                      // ORBIT_LEN
         bus_write(4'd3, 16'd40000);                     // OCCUPANCY
@@ -205,10 +236,28 @@ module hits_bus_tb;
                 if (loaded_errors < 5) $display("ERROR: jitter word %0d", n);
                 loaded_errors = loaded_errors + 1;
             end
+        for (n = 0; n < 64; n = n + 1)
+  `ifdef USE_SHAPER_CSA_CR4RC
+            if (dut.core.g_phase.sf.pipe.tbl.rom_ph[n] !== ph[n]) begin
+  `else
+            if (dut.core.g_phase.sf.tbl.rom_ph[n] !== ph[n]) begin
+  `endif
+                if (loaded_errors < 5) $display("ERROR: phase table word %0d", n);
+                loaded_errors = loaded_errors + 1;
+            end
+`elsif TB_PHASE
+  `ifdef USE_SHAPER_CSA_CR4RC
+        if (dut.core.g_phase.sf.pipe.one.coef !== ph[32 + `PHASE_REF]) begin
+  `else
+        if (dut.core.g_phase.sf.one.coef !== ph[32 + `PHASE_REF]) begin
+  `endif
+            $display("ERROR: the set of coefficients of the fixed phase");
+            loaded_errors = loaded_errors + 1;
+        end
 `endif
         if ({dut.occupancy, dut.offset, dut.occ_bypass, dut.train_active, dut.orbit_last,
              dut.phase0, dut.sigma_k} !== {16'd40000, 13'd100, 1'b0, 1'b1, 12'd2999,
-             6'd`PHASE_REF, 16'd`K_REF}) begin
+             6'd`PHASE0_REG, 16'd`K_REF}) begin
             $display("ERROR: scalars occupancy %0d pedestal %0d bypass %b mask %b orbit_last %0d phase0 %0d sigma_k %0d",
                      dut.occupancy, dut.offset, dut.occ_bypass, dut.train_active, dut.orbit_last,
                      dut.phase0, dut.sigma_k);

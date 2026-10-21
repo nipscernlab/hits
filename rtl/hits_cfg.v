@@ -17,6 +17,7 @@ module hits_cfg
 #(
 	parameter BUNCH_POS = 3564,            // size of the mask memory, the longest orbit
 	parameter [15:0] CAPS = 16'h1000,      // what was synthesized, see hits_bus.v
+	parameter integer PH_PIECES = 12,      // 16-bit pieces of a phase word: 12 (CSA, 192 bits), 14 (F34, 210)
 	// values at power-up and after rst
 	parameter [15:0] OCCUPANCY_INIT = 16'd0,
 	parameter [12:0] PEDESTAL_INIT = 13'd0,
@@ -45,7 +46,7 @@ module hits_cfg
 	output reg mem_we = 1'b0,
 	output reg [2:0] mem_sel = 3'd0,
 	output reg [11:0] mem_addr = 12'd0,
-	output [69:0] mem_wdata
+	output [16*PH_PIECES-1:0] mem_wdata         // wider than any word (70, 46, 192 or 210 bits)
 );
 
 localparam [3:0] A_ID = 4'd0, A_CAPS = 4'd1, A_STATUS = 4'd2, A_OCCUPANCY = 4'd3,
@@ -56,12 +57,15 @@ localparam [15:0] ID = 16'h4854;        // "HT"
 reg run = 1'b1;
 assign core_rst = rst | ~run;
 
-// pieces per word of each vector: 0 mask (1 bit), 1 energy (70), 2 noise (46), 3 jitter (46)
-reg [2:0] chunk = 3'd0;
-wire [2:0] last_chunk = (mem_sel == 3'd1) ? 3'd4 : (mem_sel == 3'd0) ? 3'd0 : 3'd2;
-reg [79:0] word = 80'd0;                // the word being assembled (70 bits used)
+// pieces per word of each vector: 0 mask (1 bit), 1 energy (70), 2 noise (46), 3 jitter (46),
+// 4 table of the phases and 5 one set of coefficients (192 or 210 bits, PH_PIECES)
+reg [3:0] chunk = 4'd0;
+wire [3:0] last_chunk = (mem_sel == 3'd0) ? 4'd0 :
+                        (mem_sel == 3'd1) ? 4'd4 :
+                        (mem_sel >= 3'd4) ? PH_PIECES - 1 : 4'd2;
+reg [16*PH_PIECES-1:0] word = 0;         // the word being assembled
 reg [11:0] next_addr = 12'd0;           // where the word being assembled goes
-assign mem_wdata = word[69:0];
+assign mem_wdata = word;
 
 wire wr_data = wr && addr == A_MEM_DATA;
 
@@ -79,7 +83,7 @@ always @(posedge clk or posedge rst)
 		mem_we <= 1'b0;
 		mem_addr <= 12'd0;
 		next_addr <= 12'd0;
-		chunk <= 3'd0;
+		chunk <= 4'd0;
 	end else begin
 		mem_we <= 1'b0;
 		if (wr)
@@ -91,13 +95,13 @@ always @(posedge clk or posedge rst)
 				A_ORBIT_LEN: orbit_last <= wdata[$clog2(BUNCH_POS)-1:0] - 1'b1;
 				A_PHASE0:    phase0 <= wdata[5:0];
 				A_SIGMA:     sigma_k <= wdata;
-				A_MEM_SEL:   begin mem_sel <= wdata[2:0]; chunk <= 3'd0; end
-				A_MEM_ADDR:  begin next_addr <= wdata[11:0]; chunk <= 3'd0; end
+				A_MEM_SEL:   begin mem_sel <= wdata[2:0]; chunk <= 4'd0; end
+				A_MEM_ADDR:  begin next_addr <= wdata[11:0]; chunk <= 4'd0; end
 				default: ;
 			endcase
 		if (wr_data) begin
 			if (chunk == last_chunk) begin
-				chunk <= 3'd0;
+				chunk <= 4'd0;
 				mem_we <= 1'b1;               // the word is written next cycle,
 				mem_addr <= next_addr;        // with its last piece already in place
 				next_addr <= next_addr + 1'b1;

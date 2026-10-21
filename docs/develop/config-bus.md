@@ -134,7 +134,7 @@ The reset value of each scalar is a synthesis parameter, with defaults that give
 the behavior of today (the occupancy and the pedestal of the board, the mask on,
 the full orbit).
 
-Table 3: the bits of `CAPS` (proposed).
+Table 3: the bits of `CAPS`.
 
 | Bits | Meaning |
 |---|---|
@@ -169,13 +169,23 @@ two widths, written differently for each tool.
 
 The `.mif` files given at synthesis are the initial contents of these memories:
 what `hits` uses until a controller loads something else. Changing the σ of the
-noise is loading another Gaussian table, with no multiplier.
+noise is loading another Gaussian table, with no multiplier. What a controller
+loads stays through a reset and a stop: only power-up brings back the `.mif`.
 
-The fixed phase has no table: the controller loads the coefficients of the
-phase it wants (vector 5), computed off line by the generator of the phase
-shapers, and the table of 64 phases exists only for the jitter. The taps stay
-variable, so the fixed phase keeps the DSP blocks it costs today; the memory of
-the table goes away.
+The fixed phase has no table: the shaper reads one set of coefficients from a
+register (`COEF_SRC = "one"` in `shaper_*_phase.v`), which starts at power-up
+with the set of the phase `PHASE0` and which the controller replaces with the
+set of the phase it wants (vector 5). The sets of the 64 phases are the lines of
+`shaper_csa_cr4rc_phase.mif` and `shaper_fenics_f34_phase.mif`, written by the
+generator of the phase shapers; line 32 + n is the phase n × 25/64 ns. The table
+of 64 phases (`COEF_SRC = "table"`, vector 4) exists only with the jitter, where
+every hit takes its own phase. In `hits`, with nothing written, the register is
+a constant. On the DE10-Nano board with the CSA shaper, the fixed phase went from
+887 ALMs, 12 M10K and 28 DSP (with the table) to 866 ALMs, 7 M10K and 28 DSP:
+the table is gone, and the products of the head stay in DSP blocks, where
+Quartus puts them even with a constant factor (measured on 2026-10-21; the base
+shapers avoid it because their generators write those products as shifts and
+adds).
 
 Writing a wide word needs a register that assembles it, as wide as the widest
 word synthesized; one register serves every vector, since one is loaded at a

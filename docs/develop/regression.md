@@ -52,6 +52,8 @@ Table 1: the builds of the regression and their goldens (in `verification/`).
 | `pzc_csa_cr4rc` | reconstruction | `USE_SHAPER_CSA_CR4RC` | `hits_reco_tb_golden_pzc_csa_cr4rc.vcd` |
 | `est` | reconstruction | `USE_BASELINE_EST` | `hits_reco_tb_golden_est.vcd` |
 | `bus` | bus | none (F34) | `hits_bus_tb_golden.vcd` |
+| `bus_phase` | bus | `TB_PHASE` (fixed phase +8, F34) | `hits_bus_tb_golden_phase.vcd` |
+| `bus_phase_csa` | bus | `TB_PHASE USE_SHAPER_CSA_CR4RC` | `hits_bus_tb_golden_phase_csa.vcd` |
 | `bus_jitter` | bus | `TB_JITTER USE_SHAPER_CSA_CR4RC` | `hits_bus_tb_golden_jitter.vcd` |
 
 The comparison ignores only what is not behavior: the `$date` and `$version`

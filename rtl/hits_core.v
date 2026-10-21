@@ -105,11 +105,13 @@ module hits_core
 	input signed [5:0] phase0,             // mean phase index offset, -32..31 (PHASE0)
 	input [15:0] sigma_k,                  // jitter: K = floor((sigma_ps*4096 + 3125)/6250) (from SIGMA_PS)
 	// write port into the memories, used only in reset: mem_sel 0 = bunch-train mask (bit 0),
-	// 1 = energy spectrum (70 bits), 2 = noise Gaussian (46 bits), 3 = jitter Gaussian (46 bits)
+	// 1 = energy spectrum (70 bits), 2 = noise Gaussian (46 bits), 3 = jitter Gaussian (46 bits),
+	// 4 = table of the 64 phases (with the jitter), 5 = the one set of coefficients of the fixed
+	// phase (no jitter); a phase word is 192 bits (CSA) or 210 (F34)
 	input mem_we,
 	input [2:0] mem_sel,
 	input [11:0] mem_addr,
-	input [69:0] mem_wdata,
+	input [209:0] mem_wdata,
 	output hits_out, bt_mask_out,
 	output [ENG_OUT_BITS-1:0] energy_out, event_bt, event_all,
 	output signed [SHAPER_OUT_BITS-1:0] shaper_out,
@@ -261,13 +263,18 @@ if (PHASE_SHAPER) begin : g_phase
 		.BITS_IN(ENG_OUT_BITS),
 		.G_OUT_LOG(10),
 		.PIPE_IN(1),
-		.MEM_PH(MEM_PH_CSA)
+		.MEM_PH(MEM_PH_CSA),
+		.COEF_SRC(JITTER ? "table" : "one"),   // jitter: the 64 phases; fixed phase: one set
+		.PHASE0(PHASE0)
 	)sf
 	(
 		.clock(clk),
 		.rst(rst),
 		.in(event_bt),
 		.phase(ph_idx),
+		.wr_en(mem_we && mem_sel == (JITTER ? 3'd4 : 3'd5)),
+		.wr_addr(mem_addr[5:0]),
+		.wr_data(mem_wdata[191:0]),
 		.out(shaper_out)
 	);
 end else begin : g_base
@@ -319,13 +326,18 @@ if (PHASE_SHAPER) begin : g_phase
 	#(
 		.BITS_IN(ENG_OUT_BITS),
 		.G_OUT_LOG(10),
-		.MEM_PH(MEM_PH_F34)
+		.MEM_PH(MEM_PH_F34),
+		.COEF_SRC(JITTER ? "table" : "one"),   // jitter: the 64 phases; fixed phase: one set
+		.PHASE0(PHASE0)
 	)sf
 	(
 		.clock(clk),
 		.rst(rst),
 		.in(event_bt),
 		.phase(ph_idx),
+		.wr_en(mem_we && mem_sel == (JITTER ? 3'd4 : 3'd5)),
+		.wr_addr(mem_addr[5:0]),
+		.wr_data(mem_wdata[209:0]),
 		.out(shaper_out)
 	);
 end else begin : g_base

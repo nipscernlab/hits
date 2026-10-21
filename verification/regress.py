@@ -113,6 +113,9 @@ BUILDS = {
     # the configuration bus: memories loaded and scalars set through the bus equal to a
     # hits built with them (2026-10-21); with the jitter on the CSA shaper
     "bus":           ("bus", [], "hits_bus_tb_golden.vcd"),
+    # the fixed phase by one loaded set of coefficients (2026-10-21), F34 and CSA
+    "bus_phase":     ("bus", ["TB_PHASE"], "hits_bus_tb_golden_phase.vcd"),
+    "bus_phase_csa": ("bus", ["TB_PHASE", "USE_SHAPER_CSA_CR4RC"], "hits_bus_tb_golden_phase_csa.vcd"),
     "bus_jitter":    ("bus", ["TB_JITTER", "USE_SHAPER_CSA_CR4RC"], "hits_bus_tb_golden_jitter.vcd"),
     # HITS + technique; the wrapper instantiates the PZC when
     # USE_BASELINE_EST is not set
@@ -300,9 +303,12 @@ def main():
         if "core" in groups:
             print("THE CORE changed (rtl/): a build of HITS alone failed, "
                   "which only goes up to the ADC quantization.")
-        else:
+        elif groups == {"reconstruction"}:
             print("Only builds with a technique failed: the core is intact, "
                   "the technique changed (reconstruction/).")
+        elif groups == {"bus"}:
+            print("Only builds of the configuration bus failed: the core is intact, "
+                  "hits_bus, hits_cfg or their testbench changed.")
         print("regression: %d/%d builds FAILED: %s"
               % (len(failed), len(requested), ", ".join(n for n, _ in failed)))
         sys.exit(1)

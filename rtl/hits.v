@@ -225,7 +225,7 @@ hits_core
 	.mem_we(1'b0),
 	.mem_sel(3'd0),
 	.mem_addr(12'd0),
-	.mem_wdata(70'd0),
+	.mem_wdata(210'd0),
 	.hits_out(hits_out),
 	.bt_mask_out(bt_mask_out),
 	.energy_out(energy_out),
