@@ -6,12 +6,15 @@ each one bit-for-bit against its frozen baseline.
     python verification/regress.py sim est          # a subset
     python verification/regress.py --create <build> # CREATE a missing golden
 
-Two groups of builds, so a failure says WHAT broke:
+Three groups of builds, so a failure says WHAT broke:
   core            HITS ALONE, up to the ADC quantization (projects/hits/aurora/,
                   hits_tb.v, only rtl/ is compiled). If one fails, the CORE changed.
   reconstruction  HITS + the technique under test (projects/hits_reco/aurora/,
                   hits_reco_tb.v, rtl/ + reconstruction/). If only these fail,
                   the TECHNIQUE changed, not the core.
+  bus             the configuration bus (projects/hits_bus/aurora/, hits_bus_tb.v):
+                  hits_bus loaded through the bus against a hits built with the same
+                  configuration, compared word by word and cycle by cycle.
 
 Exit 0 only if EVERY requested build is bit-identical to its golden AND no
 step reports an error. A correct golden does not absolve a broken run: any
@@ -50,6 +53,11 @@ PROJECTS = {
                      "hits_reco_tb.v", "hits_reco_tb", "hits_reco_tb.vcd",
                      ("rtl/*.v", "rtl/*/*.v", "reconstruction/*.v",
                       "reconstruction/*/*.v")),
+    # the configuration bus (hits_bus): a self-checking testbench that loads through the
+    # bus what a hits next to it gets from its parameters, and compares both
+    "bus": (os.path.join(ROOT, "projects", "hits_bus", "aurora"),
+            "hits_bus_tb.v", "hits_bus_tb", "hits_bus_tb.vcd",
+            ("rtl/*.v", "rtl/*/*.v")),
 }
 
 # name: (project, macros, golden)
@@ -102,6 +110,10 @@ BUILDS = {
                       "hits_tb_golden_phase_csa_cr4rc.vcd"),
     "sim_jitter_csa_cr4rc": ("core", ["USE_SHAPER_CSA_CR4RC", "USE_PHASE_SIGMA_PS=1000"],
                       "hits_tb_golden_jitter_csa_cr4rc.vcd"),
+    # the configuration bus: memories loaded and scalars set through the bus equal to a
+    # hits built with them (2026-10-21); with the jitter on the CSA shaper
+    "bus":           ("bus", [], "hits_bus_tb_golden.vcd"),
+    "bus_jitter":    ("bus", ["TB_JITTER", "USE_SHAPER_CSA_CR4RC"], "hits_bus_tb_golden_jitter.vcd"),
     # HITS + technique; the wrapper instantiates the PZC when
     # USE_BASELINE_EST is not set
     "pzc":           ("reconstruction", [], "hits_reco_tb_golden_pzc.vcd"),

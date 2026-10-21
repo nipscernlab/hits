@@ -17,11 +17,15 @@ from a broken run would otherwise bless it.
 
 ## The builds
 
-The builds come in two groups. The `core` builds compile only `rtl/` and the
+The builds come in three groups. The `core` builds compile only `rtl/` and the
 testbench of the simulator alone, and stop at the ADC sample; the
 `reconstruction` builds add a reconstruction technique. When only `reconstruction`
-builds fail, the technique changed and the simulator is intact. Table 1 lists
-the builds.
+builds fail, the technique changed and the simulator is intact. The `bus` builds
+test the configuration bus ([The configuration bus](config-bus.md)): the
+testbench loads through the bus, into a `hits_bus` whose memories start with
+every bit at 1, the configuration a `hits` next to it gets from its parameters,
+checks every memory word and register, and compares the outputs of the two on
+every cycle; any difference prints an error. Table 1 lists the builds.
 
 Table 1: the builds of the regression and their goldens (in `verification/`).
 
@@ -47,6 +51,8 @@ Table 1: the builds of the regression and their goldens (in `verification/`).
 | `pzc_legacy` | reconstruction | `USE_SHAPER_LEGACY` | `hits_reco_tb_golden_pzc_legacy.vcd` |
 | `pzc_csa_cr4rc` | reconstruction | `USE_SHAPER_CSA_CR4RC` | `hits_reco_tb_golden_pzc_csa_cr4rc.vcd` |
 | `est` | reconstruction | `USE_BASELINE_EST` | `hits_reco_tb_golden_est.vcd` |
+| `bus` | bus | none (F34) | `hits_bus_tb_golden.vcd` |
+| `bus_jitter` | bus | `TB_JITTER USE_SHAPER_CSA_CR4RC` | `hits_bus_tb_golden_jitter.vcd` |
 
 The comparison ignores only what is not behavior: the `$date` and `$version`
 blocks, the `RTL_DIR` path of the testbench, and the order of value changes

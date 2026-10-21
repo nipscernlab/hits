@@ -1,0 +1,6 @@
+hits 0b5692e 2026-10-21 + the hits_cfg.v and hits_bus.v of the next commit (uncommitted then), Quartus in C:\intelFPGA_lite\24.1std\quartus\bin64, 5CSEBA6U23I7, out of context, virtual pins, 25 ns
+configuration                top         ALMs   regs  M10K  DSP       Fmax
+default (F34)                hits        1762   1769     7    3   82.8 MHz
+default (F34)                hits_bus    1807   1947     7    3   82.3 MHz
+paper R1 (CSA, Lorenzetti)   hits         917   1172     7   23   75.7 MHz
+paper R1 (CSA, Lorenzetti)   hits_bus     935   1315     7   23   80.0 MHz

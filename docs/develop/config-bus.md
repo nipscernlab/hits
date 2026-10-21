@@ -203,6 +203,28 @@ Table 5: loading a mask and setting the occupancy.
 A controller can first read `ID` (address 0) to check that it talks to HITS,
 and `CAPS` (address 1) to learn which vectors exist.
 
+## What it costs
+
+Measured on 2026-10-21 by `projects/hits_bus/quartus/bus_cost.py`: `hits` and
+`hits_bus` compiled the same way in Quartus for the Cyclone V of the DE10-Nano,
+out of context with every port on a virtual pin, so the bus stays driven and
+nothing of it is optimized away.
+
+Table 6: `hits` against `hits_bus` (the fixed phase and the jitter not built).
+
+| Configuration | Top | ALMs | Registers | M10K | DSP | Fmax |
+|---|---|---|---|---|---|---|
+| default (F34) | `hits` | 1762 | 1769 | 7 | 3 | 82.8 MHz |
+| default (F34) | `hits_bus` | 1807 | 1947 | 7 | 3 | 82.3 MHz |
+| revised paper (CSA + CR-4RC, Lorenzetti) | `hits` | 917 | 1172 | 7 | 23 | 75.7 MHz |
+| revised paper (CSA + CR-4RC, Lorenzetti) | `hits_bus` | 935 | 1315 | 7 | 23 | 80.0 MHz |
+
+The bus costs about 2% of the logic and 140 to 180 registers (the scalars, the
+assembling register, the addresses and the piece counter), and no memory block
+or DSP: the memories that became writable use the same M10K blocks. The maximum
+frequency moves by less than the placement varies from one compilation to the
+next; the critical path stays in the loop of the shaper.
+
 ## What stays at synthesis
 
 - The structure: the random generator, the kind of energy and noise generator,
