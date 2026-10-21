@@ -13,6 +13,24 @@ greybox_tmp/
 *.qws
 c5_pin_model_dump.txt
 
+# --- Board with the ARM (projects/de10_nano_arm/): generated, see its README ---
+projects/de10_nano_arm/soc_system/
+projects/de10_nano_arm/soc_system.sopcinfo
+projects/de10_nano_arm/hps_0.h
+projects/de10_nano_arm/hps_isw_handoff/
+projects/de10_nano_arm/hps_sdram_p0_*
+projects/de10_nano_arm/*_assignment_defaults.qdf
+projects/de10_nano_arm/pll_40mhz_sim/
+projects/de10_nano_arm/pll_40mhz_sim.f
+projects/de10_nano_arm/pll_40mhz.bsf
+projects/de10_nano_arm/pll_40mhz.ppf
+projects/de10_nano_arm/pll_40mhz.spd
+projects/de10_nano_arm/pll_40mhz.sip
+projects/de10_nano_arm/software/spl_bsp/
+projects/de10_nano_arm/soc_system.dts
+projects/de10_nano_arm/soc_system.dtb
+projects/de10_nano_arm/**/stp1.csv
+
 # --- Editor / tool leftovers ---
 *.bak
 *.asv

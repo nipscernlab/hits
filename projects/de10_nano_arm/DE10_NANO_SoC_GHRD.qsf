@@ -710,7 +710,6 @@ set_global_assignment -name MIF_FILE ../../rtl/components/energy/energy_icdf_pap
 set_global_assignment -name VERILOG_FILE ../../rtl/components/energy/energy_seg.v
 set_global_assignment -name MIF_FILE ../../rtl/components/energy/energy_seg_default.mif
 set_global_assignment -name MIF_FILE ../../rtl/components/energy/energy_seg_lorenzetti.mif
-set_global_assignment -name VERILOG_FILE sw_converter.v
 # Shaper selection: the default is F34 (the FENICS Phase-II pulse); uncomment
 # ONE line for another one. Each choice has its own golden VCD (see README).
 #set_global_assignment -name VERILOG_MACRO "USE_SHAPER_LEGACY=1"
@@ -751,7 +750,6 @@ set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/iir_order2.
 set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/iir_order1.v
 set_global_assignment -name VERILOG_FILE ../../rtl/components/hit_generation/hit_draw.v
 set_global_assignment -name VERILOG_FILE ../../rtl/components/hit_generation/hit_generator.v
-set_global_assignment -name VERILOG_FILE hits_reco_soc.v
 set_global_assignment -name VERILOG_FILE reconstruction/hits_reco.v
 set_global_assignment -name VERILOG_FILE ../../rtl/hits/hits_core.v
 set_global_assignment -name VERILOG_FILE ../../rtl/components/energy/energy_icdf.v
@@ -773,13 +771,11 @@ set_global_assignment -name SEARCH_PATH ../../rtl/components/adc
 # resolved through this path (checked with Quartus 24.1, 2026-09-25).
 set_global_assignment -name SEARCH_PATH reconstruction/pzc
 set_global_assignment -name SEARCH_PATH reconstruction/baseline_estimator
-set_global_assignment -name VERILOG_FILE ip/intr_capturer/intr_capturer.v
 set_global_assignment -name VERILOG_FILE ip/edge_detect/altera_edge_detector.v
 set_global_assignment -name VERILOG_FILE ip/debounce/debounce.v
 set_global_assignment -name QIP_FILE ip/altsource_probe/hps_reset.qip
 set_global_assignment -name QIP_FILE soc_system/synthesis/soc_system.qip
 set_global_assignment -name QIP_FILE pll_40mhz.qip
-set_global_assignment -name SIP_FILE pll_40mhz.sip
 set_global_assignment -name SIGNALTAP_FILE stp1.stp
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[6] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[11] -to auto_signaltap_0|vcc -section_id auto_signaltap_0

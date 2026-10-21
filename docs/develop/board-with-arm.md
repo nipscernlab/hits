@@ -43,5 +43,12 @@ To run it:
    USB-Blaster II, open `stp1.stp` in Signal Tap and start the analysis.
 
 The prebuilt `.sof` and `.rbf` in `output_files/` date from 2026-07-17 and
-predate the synchronizer; compiling the project gives the current design. The
-project uses Platform Designer files of Quartus 23.1.
+predate the synchronizer; compiling the project gives the current design. Shipping
+a current bitstream with each release is
+[issue #10](https://github.com/nipscernlab/hits/issues/10).
+
+The files that Platform Designer, Quartus and the SoC EDS generate are not in git.
+Before the first compilation, generate the HPS system with
+`qsys-generate soc_system.qsys --synthesis=VERILOG`; the README of the folder,
+[`projects/de10_nano_arm/README.md`](https://github.com/nipscernlab/hits/blob/main/projects/de10_nano_arm/README.md),
+lists every generated file and how to make it.

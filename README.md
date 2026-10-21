@@ -194,7 +194,7 @@ rtl/components/adc/              Pedestal, quantization and saturation: the simu
 projects/aurora/                 Aurora project of the simulator alone (simulation; the testbench is verification/testbenches/hits_tb.v)
 projects/de10_nano/              Quartus project for the DE10-Nano: no HPS, no Qsys, the bus idle, occupancy and pedestal fixed in the top
 projects/zybo/                   Vivado: hits_vivado.tcl synthesizes the core out of context for any part (default xc7z010clg400-1); not yet a board project
-projects/de10_nano_arm/          Quartus project for the DE10-Nano SoC (FPGA + ARM/HPS, Qsys, SignalTap): simulator + reconstruction technique
+projects/de10_nano_arm/          Quartus project for the DE10-Nano SoC (FPGA + ARM/HPS, Qsys, SignalTap): simulator + reconstruction technique; its README says what is generated and how
 projects/de10_nano_arm/reconstruction/  Reconstruction techniques built by this board (PZC, baseline estimator) and the wrapper hits_reco.v
 projects/de10_nano_arm/software/change_occupancy/  ARM program that sets occupancy and pedestal (main.c, Makefile, prebuilt binary)
 projects/de10_nano_arm/tools/    MATLAB script that plots a SignalTap capture (output_files/stp1.csv)
@@ -491,9 +491,10 @@ micro-SD card (2 GB minimum).
    in Quartus, connect the USB-Blaster II, open `stp1.stp` (SignalTap) and press
    *Autorun Analysis*. The effect of the SSH menu is visible live.
 
-To rebuild the FPGA design instead of using the prebuilt bitstream: compile the
-project in Quartus (ready-to-flash `.sof`/`.rbf` are kept in
-`projects/de10_nano_arm/output_files/`).
+To rebuild the FPGA design instead of using the prebuilt bitstream: generate the
+HPS system and compile, as `projects/de10_nano_arm/README.md` explains (the
+prebuilt `.sof`/`.rbf` in `projects/de10_nano_arm/output_files/` are from
+2026-07-17; a current one with each release is issue #10).
 
 ## Contributing (branch workflow)
 
