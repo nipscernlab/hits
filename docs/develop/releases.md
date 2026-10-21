@@ -24,7 +24,7 @@ Table 1: releases of HITS.
 
 The versions of the papers are kept by their tags, not as releases:
 `paper-jsen-2026` is the code of the submitted paper and `paper-jsen-2026-r1`
-the code of the revision ([Papers](../papers.md)).
+the code of the revision ([Papers](../guide/papers.md)).
 
 The release `linux-image-v1` is not a version of HITS: it holds the operating
 system image of the board with the ARM processor.

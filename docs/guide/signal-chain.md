@@ -2,12 +2,13 @@
 
 `hits` produces one sample per clock cycle, and one cycle is one bunch crossing
 of the collider: the sampling of a high-speed readout. Figure 1 shows the chain.
-Each block is a folder of `rtl/`; above each block is the random generator it
-draws from, and below it what sets it, at run time (an input) or at synthesis (a
-parameter or a memory file).
+Each block is a folder of `rtl/components/`; above each block is the random
+generator it draws from, and below it what sets it: a register or a memory that
+the configuration bus can change at run time
+([Configuring HITS at run time](configuring.md)), or a choice made at synthesis.
 
 ```{figure} images/signal-chain.svg
-:alt: The HITS chain: hit draw, energy draw, pulse shaper, and noise with ADC in a row, linked by hits_out, event_bt, shaper_out and shaper_clip; the random generators above, the inputs and synthesis choices below.
+:alt: The HITS chain: hit draw, energy draw, pulse shaper, and noise with ADC in a row, linked by hits_out, event_bt, shaper_out and shaper_clip; the random generators above, the registers, memories and synthesis choices below.
 :width: 100%
 
 Figure 1: the HITS chain, one sample per clock cycle.
@@ -25,10 +26,11 @@ from one seed and its jumps of 2^64 and 2 × 2^64 steps, so their sequences neve
 overlap. Two older generators remain for reproducing earlier work: a round-robin
 bank of linear-feedback shift registers (LFSR) and a leap-forward LFSR.
 
-`hits/` decides, every bunch crossing, whether a hit happens. The draw is a
-Bernoulli trial with probability `occupancy`/65536. A hit only passes where
-the bunch-train mask has a filled slot: the mask holds 3564 slots, one orbit of
-the collider, and is read from `bunch_train_mask.mif`.
+`hit_generation/` decides, every bunch crossing, whether a hit happens. The draw is a
+Bernoulli trial with probability `OCCUPANCY`/65536, `OCCUPANCY` being a
+register of the bus. A hit only passes where the bunch-train mask has a filled
+slot: the mask holds 3564 slots, one orbit of the collider, and starts with the
+contents of `bunch_train_mask.mif`.
 
 `energy/` draws an energy every cycle, in whole ADC counts, used only when a
 hit happens. By default it is a segmented inverse cumulative distribution
@@ -53,7 +55,7 @@ noise tables of the first paper, with σ = 4 and σ = 8, remain as options. Why 
 is 4 counts, and where the noise model came from, is in
 [`rtl/components/noise/README.md`](https://github.com/nipscernlab/hits/blob/main/rtl/components/noise/README.md).
 
-`adc/` adds the pedestal (`offset`), drops the fixed-point scale rounding to the
+`adc/` adds the pedestal (the register `PEDESTAL`), drops the fixed-point scale rounding to the
 nearest count, and saturates the result to 0..4095.
 
 ## Ports
@@ -62,8 +64,7 @@ nearest count, and saturates the result to 0..4095.
 |---|---|---|---|
 | `clk` | in | 1 | the clock, one cycle per bunch crossing |
 | `rst` | in | 1 | reset, active high, asynchronous; clears every state, so a run after a reset repeats exactly |
-| `occupancy` | in | 16 | hit probability, `occupancy`/65536 per filled bunch crossing |
-| `offset` | in | 13, signed | the pedestal, in ADC counts |
+| `addr`, `wdata`, `wr`, `rd`, `rdata` | in, out | 4, 16, 1, 1, 16 | the configuration bus ([Configuring HITS at run time](configuring.md)); tie `wr` and `rd` to 0 to keep the values of synthesis |
 | `hits_out` | out | 1 | 1 when a hit happens in this bunch crossing, after the bunch-train mask |
 | `bt_mask_out` | out | 1 | the bunch-train mask (1 = filled slot) |
 | `energy_out` | out | 13 | the energy drawn this cycle, in ADC counts |
@@ -75,5 +76,8 @@ nearest count, and saturates the result to 0..4095.
 | `shaper_clip` | out | 12 | the ADC sample: the output of the simulator |
 
 The widths in the table are those of the default parameters (`ENG_OUT_BITS` =
-13). `occupancy` and `offset` may change at any time; they are sampled on the
-clock like any input.
+13). The occupancy and the pedestal are registers of the bus: their values at
+power-up are the parameters `OCCUPANCY_INIT` and `PEDESTAL_INIT`, and a write
+takes effect on the next cycle. Inside, the circuit is `hits_core`
+(`rtl/hits/hits_core.v`), which takes the occupancy, the pedestal and the rest of
+the configuration as inputs.

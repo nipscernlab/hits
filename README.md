@@ -25,9 +25,9 @@ One sample per 25 ns clock. Every box is a folder of `rtl/`; the top that wires
 them is `rtl/hits.v`.
 
 ```
-             occupancy (7 bits, from the HPS)
+             OCCUPANCY (register of the configuration bus)
                    |
- random/ --> hits/ (Bernoulli draw x bunch-train mask) --- hit ---+
+ random/ --> hit_generation/ (Bernoulli draw x bunch-train mask) --- hit ---+
                                                                   |
  random/ --> energy/ (segmented inverse CDF) -------- energy ---> [x] event_bt
                                                                   |
@@ -35,7 +35,7 @@ them is `rtl/hits.v`.
                                                                   |  shaper_out
  random/ --> noise/ (Gaussian, segmented inverse CDF) - noise --> [+] shaper_corrupted
                                                                   |
-             offset (pedestal, from the HPS) ---------------> adc/ (offset, round, clip 0..4095)
+             PEDESTAL (register of the configuration bus) ---> adc/ (offset, round, clip 0..4095)
                                                                   |
                                                              shaper_clip  = THE SIMULATOR OUTPUT
 ```
@@ -88,7 +88,7 @@ noise with sigma = 4 ADC.
 | Noise | Gaussian (segmented inverse CDF), the sigma = 4 tables, the sigma = 8 tables | macro `USE_NOISE_TABLES` or `USE_NOISE_SIGMA8`; the round_robin and leap generators always use the tables | Gaussian, sigma = 4 (since 2026-10-02) |
 | ADC quantization | round to nearest, truncate | macro `USE_ADC_FLOOR` (truncate) | round (since 2026-10-03) |
 | CSA + CR-4RC pipeline | on, off | macro `USE_SHAPER_NO_PIPE` (off) | on (input register since 2026-10-03; full pipeline, latency 5, since 2026-10-14) |
-| Occupancy, pedestal | 16-bit occupancy (hit probability occupancy/65536; the round_robin and leap generators use its top 7 bits), 13-bit offset | runtime inputs `occupancy`, `offset`; on the board with the ARM, the top 7 bits from the HPS (`./change_occupancy`) | set by the testbench / HPS |
+| Occupancy, pedestal | 16-bit occupancy (hit probability occupancy/65536; the round_robin and leap generators use its top 7 bits), 13-bit offset | registers `OCCUPANCY`, `PEDESTAL` of the configuration bus, starting at the parameters `OCCUPANCY_INIT`, `PEDESTAL_INIT` (docs/guide/configuring.md); on the board with the ARM, the top 7 bits from the HPS (`./change_occupancy`) | 0, 0 (the testbench and the boards set their own) |
 | Occupancy bypass | `OCC_BYPASS` = 1: a hit on every filled bunch crossing | synthesis parameter of `hits` | no bypass |
 | Pulse phase (F34, CSA + CR-4RC) | fixed phase `PHASE0` (−32..31 steps of 0.390625 ns); Gaussian jitter per hit `SIGMA_PS` (ps, no cut) | synthesis parameters of `hits`; in `hits_tb.v`, `-DUSE_PHASE0=<n>` and `-DUSE_PHASE_SIGMA_PS=<ps>` | none (`PHASE0` = 0, `SIGMA_PS` = 0: the shaper of before, bit for bit; since 2026-10-17) |
 

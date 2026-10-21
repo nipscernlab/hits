@@ -72,20 +72,20 @@
 
   <!-- inputs and synthesis choices -->
   <line class="ln" x1="100" y1="250" x2="100" y2="192"/>
-  <text class="in" x="100" y="268">occupancy (input)</text>
-  <text class="in" x="100" y="285">bunch-train mask (ROM)</text>
+  <text class="in" x="100" y="268">occupancy (register)</text>
+  <text class="in" x="100" y="285">bunch-train mask (memory)</text>
 
   <line class="ln" x1="325" y1="250" x2="325" y2="192"/>
   <text class="in" x="325" y="268">energy spectrum</text>
-  <text class="in" x="325" y="285">(ROM, synthesis)</text>
+  <text class="in" x="325" y="285">(memory, loadable)</text>
 
   <line class="ln" x1="550" y1="250" x2="550" y2="192"/>
-  <text class="in" x="550" y="268">pulse shape and phase</text>
-  <text class="in" x="550" y="285">(synthesis)</text>
+  <text class="in" x="550" y="268">shape (synthesis)</text>
+  <text class="in" x="550" y="285">phase (synthesis, bus)</text>
 
   <line class="ln" x1="775" y1="250" x2="775" y2="192"/>
-  <text class="in" x="775" y="268">offset (input)</text>
-  <text class="in" x="775" y="285">noise σ (ROM, synthesis)</text>
+  <text class="in" x="775" y="268">pedestal (register)</text>
+  <text class="in" x="775" y="285">noise σ (memory, loadable)</text>
 
-  <text class="in" x="490" y="318" font-size="11">one sample per clock cycle; dashed: present only when SIGMA_PS &gt; 0</text>
+  <text class="in" x="490" y="318" font-size="11">one sample per clock cycle; dashed: present only with the jitter; registers and memories set by the configuration bus</text>
 </svg>

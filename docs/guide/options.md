@@ -1,12 +1,15 @@
 # Build options
 
 Every choice of HITS is made when the design is built: a parameter of
-`hits` or a macro. With nothing set you get the default simulator, which
+`hits` or a macro. The values that the configuration bus changes at run time
+(the occupancy, the pedestal, the hit options, the jitter and the contents of
+the memories) start from these choices
+([Configuring HITS at run time](configuring.md)). With nothing set you get the default simulator, which
 is the configuration this manual describes unless it says otherwise: the xoshiro
 generator, the segmented energy spectrum, the F34 pulse shape at its nominal
 phase, Gaussian noise with σ = 4 ADC counts and a rounding ADC.
 
-Table 1 lists the choices. [Parameters and macros](reference/parameters.md)
+Table 1 lists the choices. [Parameters and macros](../reference/parameters.md)
 gives every parameter with its default.
 
 Table 1: the build options.
@@ -20,8 +23,9 @@ Table 1: the build options.
 | Noise | Gaussian σ = 4, tables σ = 4, tables σ = 8 | macro `USE_NOISE_TABLES` or `USE_NOISE_SIGMA8` | Gaussian σ = 4 |
 | ADC quantization | round to nearest, truncate | macro `USE_ADC_FLOOR` | round |
 | CSA + CR-4RC pipeline | on, off | macro `USE_SHAPER_NO_PIPE` | on |
-| Occupancy bypass | a hit on every filled crossing | parameter `OCC_BYPASS` | no bypass |
-| Bunch-train mask | on, off | parameter `BUNCH_TRAIN_ACTIVE` | on |
+| Occupancy bypass | a hit on every filled crossing | parameter `OCC_BYPASS`; register `MODE` | no bypass |
+| Bunch-train mask | on, off | parameter `BUNCH_TRAIN_ACTIVE`; register `MODE` | on |
+| Occupancy, pedestal | any value | parameters `OCCUPANCY_INIT`, `PEDESTAL_INIT`; registers `OCCUPANCY`, `PEDESTAL` | 0, 0 |
 
 ## Setting a macro or a parameter
 
@@ -178,13 +182,14 @@ selects the tables with σ = 8, the noise of the first paper.
 
 ## ADC
 
-The ADC adds `offset`, rounds to the nearest count and saturates to 0..4095.
+The ADC adds the pedestal, rounds to the nearest count and saturates to 0..4095.
 `USE_ADC_FLOOR` truncates instead, as the first paper did; truncation reads half
 a count low on average.
 
 ## Occupancy
 
-`occupancy` is a 16-bit input: the hit probability is `occupancy`/65536 in each
-filled bunch crossing. `OCC_BYPASS` = 1 makes every
+The occupancy is a 16-bit register of the bus, `OCCUPANCY`, that starts at
+`OCCUPANCY_INIT`: the hit probability is `OCCUPANCY`/65536 in each filled bunch
+crossing. `OCC_BYPASS` = 1 makes every
 filled bunch crossing a hit. `BUNCH_TRAIN_ACTIVE` = 0 turns the mask off, so
 every bunch crossing is filled.

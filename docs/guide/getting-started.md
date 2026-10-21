@@ -20,8 +20,9 @@ git clone https://github.com/nipscernlab/hits.git
 ```
 
 The HITS core is the folder `rtl/`. Its top module is `hits`, in `rtl/hits.v`;
-one subfolder holds each stage, and each memory file sits next to the module
-that reads it.
+`rtl/hits/` holds its circuit and the registers of its configuration bus, one
+subfolder of `rtl/components/` holds each stage, and each memory file sits next
+to the module that reads it.
 
 ## A first simulation
 

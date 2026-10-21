@@ -1,21 +1,26 @@
 # Using the core in your design
 
-`hits` is a self-contained core: one clock, one reset, two inputs that
-set the occupancy and the pedestal, and the outputs listed in
-[The signal chain](signal-chain.md#ports). It needs no processor. On the
-DE10-Nano examples the occupancy and the pedestal come from constants in the top
-module, or from the ARM processor of the board through a register.
+`hits` is a self-contained core: one clock, one reset, a configuration bus,
+and the outputs listed in [The signal chain](signal-chain.md#ports). It needs no
+processor: with the bus tied off it runs with the values given at synthesis, and
+a controller on the bus can change them at run time
+([Configuring HITS at run time](configuring.md)).
 
 ## Instantiating it
 
 ```verilog
 hits #(
-    .SIGMA_PS (1000)              // optional: 1 ns of jitter per hit
+    .OCCUPANCY_INIT   (16'd16384),// 25% of the filled bunch crossings
+    .PEDESTAL_INIT    (13'd146),  // pedestal, ADC counts
+    .SIGMA_PS         (1000)      // optional: 1 ns of jitter per hit
 ) sim (
     .clk              (clk_40),   // one cycle per bunch crossing
     .rst              (rst),
-    .occupancy        (16'd16384),// 25% of the filled bunch crossings
-    .offset           (13'sd146), // pedestal, ADC counts
+    .addr             (4'd0),     // the configuration bus, idle
+    .wdata            (16'd0),
+    .wr               (1'b0),
+    .rd               (1'b0),
+    .rdata            (),
     .hits_out         (),
     .bt_mask_out      (),
     .energy_out       (),
@@ -28,8 +33,11 @@ hits #(
 );
 ```
 
-Compile every `.v` of `rtl/` and of its subfolders; the modules that a build
-does not use are left out by the tools.
+Compile every `.v` of `rtl/` and of its subfolders (`rtl/hits.v`, `rtl/hits/`
+and `rtl/components/*/`); the modules that a build does not use are left out by
+the tools. A design that never changes the configuration can also instantiate
+`hits_core` with its configuration inputs tied to constants, as the testbench
+`verification/testbenches/hits_tb.v` does.
 
 ## Clock and reset
 
@@ -59,9 +67,10 @@ file in `rtl/` (one binary word per line, despite the extension). The parameters
 of `hits` name the files by their bare name, such as
 `noise_gauss_s4.mif`, and each tool looks for them in its own way:
 
-- Icarus Verilog reads them relative to the folder it runs in. The example
-  testbench passes every file name with the path `RTL_DIR` in front, so it has to
-  run from its own folder.
+- Icarus Verilog reads them relative to the folder it runs in. The testbench
+  passes every file name with the path `RTL_DIR` in front, so it has to run two
+  levels below the root of the repository (`verification/testbenches/`, or
+  `projects/aurora/` for AURORA).
 - Quartus reads a relative name from the project folder and from the folders
   listed as `SEARCH_PATH` in the `.qsf`. The DE10-Nano example instead passes
   every file name with `../../rtl` in front, relative to its project folder.
@@ -78,7 +87,7 @@ Table 1: the memory files each part of the core reads.
 
 | File | Read by | When |
 |---|---|---|
-| `bunch_train_mask.mif` | `hits/bunch_train_mask.v` | always |
+| `bunch_train_mask.mif` | `hit_generation/bunch_train_mask.v` | always |
 | `energy_seg_default.mif` (or the ROM in `MEM_SEG`) | `energy/energy_seg.v` | xoshiro, without `USE_ENERGY_TABLES` |
 | `energy_icdf_paper_0..2.mif` | `energy/energy_icdf.v` | the energy tables |
 | `noise_gauss_s4.mif` | `noise/noise_gauss.v` | Gaussian noise; also the jitter draw when `SIGMA_PS` > 0 |
@@ -86,17 +95,22 @@ Table 1: the memory files each part of the core reads.
 | `shaper_fenics_f34_phase.mif` | `shaper/shaper_fenics_f34_phase.v` | F34 with a phase |
 | `shaper_csa_cr4rc_phase.mif` | `shaper/shaper_csa_cr4rc_phase.v` | CSA + CR-4RC with a phase |
 
+The paths are relative to `rtl/components/`. The memories that the bus can
+write start with these contents; what a controller loads replaces them until
+the next power-up.
+
 ## Resources
 
-Table 2 gives the resources of the whole core, measured on 2026-10-17 on the
-code of commits `71d5536` (Quartus) and `c182636` (Vivado). Quartus Prime Lite 24.1std ran on the Cyclone V
+Table 2 gives the resources of the whole core without the configuration bus,
+measured on 2026-10-17 on the code of commits `71d5536` (Quartus) and `c182636`
+(Vivado), before the bus existed. Quartus Prime Lite 24.1std ran on the Cyclone V
 of the DE10-Nano (5CSEBA6U23I7), Vivado 2025.2 on a Zynq-7010 (xc7z010clg400-1,
 speed grade -1). In both the core was the top, with its ports on virtual pins (no
 input or output buffers) and a clock constraint at the sampling rate of the
 readout. Fmax is the worst-case corner after
 placement and routing.
 
-Table 2: resources of `hits`.
+Table 2: resources of the core without the bus (today, `hits_core`).
 
 | Build | Quartus, Cyclone V | Vivado, Zynq-7010 |
 |---|---|---|
@@ -105,6 +119,13 @@ Table 2: resources of `hits`.
 | F34, fixed phase only | 1707 ALMs, 1972 registers, 18 DSP, 13 M10K, 84.6 MHz | |
 | CSA + CR-4RC | 883 ALMs, 1155 registers, 23 DSP, 7 M10K, 83.5 MHz | |
 | CSA + CR-4RC, jitter σ = 1 ns | 1186 ALMs, 1612 registers, 30 DSP, 14 M10K, 71.7 MHz | 2352 LUTs, 1620 FFs, 35 DSP, 3 RAMB36 + 5 RAMB18, 69.4 MHz |
+
+The bus adds about 2% of the logic and 140 to 180 registers when it is driven
+from outside, and no memory block or DSP (Table 6 of
+[The configuration bus](../develop/config-bus.md)). Tied off, it is removed: the
+DE10-Nano example (CSA + CR-4RC and the Lorenzetti spectrum) takes 804 ALMs,
+1191 registers, 7 M10K and 23 DSP with the bus idle, measured on 2026-10-21, the
+same as before the bus existed (measured at commit `741d8f5`).
 
 The F34 shaper is built from shifts and adds: its constant multiplications are
 forced into logic (`multstyle = "logic"`), which keeps the default build at 3 DSP

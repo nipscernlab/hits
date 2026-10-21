@@ -23,17 +23,19 @@ files and the release process.
 
 ## Using HITS
 
-- [Getting started](getting-started.md): what you need, and a first
+- [Getting started](guide/getting-started.md): what you need, and a first
   simulation in a minute.
-- [The signal chain](signal-chain.md): the stages of the simulator, its ports
+- [The signal chain](guide/signal-chain.md): the stages of the simulator, its ports
   and its outputs.
-- [Build options](options.md): the random generator, the energy spectrum, the
+- [Configuring HITS at run time](guide/configuring.md): the configuration bus,
+  its registers and how to load a memory.
+- [Build options](guide/options.md): the random generator, the energy spectrum, the
   pulse shape and its phase, the noise and the ADC, and how to choose each one.
-- [Using the core in your design](integrating.md): clock, reset, latency, the
+- [Using the core in your design](guide/integrating.md): clock, reset, latency, the
   memory files and the resources it takes.
-- [Examples](examples.md): simulation with Icarus Verilog and AURORA,
+- [Examples](guide/examples.md): simulation with Icarus Verilog and AURORA,
   synthesis with Quartus and with Vivado.
-- [Reproducing the papers](papers.md): the configurations behind the published
+- [Reproducing the papers](guide/papers.md): the configurations behind the published
   results.
 
 ## Reference
@@ -53,19 +55,20 @@ files and the release process.
   project with the hard processor system.
 - [Releases](develop/releases.md): versions, what goes into a release and the
   checks a release has to pass.
-- [The configuration bus](develop/config-bus.md): the design, still a draft, of
-  the registers through which a processor configures HITS at run time.
+- [The configuration bus](develop/config-bus.md): why the bus is the way it
+  is, what it costs and what is still open.
 
 ```{toctree}
 :hidden:
 :caption: Using HITS
 
-getting-started
-signal-chain
-options
-integrating
-examples
-papers
+guide/getting-started
+guide/signal-chain
+guide/configuring
+guide/options
+guide/integrating
+guide/examples
+guide/papers
 ```
 
 ```{toctree}

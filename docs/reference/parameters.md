@@ -7,18 +7,19 @@ and this page is a defect.
 ## Parameters
 
 Table 1 lists the parameters a user sets. Table 2 lists those that size the
-datapath or name the memory files; they rarely change.
+datapath or name the memory files; they rarely change. Table 3 lists those of the
+configuration bus ([Configuring HITS at run time](../guide/configuring.md)).
 
 Table 1: the parameters that choose the simulator.
 
 | Parameter | Default | Meaning |
 |---|---|---|
 | `RNG_TYPE` | `"xoshiro"` | random generator: `"xoshiro"`, `"round_robin"` or `"leap"` |
-| `OCC_BYPASS` | 0 | 1: a hit on every filled bunch crossing |
-| `BUNCH_TRAIN_ACTIVE` | 1 | 0: no bunch-train mask, every crossing filled |
+| `OCC_BYPASS` | 0 | 1: a hit on every filled bunch crossing (at power-up; register `MODE`) |
+| `BUNCH_TRAIN_ACTIVE` | 1 | 0: no bunch-train mask, every crossing filled (at power-up; register `MODE`) |
 | `MEM_SEG` | `"energy_seg_default.mif"` | ROM of the energy spectrum (segmented inverse CDF) |
-| `PHASE0` | 0 | fixed phase of the pulse, in steps of 1/64 of the sampling period, −32 to 31 (F34 and CSA + CR-4RC) |
-| `SIGMA_PS` | 0 | jitter per hit, σ in ps, 0 to 12500, Gaussian without cut (F34 and CSA + CR-4RC) |
+| `PHASE0` | 0 | fixed phase of the pulse, in steps of 1/64 of the sampling period, −32 to 31 (F34 and CSA + CR-4RC); with the jitter, the value at power-up of the register `PHASE0` |
+| `SIGMA_PS` | 0 | jitter per hit, σ in ps, 0 to 12500, Gaussian without cut (F34 and CSA + CR-4RC); the value at power-up of the register `SIGMA` |
 | `XO_SEED_HIT` | one fixed seed | xoshiro state of the hit draw, `{s3, s2, s1, s0}` |
 | `XO_SEED_ENERGY` | the jump of 2^64 of `XO_SEED_HIT` | xoshiro state of the energy draw |
 | `XO_SEED_NOISE` | the jump of 2 × 2^64 of `XO_SEED_HIT` | xoshiro state of the noise draw |
@@ -46,12 +47,21 @@ Table 2: the parameters that size the datapath or name files.
 | `MEM_PH_F34` | `"shaper_fenics_f34_phase.mif"` | the 64-phase table of F34 |
 | `MEM_PH_CSA` | `"shaper_csa_cr4rc_phase.mif"` | the 64-phase table of CSA + CR-4RC |
 
+Table 3: the parameters of the configuration bus.
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `OCCUPANCY_INIT` | 0 | the occupancy at power-up and after `rst`, occupancy/65536 (register `OCCUPANCY`) |
+| `PEDESTAL_INIT` | 0 | the pedestal at power-up and after `rst`, ADC counts (register `PEDESTAL`) |
+| `PHASE_SHAPER` | `PHASE0` ≠ 0 or `SIGMA_PS` ≠ 0 | 1: build the shaper with a phase, so the bus can set one |
+| `JITTER` | `SIGMA_PS` ≠ 0 | 1: build the jitter per hit, so the bus can set it |
+
 ## Macros
 
-Table 3 lists the macros of the core. The example testbench reads a few more,
+Table 4 lists the macros of the core. The example testbench reads a few more,
 listed after the table.
 
-Table 3: the macros read by `rtl/`.
+Table 4: the macros read by `rtl/`.
 
 | Macro | Effect |
 |---|---|
@@ -64,7 +74,7 @@ Table 3: the macros read by `rtl/`.
 | `USE_NOISE_SIGMA8` | the noise tables with σ = 8 |
 | `USE_ADC_FLOOR` | an ADC that truncates instead of rounding |
 
-The example testbench `hits_tb.v` also reads `USE_RNG_ROUND_ROBIN` and
+The testbench `verification/testbenches/hits_tb.v` also reads `USE_RNG_ROUND_ROBIN` and
 `USE_RNG_LEAP` (they set `RNG_TYPE`), `USE_ENERGY_LORENZETTI` (it sets `MEM_SEG`
 to the Lorenzetti spectrum and the occupancy to 65530),
 `USE_PHASE0=<n>` (`PHASE0`) and `USE_PHASE_SIGMA_PS=<ps>` (`SIGMA_PS`).
