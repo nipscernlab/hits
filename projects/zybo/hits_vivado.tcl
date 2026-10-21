@@ -6,7 +6,7 @@
 # to put HITS on a board, instantiate hits in your own top instead.
 #
 # Run it from an EMPTY folder (Vivado writes its reports there):
-#   vivado -mode batch -source <hits>/projects/hits/vivado/hits_vivado.tcl \
+#   vivado -mode batch -source <hits>/projects/zybo/hits_vivado.tcl \
 #          -tclargs [part] [D:<MACRO>[:value] ...] [G:<PARAMETER>:<value> ...]
 # Examples:
 #   ... -tclargs                                    # xc7z010clg400-1, the default build
@@ -17,7 +17,7 @@
 # them by bare file name, and Vivado reads them from where it runs.
 
 set here [file dirname [file normalize [info script]]]
-set rtl  [file normalize [file join $here .. .. .. rtl]]
+set rtl  [file normalize [file join $here .. .. rtl]]
 set part xc7z010clg400-1
 set defines {}
 set generics {}

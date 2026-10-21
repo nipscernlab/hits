@@ -1,6 +1,6 @@
 # The board with the ARM processor
 
-`projects/hits_reco/quartus/` is the project HITS started from: the
+`projects/de10_nano_arm/` is the project HITS started from: the
 DE10-Nano with its hard processor system (HPS), a dual-core ARM processor, built
 on the reference design of Terasic. The simulator and a reconstruction technique
 run in the FPGA, and a program on the ARM sets the occupancy and the pedestal

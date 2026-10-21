@@ -5,146 +5,146 @@
     "lastModified": "2026-09-25T12:00:00.000Z",
     "computerName": "",
     "appVersion": "",
-    "projectPath": "C:\\nipscern\\hits\\projects\\hits\\aurora",
+    "projectPath": "C:\\nipscern\\hits\\projects\\aurora",
     "lastOpened": "2026-09-25T12:00:00.000Z"
   },
   "structure": {
-    "basePath": "C:\\nipscern\\hits\\projects\\hits\\aurora",
+    "basePath": "C:\\nipscern\\hits\\projects\\aurora",
     "folders": [],
     "processors": [],
-    "topLevelFile": "..\\..\\..\\rtl\\hits.v",
-    "testbenchFile": "hits_tb.v",
+    "topLevelFile": "..\\..\\rtl\\hits.v",
+    "testbenchFile": "..\\..\\verification\\testbenches\\hits_tb.v",
     "synthesizableFiles": [
       {
         "name": "hits.v",
-        "path": "..\\..\\..\\rtl\\hits.v",
+        "path": "..\\..\\rtl\\hits.v",
         "isTopLevel": true
       },
       {
         "name": "hits_core.v",
-        "path": "..\\..\\..\\rtl\\hits\\hits_core.v",
+        "path": "..\\..\\rtl\\hits\\hits_core.v",
         "isTopLevel": false
       },
       {
         "name": "hits_cfg.v",
-        "path": "..\\..\\..\\rtl\\hits\\hits_cfg.v",
+        "path": "..\\..\\rtl\\hits\\hits_cfg.v",
         "isTopLevel": false
       },
       {
         "name": "hit_generator.v",
-        "path": "..\\..\\..\\rtl\\components\\hit_generation\\hit_generator.v",
+        "path": "..\\..\\rtl\\components\\hit_generation\\hit_generator.v",
         "isTopLevel": false
       },
       {
         "name": "bunch_train_mask.v",
-        "path": "..\\..\\..\\rtl\\components\\hit_generation\\bunch_train_mask.v",
+        "path": "..\\..\\rtl\\components\\hit_generation\\bunch_train_mask.v",
         "isTopLevel": false
       },
       {
         "name": "adc.v",
-        "path": "..\\..\\..\\rtl\\components\\adc\\adc.v",
+        "path": "..\\..\\rtl\\components\\adc\\adc.v",
         "isTopLevel": false
       },
       {
         "name": "energy_generator.v",
-        "path": "..\\..\\..\\rtl\\components\\energy\\energy_generator.v",
+        "path": "..\\..\\rtl\\components\\energy\\energy_generator.v",
         "isTopLevel": false
       },
       {
         "name": "energy_icdf.v",
-        "path": "..\\..\\..\\rtl\\components\\energy\\energy_icdf.v",
+        "path": "..\\..\\rtl\\components\\energy\\energy_icdf.v",
         "isTopLevel": false
       },
       {
         "name": "energy_seg.v",
-        "path": "..\\..\\..\\rtl\\components\\energy\\energy_seg.v",
+        "path": "..\\..\\rtl\\components\\energy\\energy_seg.v",
         "isTopLevel": false
       },
       {
         "name": "hit_draw.v",
-        "path": "..\\..\\..\\rtl\\components\\hit_generation\\hit_draw.v",
+        "path": "..\\..\\rtl\\components\\hit_generation\\hit_draw.v",
         "isTopLevel": false
       },
       {
         "name": "noise_generator.v",
-        "path": "..\\..\\..\\rtl\\components\\noise\\noise_generator.v",
+        "path": "..\\..\\rtl\\components\\noise\\noise_generator.v",
         "isTopLevel": false
       },
       {
         "name": "noise_icdf.v",
-        "path": "..\\..\\..\\rtl\\components\\noise\\noise_icdf.v",
+        "path": "..\\..\\rtl\\components\\noise\\noise_icdf.v",
         "isTopLevel": false
       },
       {
         "name": "noise_gauss.v",
-        "path": "..\\..\\..\\rtl\\components\\noise\\noise_gauss.v",
+        "path": "..\\..\\rtl\\components\\noise\\noise_gauss.v",
         "isTopLevel": false
       },
       {
         "name": "lfsr42.v",
-        "path": "..\\..\\..\\rtl\\components\\random\\lfsr42.v",
+        "path": "..\\..\\rtl\\components\\random\\lfsr42.v",
         "isTopLevel": false
       },
       {
         "name": "rng.v",
-        "path": "..\\..\\..\\rtl\\components\\random\\rng.v",
+        "path": "..\\..\\rtl\\components\\random\\rng.v",
         "isTopLevel": false
       },
       {
         "name": "rng_round_robin.v",
-        "path": "..\\..\\..\\rtl\\components\\random\\rng_round_robin.v",
+        "path": "..\\..\\rtl\\components\\random\\rng_round_robin.v",
         "isTopLevel": false
       },
       {
         "name": "rng_leap.v",
-        "path": "..\\..\\..\\rtl\\components\\random\\rng_leap.v",
+        "path": "..\\..\\rtl\\components\\random\\rng_leap.v",
         "isTopLevel": false
       },
       {
         "name": "rng_xoshiro.v",
-        "path": "..\\..\\..\\rtl\\components\\random\\rng_xoshiro.v",
+        "path": "..\\..\\rtl\\components\\random\\rng_xoshiro.v",
         "isTopLevel": false
       },
       {
         "name": "iir_order1.v",
-        "path": "..\\..\\..\\rtl\\components\\shaper\\iir_order1.v",
+        "path": "..\\..\\rtl\\components\\shaper\\iir_order1.v",
         "isTopLevel": false
       },
       {
         "name": "iir_order2.v",
-        "path": "..\\..\\..\\rtl\\components\\shaper\\iir_order2.v",
+        "path": "..\\..\\rtl\\components\\shaper\\iir_order2.v",
         "isTopLevel": false
       },
       {
         "name": "shaper_csa_cr4rc.v",
-        "path": "..\\..\\..\\rtl\\components\\shaper\\shaper_csa_cr4rc.v",
+        "path": "..\\..\\rtl\\components\\shaper\\shaper_csa_cr4rc.v",
         "isTopLevel": false
       },
       {
         "name": "shaper_csa_cr4rc_phase.v",
-        "path": "..\\..\\..\\rtl\\components\\shaper\\shaper_csa_cr4rc_phase.v",
+        "path": "..\\..\\rtl\\components\\shaper\\shaper_csa_cr4rc_phase.v",
         "isTopLevel": false
       },
       {
         "name": "shaper_fenics.v",
-        "path": "..\\..\\..\\rtl\\components\\shaper\\shaper_fenics.v",
+        "path": "..\\..\\rtl\\components\\shaper\\shaper_fenics.v",
         "isTopLevel": false
       },
       {
         "name": "shaper_fenics_f34.v",
-        "path": "..\\..\\..\\rtl\\components\\shaper\\shaper_fenics_f34.v",
+        "path": "..\\..\\rtl\\components\\shaper\\shaper_fenics_f34.v",
         "isTopLevel": false
       },
       {
         "name": "shaper_fenics_f34_phase.v",
-        "path": "..\\..\\..\\rtl\\components\\shaper\\shaper_fenics_f34_phase.v",
+        "path": "..\\..\\rtl\\components\\shaper\\shaper_fenics_f34_phase.v",
         "isTopLevel": false
       }
     ],
     "testbenchFiles": [
       {
         "name": "hits_tb.v",
-        "path": "hits_tb.v",
+        "path": "..\\..\\verification\\testbenches\\hits_tb.v",
         "isTopLevel": true
       }
     ]

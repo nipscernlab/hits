@@ -1,4 +1,4 @@
-"""Writes the memory files of the bus testbench (hits_bus_tb.v), next to this script.
+"""Writes the memory files of the bus testbench (hits_config_tb.v), next to this script.
 
   ones_mask.mif   3564 x 1 bit of 1: the mask hits starts with
   ones_70.mif     512 x 70 bits of 1: the energy ROM it starts with

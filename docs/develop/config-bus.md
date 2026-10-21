@@ -215,8 +215,8 @@ and `CAPS` (address 1) to learn which vectors exist.
 
 ## What it costs
 
-Measured on 2026-10-21 by `projects/hits_bus/quartus/bus_cost.py`, before the
-renaming: the lean `hits` and `hits_bus` (today's `hits`) compiled the same way in Quartus for the Cyclone V of the DE10-Nano,
+Measured on 2026-10-21 by `projects/hits_bus/quartus/bus_cost.py` (at commit
+4f70075; removed with the reorganization of the repository), before the renaming: the lean `hits` and `hits_bus` (today's `hits`) compiled the same way in Quartus for the Cyclone V of the DE10-Nano,
 out of context with every port on a virtual pin, so the bus stays driven and
 nothing of it is optimized away.
 

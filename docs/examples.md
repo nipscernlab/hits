@@ -1,22 +1,23 @@
 # Examples
 
-Three examples come with HITS, in `projects/hits/`: a simulation, a
-Quartus project and a Vivado script. None of them is part of the simulator. They
+Three examples come with HITS: a simulation (`projects/aurora/`, with the testbench
+`verification/testbenches/hits_tb.v`), a Quartus project (`projects/de10_nano/`) and a
+Vivado script (`projects/zybo/`). None of them is part of the simulator. They
 show one way of using the core, and each can be copied and changed.
 
 ## Simulation: Icarus Verilog and AURORA
 
-`projects/hits/aurora/` holds the testbench `hits_tb.v` and the
-AURORA project `hits.spf`. The testbench instantiates `hits`
-alone, so the simulation ends at the ADC sample `shaper_clip`. It runs three
+`verification/testbenches/` holds the testbench `hits_tb.v` and `projects/aurora/`
+the AURORA project `hits.spf`. The testbench instantiates `hits_core`, the circuit of
+`hits`, alone and with its configuration fixed, so the simulation ends at the ADC sample `shaper_clip`. It runs three
 orbits (10 892 cycles) with the pedestal at 146 ADC counts and the occupancy at
 25%, then 75% from the middle of the run. With
 `-DUSE_ENERGY_LORENZETTI` the occupancy stays at 99.991%,
 as the Lorenzetti spectrum requires.
 
 ```sh
-cd projects/hits/aurora
-iverilog -s hits_tb -o tb.vvp ../../../rtl/*.v ../../../rtl/hits/*.v ../../../rtl/components/*/*.v hits_tb.v
+cd verification/testbenches
+iverilog -s hits_tb -o tb.vvp ../../rtl/*.v ../../rtl/hits/*.v ../../rtl/components/*/*.v hits_tb.v
 vvp tb.vvp                  # writes hits_tb.vcd
 ```
 
@@ -33,7 +34,7 @@ not find the memory files.
 
 ## Synthesis in Quartus: the DE10-Nano
 
-`projects/hits/quartus/` puts the core alone on a Terasic DE10-Nano
+`projects/de10_nano/` puts the core alone on a Terasic DE10-Nano
 (Cyclone V 5CSEBA6U23I7), with no processor. The top
 `top_hits_de10.v` makes the sampling clock from the oscillator of the
 board with a phase-locked loop (PLL), holds the occupancy at 99.991% and the pedestal at 146, and resets the core from the push
@@ -56,13 +57,13 @@ your design takes them.
 
 ## Synthesis in Vivado
 
-`projects/hits/vivado/hits_vivado.tcl` synthesizes, places and routes
+`projects/zybo/hits_vivado.tcl` synthesizes, places and routes
 `hits` alone, out of context (no pins, no board), against a clock
 constraint at the sampling rate, and prints the resources and the Fmax. Run it from an empty folder:
 
 ```sh
-vivado -mode batch -source <hits>/projects/hits/vivado/hits_vivado.tcl
-vivado -mode batch -source <hits>/projects/hits/vivado/hits_vivado.tcl \
+vivado -mode batch -source <hits>/projects/zybo/hits_vivado.tcl
+vivado -mode batch -source <hits>/projects/zybo/hits_vivado.tcl \
     -tclargs xc7z010clg400-1 D:USE_SHAPER_CSA_CR4RC G:SIGMA_PS:1000
 ```
 

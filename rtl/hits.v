@@ -82,7 +82,7 @@
 // Until 2026-10-21 this module was hits_bus, and hits was a variant with every value
 // fixed by its parameters; that variant is gone. Who wants the values fixed instantiates
 // hits_core with its configuration inputs tied to constants, as the testbench
-// projects/hits/aurora/hits_tb.v does.
+// verification/testbenches/hits_tb.v does.
 module hits
 #(
 	// pseudo-random generator: "xoshiro" (xoshiro128**, default since

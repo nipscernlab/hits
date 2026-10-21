@@ -8,7 +8,7 @@
 // spectrum, noise and jitter Gaussians). hits (rtl/hits.v) drives them from the
 // configuration bus (docs/develop/config-bus.md); tied to constants, they give the
 // circuit of the variant with everything fixed (the testbench
-// projects/hits/aurora/hits_tb.v does this). The macros that select the shaper, the
+// verification/testbenches/hits_tb.v does this). The macros that select the shaper, the
 // noise, the energy and the ADC are described in rtl/hits.v.
 //
 // The full front-end signal chain of the calorimeter readout, one sample per
@@ -19,7 +19,7 @@
 //
 // The pole-zero cancellation (PZC) is NOT part of the simulator: it is a
 // downstream reconstruction stage. Only the board with the ARM builds it, in
-// projects/hits_reco/quartus/reconstruction/, through the hits_reco wrapper.
+// projects/de10_nano_arm/reconstruction/, through the hits_reco wrapper.
 module hits_core
 #(
 	// pseudo-random generator: "xoshiro" (xoshiro128**, default since

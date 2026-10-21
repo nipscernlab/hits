@@ -6,7 +6,7 @@
 // at run time is fixed here, and the occupancy and the offset are driven by the
 // testbench. The chain ends at the ADC quantization, `shaper_clip`. No reconstruction
 // technique is compiled or instantiated here.
-// Aurora project: hits.spf in this folder, which lists only rtl/ files.
+// Aurora project: projects/aurora/hits.spf, which lists only rtl/ files and this one.
 //
 // Shaper: chosen by the macros described at the top of rtl/hits.v (default:
 // shaper_fenics_f34, the FENICS Phase-II pulse). Commit rtl/ with the `define
@@ -45,14 +45,15 @@
 // - offset (pedestal) = 146 ADC;
 // - 3 full bunch-train orbits (3 x 3564 slots) + margin;
 // - the .mif files are loaded through RTL_DIR, RELATIVE to this folder: the
-//   simulation must run with cwd = projects/hits/aurora (Aurora runs it
+//   simulation must run with cwd two levels below the root of the repository:
+//   verification/testbenches (the regression) or projects/aurora (Aurora runs it
 //   in the .spf folder).
 
 `timescale 1ns/100ps
 
 module hits_tb;
 
-    localparam RTL_DIR = "../../../rtl";
+    localparam RTL_DIR = "../../rtl";
 
     localparam ORBIT    = 3564;             // 25 ns slots per orbit
     localparam N_ORBITS = 3;

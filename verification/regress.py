@@ -7,9 +7,9 @@ each one bit-for-bit against its frozen baseline.
     python verification/regress.py --create <build> # CREATE a missing golden
 
 Two groups of builds, so a failure says WHAT broke:
-  core            HITS ALONE, up to the ADC quantization (projects/hits/aurora/,
-                  hits_tb.v, only rtl/ is compiled). If one fails, the CORE changed.
-  bus             the configuration bus (projects/hits_bus/aurora/, hits_bus_tb.v):
+  core            HITS ALONE, up to the ADC quantization (hits_tb.v, only rtl/ is
+                  compiled). If one fails, the CORE changed.
+  bus             the configuration bus (hits_config_tb.v):
                   hits loaded through the bus against a hits_core built with the same
                   configuration, compared word by word and cycle by cycle.
 
@@ -39,17 +39,19 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VERIF = os.path.join(ROOT, "verification")
+GOLDENS = os.path.join(VERIF, "goldens")
+TESTBENCHES = os.path.join(VERIF, "testbenches")
 
-# the two projects: folder (the simulation cwd), testbench, top, VCD it
-# writes ($dumpfile is hardcoded in each tb) and what gets compiled
+# the two testbenches, both in verification/testbenches/: folder (the simulation cwd),
+# testbench, top, VCD it writes ($dumpfile is hardcoded in each tb) and what gets compiled
 PROJECTS = {
-    "core": (os.path.join(ROOT, "projects", "hits", "aurora"),
+    "core": (TESTBENCHES,
                   "hits_tb.v", "hits_tb", "hits_tb.vcd",
                   ("rtl/*.v", "rtl/hits/*.v", "rtl/components/*/*.v")),
     # the configuration bus: a self-checking testbench that loads through the bus of hits
     # what a hits_core next to it gets as constants, and compares both
-    "bus": (os.path.join(ROOT, "projects", "hits_bus", "aurora"),
-            "hits_bus_tb.v", "hits_bus_tb", "hits_bus_tb.vcd",
+    "bus": (TESTBENCHES,
+            "hits_config_tb.v", "hits_config_tb", "hits_config_tb.vcd",
             ("rtl/*.v", "rtl/hits/*.v", "rtl/components/*/*.v")),
 }
 
@@ -103,11 +105,11 @@ BUILDS = {
                       "hits_tb_golden_jitter_csa_cr4rc.vcd"),
     # the configuration bus: memories loaded and scalars set through the bus equal to a
     # hits built with them (2026-10-21); with the jitter on the CSA shaper
-    "bus":           ("bus", [], "hits_bus_tb_golden.vcd"),
+    "bus":           ("bus", [], "hits_config_tb_golden.vcd"),
     # the fixed phase by one loaded set of coefficients (2026-10-21), F34 and CSA
-    "bus_phase":     ("bus", ["TB_PHASE"], "hits_bus_tb_golden_phase.vcd"),
-    "bus_phase_csa": ("bus", ["TB_PHASE", "USE_SHAPER_CSA_CR4RC"], "hits_bus_tb_golden_phase_csa.vcd"),
-    "bus_jitter":    ("bus", ["TB_JITTER", "USE_SHAPER_CSA_CR4RC"], "hits_bus_tb_golden_jitter.vcd"),
+    "bus_phase":     ("bus", ["TB_PHASE"], "hits_config_tb_golden_phase.vcd"),
+    "bus_phase_csa": ("bus", ["TB_PHASE", "USE_SHAPER_CSA_CR4RC"], "hits_config_tb_golden_phase_csa.vcd"),
+    "bus_jitter":    ("bus", ["TB_JITTER", "USE_SHAPER_CSA_CR4RC"], "hits_config_tb_golden_jitter.vcd"),
 }
 
 # Goldens that must NEVER change: sha256 of the file with LF line endings.
@@ -141,7 +143,7 @@ VVP_ATTEMPTS = 3          # the run plus two retries
 def check_frozen():
     import hashlib
     for name, h in FROZEN.items():
-        with open(os.path.join(VERIF, name), "rb") as f:
+        with open(os.path.join(GOLDENS, name), "rb") as f:
             # line endings normalized: a Windows checkout (autocrlf) gives CRLF,
             # the CI (Linux) gives LF, and the golden is the same
             if hashlib.sha256(f.read().replace(b"\r\n", b"\n")).hexdigest() != h:
@@ -225,7 +227,7 @@ def run(project, defines, golden):
         return error, retries
     VCD, _ = artifacts(project)
     r = subprocess.run([sys.executable, os.path.join(VERIF, "compare_vcd.py"),
-                        VCD, os.path.join(VERIF, golden)],
+                        VCD, os.path.join(GOLDENS, golden)],
                        capture_output=True, text=True)
     clean(project)
     if r.returncode != 0:
@@ -236,7 +238,7 @@ def run(project, defines, golden):
 def create(names):
     for name in names:
         project, defines, golden = BUILDS[name]
-        target = os.path.join(VERIF, golden)
+        target = os.path.join(GOLDENS, golden)
         if os.path.exists(target):
             sys.exit("regress: %s exists; an existing golden changes only by hand, "
                      "in review" % golden)

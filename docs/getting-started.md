@@ -25,7 +25,7 @@ that reads it.
 
 ## A first simulation
 
-In AURORA, open `projects/hits/aurora/hits.spf` and press the
+In AURORA, open `projects/aurora/hits.spf` and press the
 wave button. AURORA compiles HITS with its testbench, runs it and opens the
 waveform.
 

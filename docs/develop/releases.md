@@ -31,7 +31,9 @@ system image of the board with the ARM processor.
 
 ## What a release contains
 
-- `hits-rtl-<version>.zip`: `rtl/`, `projects/hits/` (the examples),
+- `hits-rtl-<version>.zip`: `rtl/`, the examples (`projects/aurora/`,
+  `projects/de10_nano/`, `projects/zybo/` and the testbench
+  `verification/testbenches/hits_tb.v`),
   `VERSION`, `LICENSE` and `README.md`;
 - `hits-docs-<version>.zip`: this manual in HTML, for reading offline;
 - the manual published at `nipscern.com/library/hits`.

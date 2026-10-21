@@ -12,7 +12,7 @@
 # error before it leaves the machine.
 # Skipping it (git commit --no-verify) is possible, and the CI will still run.
 
-if ! git diff --cached --name-only | grep -qE '^(rtl|projects/hits/aurora|projects/hits_bus/aurora|verification)/'; then
+if ! git diff --cached --name-only | grep -qE '^(rtl|projects/aurora|verification)/'; then
     exit 0
 fi
 

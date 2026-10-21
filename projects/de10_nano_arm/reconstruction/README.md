@@ -3,7 +3,7 @@
 **Nothing in this folder is part of the HITS simulator.** The simulator is
 `rtl/` and ends at the digitized ADC sample `shaper_clip`. These are the
 energy-reconstruction techniques that the board with the ARM
-(`projects/hits_reco/quartus/`) builds after the simulator, plus the wrapper
+(`projects/de10_nano_arm/`) builds after the simulator, plus the wrapper
 that joins the two. They live inside the board project because that project is
 their only user; until 2026-10-21 they were `reconstruction/` at the root of the
 repository.

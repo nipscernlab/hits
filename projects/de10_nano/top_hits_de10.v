@@ -5,7 +5,7 @@
 // The configuration is FIXED here (no ARM): the bus of hits is left idle, so the
 // values at power-up stay. The 16-bit occupancy is
 // 65530/65536 (127 in the top 7 bits and 506 in the low 9, the deposit
-// probability of the Lorenzetti spectrum) and the pedestal 146 ADC, the values of projects/hits/aurora/hits_tb.v with
+// probability of the Lorenzetti spectrum) and the pedestal 146 ADC, the values of verification/testbenches/hits_tb.v with
 // USE_ENERGY_LORENZETTI. With the macros of hits_de10.qsf
 // (USE_SHAPER_CSA_CR4RC + USE_ENERGY_LORENZETTI) this is the paper_r1 build,
 // and the samples after the reset must equal the paper_r1 golden bit for bit.
@@ -23,7 +23,7 @@ module top_hits_de10 (
     input  wire       KEY0,
     output wire [3:0] LED
 );
-    localparam RTL = "../../../rtl";
+    localparam RTL = "../../rtl";
 
     wire clk40, locked;
     pll_40mhz_de10 u_pll (.refclk(FPGA_CLK1_50), .outclk_0(clk40), .locked(locked));

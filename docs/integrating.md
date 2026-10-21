@@ -42,7 +42,7 @@ Table 2 gives the Fmax of each build.
 and filter, so a run that starts after a reset repeats exactly. Release it in
 step with the clock: a reset released close to a clock edge can leave part of
 the core out of reset one cycle before the rest. The DE10-Nano example
-(`projects/hits/quartus/top_hits_de10.v`) shows a reset released
+(`projects/de10_nano/top_hits_de10.v`) shows a reset released
 synchronously.
 
 ## Latency
@@ -64,7 +64,7 @@ of `hits` name the files by their bare name, such as
   run from its own folder.
 - Quartus reads a relative name from the project folder and from the folders
   listed as `SEARCH_PATH` in the `.qsf`. The DE10-Nano example instead passes
-  every file name with `../../../rtl` in front, relative to its project folder.
+  every file name with `../../rtl` in front, relative to its project folder.
 - Vivado reads them from the folder it runs in; the Vivado example copies them
   there.
 

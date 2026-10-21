@@ -1,0 +1,52 @@
+# The HITS simulator alone on the DE10-Nano (no HPS, no reconstruction).
+# With the two macros below it is the paper_r1 build (the revised paper).
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY top_hits_de10
+set_global_assignment -name SDC_FILE hits_de10.sdc
+set_global_assignment -name VERILOG_FILE top_hits_de10.v
+set_global_assignment -name VERILOG_FILE pll_40mhz_de10.v
+set_global_assignment -name VERILOG_FILE ../../rtl/hits.v
+set_global_assignment -name VERILOG_FILE ../../rtl/hits/hits_core.v
+set_global_assignment -name VERILOG_FILE ../../rtl/hits/hits_cfg.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/adc/adc.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/energy/energy_generator.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/energy/energy_icdf.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/energy/energy_seg.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/hit_generation/bunch_train_mask.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/hit_generation/hit_draw.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/hit_generation/hit_generator.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/noise/noise_gauss.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/noise/noise_generator.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/noise/noise_icdf.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/random/lfsr42.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/random/rng.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/random/rng_leap.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/random/rng_round_robin.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/random/rng_xoshiro.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/iir_order1.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/iir_order2.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_csa_cr4rc.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_csa_cr4rc_phase.v
+set_global_assignment -name MIF_FILE ../../rtl/components/shaper/shaper_csa_cr4rc_phase.mif
+set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_fenics.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_fenics_f34.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_fenics_f34_phase.v
+set_global_assignment -name MIF_FILE ../../rtl/components/shaper/shaper_fenics_f34_phase.mif
+set_global_assignment -name VERILOG_MACRO "USE_SHAPER_CSA_CR4RC=1"
+set_global_assignment -name VERILOG_MACRO "USE_ENERGY_LORENZETTI=1"
+# pins (DE10-Nano User Manual, Terasic): 50 MHz clock, KEY0, LED0-LED3
+set_location_assignment PIN_V11 -to FPGA_CLK1_50
+set_location_assignment PIN_AH17 -to KEY0
+set_location_assignment PIN_W15 -to LED[0]
+set_location_assignment PIN_AA24 -to LED[1]
+set_location_assignment PIN_V16 -to LED[2]
+set_location_assignment PIN_V15 -to LED[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to FPGA_CLK1_50
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to KEY0
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED[3]
+
+set_global_assignment -name LAST_QUARTUS_VERSION "24.1std.0 Lite Edition"

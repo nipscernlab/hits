@@ -2,8 +2,9 @@
 # checks the version, the regression and the manual, and only then builds the two
 # archives, creates the release and publishes the manual (docs/develop/releases.md).
 #
-#   hits-rtl-<version>.zip   rtl/, projects/hits/ (the examples), VERSION,
-#                            LICENSE, README.md
+#   hits-rtl-<version>.zip   rtl/, the examples (projects/aurora/, projects/de10_nano/,
+#                            projects/zybo/ and the testbench verification/testbenches/hits_tb.v),
+#                            VERSION, LICENSE, README.md
 #   hits-docs-<version>.zip  the manual in HTML
 #
 # The manual goes to GitHub Pages, which nipscern.com/library/hits serves. Pages must be
@@ -42,9 +43,9 @@ jobs:
           cd docs/_build && zip -qr "../../hits-docs-${GITHUB_REF_NAME#v}.zip" html
       - name: Package the RTL and the examples
         run: |
-          zip -qr "hits-rtl-${GITHUB_REF_NAME#v}.zip" rtl projects/hits VERSION LICENSE README.md \
-              -x 'projects/hits/quartus/db/*' 'projects/hits/quartus/incremental_db/*' \
-                 'projects/hits/quartus/output_files/*' '*.vcd' '*.vvp'
+          zip -qr "hits-rtl-${GITHUB_REF_NAME#v}.zip" rtl projects/aurora projects/de10_nano projects/zybo verification/testbenches/hits_tb.v VERSION LICENSE README.md \
+              -x 'projects/de10_nano/db/*' 'projects/de10_nano/incremental_db/*' \
+                 'projects/de10_nano/output_files/*' '*.vcd' '*.vvp'
       - name: Upload the site for Pages
         uses: actions/upload-pages-artifact@v3
         with:

@@ -290,7 +290,7 @@ assign LED[0] = led_level;
 	// lands between edges never shows a mix of old and new bits. The values are
 	// quasi-static (set once per run), so the only cost is a few cycles of delay.
 	// The reset button is asserted at once and released in step with clk_40, as
-	// in projects/hits/quartus.
+	// in projects/de10_nano.
 	reg [19:0] cfg_s1 = 20'd0, cfg_s2 = 20'd0, cfg_s3 = 20'd0, cfg_q = 20'd0;
 	always @(posedge clk_40) begin
 		cfg_s1 <= bridge_lw_32bits[19:0];

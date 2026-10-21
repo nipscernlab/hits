@@ -25,7 +25,7 @@ every bit at 1, the configuration a `hits_core` next to it gets as constants,
 checks every memory word and register, and compares the outputs of the two on
 every cycle; any difference prints an error. Table 1 lists the builds.
 
-Table 1: the builds of the regression and their goldens (in `verification/`).
+Table 1: the builds of the regression and their goldens (in `verification/goldens/`).
 
 | Build | Group | Macros | Golden |
 |---|---|---|---|
@@ -45,10 +45,10 @@ Table 1: the builds of the regression and their goldens (in `verification/`).
 | `sim_jitter` | core | `USE_PHASE_SIGMA_PS=1000` | `hits_tb_golden_jitter.vcd` |
 | `sim_phase_csa_cr4rc` | core | `USE_SHAPER_CSA_CR4RC USE_PHASE0=8` | `hits_tb_golden_phase_csa_cr4rc.vcd` |
 | `sim_jitter_csa_cr4rc` | core | `USE_SHAPER_CSA_CR4RC USE_PHASE_SIGMA_PS=1000` | `hits_tb_golden_jitter_csa_cr4rc.vcd` |
-| `bus` | bus | none (F34) | `hits_bus_tb_golden.vcd` |
-| `bus_phase` | bus | `TB_PHASE` (fixed phase +8, F34) | `hits_bus_tb_golden_phase.vcd` |
-| `bus_phase_csa` | bus | `TB_PHASE USE_SHAPER_CSA_CR4RC` | `hits_bus_tb_golden_phase_csa.vcd` |
-| `bus_jitter` | bus | `TB_JITTER USE_SHAPER_CSA_CR4RC` | `hits_bus_tb_golden_jitter.vcd` |
+| `bus` | bus | none (F34) | `hits_config_tb_golden.vcd` |
+| `bus_phase` | bus | `TB_PHASE` (fixed phase +8, F34) | `hits_config_tb_golden_phase.vcd` |
+| `bus_phase_csa` | bus | `TB_PHASE USE_SHAPER_CSA_CR4RC` | `hits_config_tb_golden_phase_csa.vcd` |
+| `bus_jitter` | bus | `TB_JITTER USE_SHAPER_CSA_CR4RC` | `hits_config_tb_golden_jitter.vcd` |
 
 The comparison ignores only what is not behavior: the `$date` and `$version`
 blocks, the `RTL_DIR` path of the testbench, and the order of value changes
@@ -62,7 +62,7 @@ about the paper, not a fix.
 
 - Before each commit, on your machine, once the hook is enabled
   (`git config core.hooksPath .githooks`). A commit that touches `rtl/`,
-  the AURORA projects or `verification/` runs the regression
+  `projects/aurora/` or `verification/` runs the regression
   first and is refused if it fails. It tests the working tree.
 - On every push to `main` and every pull request, in CI
   (`.github/workflows/regression.yml`, check `regression`).

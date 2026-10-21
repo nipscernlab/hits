@@ -1,4 +1,4 @@
-// hits_bus_tb.v -- testbench of the configuration bus (rtl/hits.v, rtl/hits/hits_cfg.v).
+// hits_config_tb.v -- testbench of the configuration bus (rtl/hits.v, rtl/hits/hits_cfg.v).
 //
 // Two simulators run side by side, released from reset on the same edge:
 //   ref  hits_core with its configuration inputs tied to constants, built with a configuration of its own: the mask testdata/mask_3000.mif and an
@@ -13,14 +13,14 @@
 // that a scalar takes effect on the next cycle. At the end it reads ID, CAPS and STATUS.
 //
 // The .mif files are loaded through RTL_DIR and testdata/, RELATIVE to this folder: run
-// with cwd = projects/hits_bus/aurora. Builds of the regression: bus (F34), bus_phase (F34,
+// with cwd = verification/testbenches. Builds of the regression: bus (F34), bus_phase (F34,
 // TB_PHASE), bus_phase_csa and bus_jitter (-DUSE_SHAPER_CSA_CR4RC with TB_PHASE, TB_JITTER).
 
 `timescale 1ns/100ps
 
-module hits_bus_tb;
+module hits_config_tb;
 
-    localparam RTL_DIR = "../../../rtl";
+    localparam RTL_DIR = "../../rtl";
     localparam N_RUN = 2 * 3000 + 400;          // cycles compared: two short orbits
 
     reg clk = 1'b0;
@@ -174,8 +174,8 @@ module hits_bus_tb;
     integer n, k;
     reg [15:0] v;
     initial begin
-        $dumpfile("hits_bus_tb.vcd");
-        $dumpvars(1, hits_bus_tb);
+        $dumpfile("hits_config_tb.vcd");
+        $dumpvars(1, hits_config_tb);
 
         repeat (4) @(posedge clk);
         rst <= 1'b0;
