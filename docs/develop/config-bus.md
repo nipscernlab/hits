@@ -19,14 +19,29 @@ with less hardware wins.
 
 ## Three layers
 
-1. The register core, beside `hits`, with the generic interface below. It holds
-   the scalars, runs and stops the simulation, and writes the vectors into the
-   memories of `hits`.
+1. The register core, with the generic interface below. It holds the scalars,
+   runs and stops the simulation, and writes the vectors into the memories of
+   the simulator.
 2. The protocol, the subject of this page: the register map and the rules for
    using it.
 3. One adapter per kind of controller, outside the core: the ports of SAPHO,
    Avalon-MM for the ARM processor of the DE10-Nano, AXI4-Lite for Zynq. The
    core is the same for all of them.
+
+## Three modules
+
+The simulator itself is `hits_core`: the circuit of `hits`, with what the bus
+can change taken out of the parameters and into inputs (the hit options, the
+length of the orbit, the phase of the jitter, and a write port into the
+memories). Two modules use it:
+
+- `hits` ties those inputs to its parameters. Its interface, its parameters
+  and the circuit it builds are the ones of before, for a board with no
+  processor or many channels in one chip.
+- `hits_bus` drives them from the register core and has the interface below.
+
+Which of the two is the recommended top is decided once the cost of the bus is
+measured.
 
 ## The interface
 
@@ -72,7 +87,10 @@ The register `CONTROL` has one bit, `RUN`.
 - At power-up `RUN` is 1: with no controller, `hits` runs with the contents and
   parameters given at synthesis, as it does today.
 - The scalars take effect on the next cycle, running or stopped. Each one fits in
-  one word, so a write is atomic and there is no shadow copy.
+  one word, so a write is atomic and there is no shadow copy. The exception is
+  `ORBIT_LEN`, written only while `RUN` is 0: changing it while running could
+  leave the position past the new end, and checking for that would cost a
+  comparator.
 - The vectors are written only while `RUN` is 0. This is a rule of the protocol,
   with no hardware to enforce it: a vector written while running mixes old and
   new contents.
@@ -99,7 +117,7 @@ Table 2: the register map.
 | 3 | `OCCUPANCY` | write | 16 | probability of a hit per filled bunch crossing, occupancy/65536 |
 | 4 | `PEDESTAL` | write | 13 | the pedestal in ADC counts, two's complement |
 | 5 | `MODE` | write | 2 | bit 0: a hit on every filled crossing (`OCC_BYPASS`); bit 1: the bunch-train mask is used (`BUNCH_TRAIN_ACTIVE`) |
-| 6 | `ORBIT_LEN` | write | 12 | bunch crossings per orbit, up to `BUNCH_POS` |
+| 6 | `ORBIT_LEN` | write | 12 | bunch crossings per orbit, up to `BUNCH_POS`; only while stopped |
 | 7 | `PHASE0` | write | 6 | mean phase of the jitter, in steps of 1/64 of the period, two's complement |
 | 8 | `SIGMA` | write | 16 | jitter: the constant `K` of `hits.v` (below) |
 | 9 | `MEM_SEL` | write | 3 | which vector the next writes go to (Table 4) |
@@ -137,15 +155,17 @@ Table 4: the vectors.
 
 | `MEM_SEL` | Vector | Words | Bits per word | Writes per word | Exists when |
 |---|---|---|---|---|---|
-| 0 | bunch-train mask | 3564 | 1, sent 16 per write | 1 per 16 crossings (223 in all) | always |
+| 0 | bunch-train mask | 3564 | 1 (bit 0 of the write) | 1 | always |
 | 1 | energy spectrum (segmented inverse CDF) | 512 | 70 | 5 | always |
 | 2 | noise distribution (segmented inverse Gaussian) | 256 | 46 | 3 | always |
 | 3 | distribution of the jitter | 256 | 46 | 3 | jitter |
 | 4 | coefficients of the 64 phases | 64 | 192 (CSA) or 210 (F34) | 12 or 14 | jitter |
 | 5 | coefficients of one phase | 1 | 192 (CSA) or 210 (F34) | 12 or 14 | fixed phase |
 
-In the mask, bit 0 of a write is the first of its 16 crossings; the last write
-carries 12 crossings in bits 11:0.
+The mask takes one crossing per write, 3564 writes in all: the memory stays
+one bit wide, as it is today. Sixteen crossings per write would need a memory
+of 16-bit words with a multiplexer to pick the bit, or a memory with ports of
+two widths, written differently for each tool.
 
 The `.mif` files given at synthesis are the initial contents of these memories:
 what `hits` uses until a controller loads something else. Changing the σ of the
@@ -176,9 +196,9 @@ Table 5: loading a mask and setting the occupancy.
 | 1 | 2 (`CONTROL`) | 0 | stop: `hits` held in reset |
 | 2 | 9 (`MEM_SEL`) | 0 | the next words go to the bunch-train mask |
 | 3 | 10 (`MEM_ADDR`) | 0 | starting at crossing 0 |
-| 4 to 226 | 11 (`MEM_DATA`) | the mask, 16 crossings per word | 223 writes, the address moving by itself |
-| 227 | 3 (`OCCUPANCY`) | 16384 | 25% |
-| 228 | 2 (`CONTROL`) | 1 | run, from the beginning |
+| 4 to 3567 | 11 (`MEM_DATA`) | the mask, one crossing per write in bit 0 | 3564 writes, the address moving by itself |
+| 3568 | 3 (`OCCUPANCY`) | 16384 | 25% |
+| 3569 | 2 (`CONTROL`) | 1 | run, from the beginning |
 
 A controller can first read `ID` (address 0) to check that it talks to HITS,
 and `CAPS` (address 1) to learn which vectors exist.
@@ -198,8 +218,6 @@ and `CAPS` (address 1) to learn which vectors exist.
 
 - The exact bits of `ID`, `CAPS` and `STATUS`, and whether `STATUS` gets a
   counter of the words written to a vector, so a program can check a load.
-- Where the register core sits: a module beside `hits`, with `hits` getting
-  the new inputs and the write ports of its memories.
 - The assembling register against narrow write ports, by measurement.
 - The maximum orbit (`BUNCH_POS`) is not in `CAPS`; the program has to know it.
 - A controller on another clock.

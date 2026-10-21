@@ -754,6 +754,7 @@ set_global_assignment -name VERILOG_FILE ../../../rtl/hits/hit_generator.v
 set_global_assignment -name VERILOG_FILE hits_reco_soc.v
 set_global_assignment -name VERILOG_FILE ../../../reconstruction/hits_reco.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/hits.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/hits_core.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/energy/energy_icdf.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/energy/energy_generator.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/hits/bunch_train_mask.v

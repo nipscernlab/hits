@@ -39,6 +39,11 @@ module energy_seg
 (
 	input clk, rst,
 	input [31:0] rnd,                              // registered uniform word
+	// write port of the ROM (a RAM initialized from MEM_SEG), for the configuration bus;
+	// one word = the W0+W1+W2 = 70 bits of a line of the .mif. Written only in reset.
+	input wr_en,
+	input [8:0] wr_addr,
+	input [69:0] wr_data,
 	output reg [ENG_OUT_BITS-1:0] energy_out = 0
 );
 localparam W0 = 27, W1 = 21, W2 = 22;          // coefficient fields (signed)
@@ -47,6 +52,8 @@ localparam FT = 16, FC = 10, LSB_LOG = 4;      // fraction bits of t, of the coe
 
 reg [W0+W1+W2-1:0] rom [0:511];
 initial $readmemb(MEM_SEG, rom);
+always @(posedge clk)
+	if (wr_en) rom[wr_addr] <= wr_data;
 
 // ---- stage 1: leading zeros of u ------------------------------------------
 function [5:0] lzc31;                          // 0..31 (31: u = 0)

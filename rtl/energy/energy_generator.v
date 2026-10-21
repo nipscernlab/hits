@@ -25,6 +25,10 @@ module energy_generator
 )
 (
 	input clk, rst,
+	// write port of the segmented ROM (ENERGY_TYPE "seg" only), for the configuration bus
+	input seg_wr_en,
+	input [8:0] seg_wr_addr,
+	input [69:0] seg_wr_data,
 	output [ENG_OUT_BITS-1:0] energy_out
 );
 
@@ -62,6 +66,9 @@ if (ENERGY_TYPE == "seg") begin : seg
 		.clk(clk),
 		.rst(rst),
 		.rnd(w_out),
+		.wr_en(seg_wr_en),
+		.wr_addr(seg_wr_addr),
+		.wr_data(seg_wr_data),
 		.energy_out(energy_out)
 	);
 end else begin : tables

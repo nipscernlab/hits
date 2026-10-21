@@ -8,16 +8,17 @@
 // threshold {occupancy7, OCC_LSB}, so the hits are bit for bit the same). With
 // the xoshiro generator the draw is 16 bits wide. The other generators draw
 // RAND_BITS (7) bits and compare them with the top 7 bits of `occupancy`, so
-// their resolution is 1/128. OCC_BYPASS = 1 makes every filled bunch crossing a
-// hit (cells with occupancy 1), whatever `occupancy` says.
+// their resolution is 1/128. occ_bypass = 1 makes every filled bunch crossing a
+// hit (cells with occupancy 1), whatever `occupancy` says; train_active = 0 ignores
+// the bunch-train mask. Both, orbit_last and the write port of the mask are inputs
+// for the configuration bus; hits ties them to its parameters (OCC_BYPASS,
+// BUNCH_TRAIN_ACTIVE, BUNCH_POS-1, no write).
 module hit_generator
 #(
 	parameter RNG_TYPE = "xoshiro",       // rng kind, see rtl/random/rng.v
 	parameter RAND_BITS = 7,              // draw width of the round_robin and leap generators
-	parameter OCC_BYPASS = 0,             // 1: hit on every bunch crossing (occupancy 1)
 	parameter BUNCH_MEM = "bunch_train_mask.mif",
 	parameter BUNCH_POS = 3564,
-	parameter BUNCH_TRAIN_ACTIVE = 1,
 	// xoshiro state {s3, s2, s1, s0} (the other generators keep their own seeds); one channel's three generators are
 	// jumped 2^64 apart, see rtl/random/xoshiro_jump.py
 	parameter [127:0] XO_SEED = {32'd3049884771, 32'd209805534, 32'd363409739, 32'd461934351}
@@ -25,6 +26,12 @@ module hit_generator
 (
 	input clk, rst,
 	input [15:0] occupancy,
+	input occ_bypass,                     // 1: hit on every filled bunch crossing (occupancy 1)
+	input train_active,                   // 0: every bunch crossing counts as filled
+	input [$clog2(BUNCH_POS)-1:0] orbit_last,
+	input mask_wr_en,
+	input [$clog2(BUNCH_POS)-1:0] mask_wr_addr,
+	input mask_wr_data,
 	output hits_out, hits_orig, bt_mask_out
 );
 
@@ -79,7 +86,7 @@ reg hit_one = 1'b0;
 always @(posedge clk or posedge rst)
 	if (rst) hit_one <= 1'b0;
 	else     hit_one <= 1'b1;
-assign hits = OCC_BYPASS ? hit_one : hits_drawn;
+assign hits = occ_bypass ? hit_one : hits_drawn;
 
 wire bt_out;
 
@@ -91,11 +98,15 @@ bunch_train_mask
 (
 	.clk(clk),
 	.rst(rst),
+	.orbit_last(orbit_last),
+	.wr_en(mask_wr_en),
+	.wr_addr(mask_wr_addr),
+	.wr_data(mask_wr_data),
 	.out(bt_out)
 );
 
 assign hits_orig = hits;
-assign bt_mask_out = bt_out | ~BUNCH_TRAIN_ACTIVE[0];
+assign bt_mask_out = bt_out | ~train_active;
 assign hits_out = hits & bt_mask_out;
 
 endmodule

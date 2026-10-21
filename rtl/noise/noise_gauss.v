@@ -31,6 +31,11 @@ module noise_gauss
 (
 	input clk, rst,
 	input [31:0] rnd,                              // registered uniform word
+	// write port of the ROM (a RAM initialized from MEM_GAUSS), for the configuration bus;
+	// one word = the W0+W1+W2 = 46 bits of a line of the .mif. Written only in reset.
+	input wr_en,
+	input [7:0] wr_addr,
+	input [45:0] wr_data,
 	output reg signed [NOISE_OUT_BITS-1:0] noise_out = 0
 );
 
@@ -39,6 +44,8 @@ localparam FT = 16, FC = 10;                   // fraction bits of t and of the 
 
 reg [W0+W1+W2-1:0] rom [0:255];
 initial $readmemb(MEM_GAUSS, rom);
+always @(posedge clk)
+	if (wr_en) rom[wr_addr] <= wr_data;
 
 // ---- stage 1: leading zeros of u ------------------------------------------
 function [5:0] lzc31;                          // 0..31 (31: u = 0)

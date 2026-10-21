@@ -31,6 +31,11 @@
         "isTopLevel": false
       },
       {
+        "name": "hits_core.v",
+        "path": "..\\..\\..\\rtl\\hits_core.v",
+        "isTopLevel": false
+      },
+      {
         "name": "hit_generator.v",
         "path": "..\\..\\..\\rtl\\hits\\hit_generator.v",
         "isTopLevel": false

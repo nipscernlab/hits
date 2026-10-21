@@ -69,6 +69,11 @@
 
 // HITS simulator core (no PZC).
 //
+// Since 2026-10-20 the circuit lives in hits_core.v, which takes as inputs what a
+// configuration bus can change at run time; this module ties those inputs to its
+// parameters, so its interface, its parameters and the circuit it builds are the
+// ones of before. hits_bus.v drives them from the bus instead.
+//
 // The full front-end signal chain of the calorimeter readout, one sample per
 // 25 ns clock cycle: pseudo-random hit generation gated by the bunch-train
 // mask, energy amplitudes from the measured distribution, analog pulse shaping
@@ -163,243 +168,32 @@ module hits
 	output signed [NOISE_OUT_BITS-1:0] noise_out
 );
 
-wire hits_orig;   // ungated hit (before the bunch-train mask), used by event_all
+// the jitter constant hits_core multiplies by: z * SIGMA_PS / 390.625 ps = g * K_SIG / 2^20
+localparam integer K_SIG = (SIGMA_PS * 4096 + 3125) / 6250;
+localparam integer ORBIT_LAST = BUNCH_POS - 1;
 
-hit_generator
+hits_core
 #(
 	.RNG_TYPE(RNG_TYPE),
-	.RAND_BITS(RAND_BITS_HITS),
-	.OCC_BYPASS(OCC_BYPASS),
+	.RAND_BITS_HITS(RAND_BITS_HITS),
+	.XO_SEED_HIT(XO_SEED_HIT),
+	.XO_SEED_ENERGY(XO_SEED_ENERGY),
+	.XO_SEED_NOISE(XO_SEED_NOISE),
 	.BUNCH_MEM(BUNCH_MEM),
 	.BUNCH_POS(BUNCH_POS),
-	.BUNCH_TRAIN_ACTIVE(BUNCH_TRAIN_ACTIVE),
-	.XO_SEED(XO_SEED_HIT)
-) hb_train
-(
-	.clk(clk),
-	.rst(rst),
-	.occupancy(occupancy),
-	.hits_out(hits_out),
-	.hits_orig(hits_orig),
-	.bt_mask_out(bt_mask_out)
-);
-
-energy_generator
-#(
-	.RNG_TYPE(RNG_TYPE),
-	.ENERGY_TYPE(ENERGY_TYPE),
-	.MEM_SEG(MEM_SEG),
-	.RAND_BITS(RAND_BITS_ENG),
+	.RAND_BITS_ENG(RAND_BITS_ENG),
 	.ENG_OUT_BITS(ENG_OUT_BITS),
+	.CLIP_OUT_BITS(CLIP_OUT_BITS),
+	.SHAPER_OUT_BITS(SHAPER_OUT_BITS),
 	.MEM_ENG_SIZE(MEM_ENG_SIZE),
 	.MEM_ENG0(MEM_ENG0),
 	.MEM_ENG1(MEM_ENG1),
 	.MEM_ENG2(MEM_ENG2),
 	.MEM_ENG0_THRESH(MEM_ENG0_THRESH),
 	.MEM_ENG1_THRESH(MEM_ENG1_THRESH),
-	.XO_SEED(XO_SEED_ENERGY)
-)ec
-(
-	.clk(clk),
-	.rst(rst),
-	.energy_out(energy_out)
-);
-
-
-// ------------------------------------------------------------- phase of each hit ---
-// The shaper reads the phase of the hit that enters it in the same cycle. With SIGMA_PS = 0
-// the index is the constant 32 + PHASE0. With jitter, delta comes from its own xoshiro
-// word through the segmented inverse CDF of noise_gauss.v (MEM_GAUSS_PHASE, g = 4096 z):
-//   index = 32 + PHASE0 + round(z * SIGMA_PS / 390.625 ps), saturated to 0..63.
-// The draw runs every cycle and is independent of the hits, so whichever hit enters
-// takes a fresh delta.
-localparam PHASE_ON = (PHASE0 != 0) || (SIGMA_PS != 0);
-wire [5:0] ph_idx;
-generate
-if (PHASE0 < -32 || PHASE0 > 31) begin : erro_phase0
-	ERROR_PHASE0_must_be_in_minus32_to_31 e ();
-end
-if (SIGMA_PS < 0 || SIGMA_PS > 12500) begin : erro_sigma
-	ERROR_SIGMA_PS_must_be_in_0_to_12500 e ();
-end
-if (SIGMA_PS != 0) begin : jitter
-	wire [31:0] w_ph;
-	rng
-	#(
-		.RNG_TYPE("xoshiro"),          // the draw is xoshiro whatever RNG_TYPE says
-		.RAND_OUT_SIZE(32),
-		.SEED0({10'd0, XO_SEED_PHASE[31:0]}),
-		.SEED1({10'd0, XO_SEED_PHASE[63:32]}),
-		.SEED2({10'd0, XO_SEED_PHASE[95:64]}),
-		.SEED3({10'd0, XO_SEED_PHASE[127:96]})
-	) rng_ph
-	(
-		.clk(clk),
-		.rst(rst),
-		.rand_out(w_ph),
-		.rand_next()
-	);
-	wire signed [16:0] g_ph;
-	noise_gauss
-	#(
-		.NOISE_OUT_BITS(17),
-		.MEM_GAUSS(MEM_GAUSS_PHASE)
-	) gauss_ph
-	(
-		.clk(clk),
-		.rst(rst),
-		.rnd(w_ph),
-		.noise_out(g_ph)
-	);
-	// z * SIGMA_PS / 390.625 = g * K_SIG / 2^20 with K_SIG = SIGMA_PS * 2^20 / (4096 * 390.625)
-	localparam integer K_SIG = (SIGMA_PS * 4096 + 3125) / 6250;
-	wire signed [40:0] d_ph = g_ph * K_SIG + (41'sd1 <<< 19);
-	wire signed [20:0] d_idx = d_ph >>> 20;
-	wire signed [21:0] i_ph = 32 + PHASE0 + d_idx;
-	reg [5:0] idx = 32 + PHASE0;
-	always @(posedge clk or posedge rst)
-		if (rst) idx <= 32 + PHASE0;
-		else idx <= (i_ph < 0) ? 6'd0 : (i_ph > 63) ? 6'd63 : i_ph[5:0];
-	assign ph_idx = idx;
-end else begin : fixed
-	assign ph_idx = 32 + PHASE0;
-end
-endgenerate
-
-// Two shapers at once is a mistake, not a choice: stop the compilation
-// with a module name that says so.
-`ifdef USE_SHAPER_CSA_CR4RC
-  `ifdef USE_SHAPER_LEGACY
-	ERROR_two_shapers_USE_SHAPER_CSA_CR4RC_and_USE_SHAPER_LEGACY_pick_one e_sh0 ();
-  `endif
-  `ifdef USE_SHAPER_F34
-	ERROR_two_shapers_USE_SHAPER_CSA_CR4RC_and_USE_SHAPER_F34_pick_one e_sh1 ();
-  `endif
-`endif
-`ifdef USE_SHAPER_LEGACY
-  `ifdef USE_SHAPER_F34
-	ERROR_two_shapers_USE_SHAPER_LEGACY_and_USE_SHAPER_F34_pick_one e_sh2 ();
-  `endif
-`endif
-
-`ifdef USE_SHAPER_CSA_CR4RC
-// CSA + CR-4RC shaper: the generic "paper simulator" pulse -- the exact
-// readout chain of the group's papers (bi-exponential detector pulse, CSA
-// with a 51 ns feedback pole, unbuffered CR-4RC with a 500 us CR and four
-// 5 ns RC stages). Peak = 1 (at scale 2**G_OUT_LOG) on sample 2; 1 cycle of
-// latency; needs a reset.
-generate
-if (PHASE_ON) begin : g_phase
-`ifdef USE_SHAPER_NO_PIPE
-	ERROR_the_phase_needs_the_pipelined_CSA_drop_USE_SHAPER_NO_PIPE e_ph ();
-`endif
-	shaper_csa_cr4rc_phase
-	#(
-		.BITS_IN(ENG_OUT_BITS),
-		.G_OUT_LOG(10),
-		.PIPE_IN(1),
-		.MEM_PH(MEM_PH_CSA)
-	)sf
-	(
-		.clock(clk),
-		.rst(rst),
-		.in(event_bt),
-		.phase(ph_idx),
-		.out(shaper_out)
-	);
-end else begin : g_base
-	shaper_csa_cr4rc
-	#(
-		.BITS_IN(ENG_OUT_BITS),
-		.G_OUT_LOG(10),
-`ifdef USE_SHAPER_NO_PIPE
-		.PIPE_IN(0)                // the paper build: latency 1, as until 2026-10-03
-`else
-		.PIPE_IN(1)                // pipelined: latency 5
-`endif
-	)sf
-	(
-		.clock(clk),
-		.rst(rst),
-		.in(event_bt),
-		.out(shaper_out)
-	);
-end
-endgenerate
-`elsif USE_SHAPER_LEGACY
-// Legacy shaper: the parallel IIR sections HITS was born with (the default
-// until 2026-10-01). Selected by USE_SHAPER_LEGACY. It has no phase.
-generate
-if (PHASE_ON) begin : erro_phase_legacy
-	ERROR_the_legacy_shaper_has_no_phase e_ph ();
-end
-endgenerate
-shaper_fenics
-#(
-	.BITS_IN(ENG_OUT_BITS),
-	.G_OUT_LOG(10)
-)sf
-(
-	.clock(clk),
-	.rst(rst),
-	.in(event_bt),
-	.out(shaper_out)
-);
-`else
-// F34 shaper (DEFAULT): 13-tap FIR head + 5 IIR sections (3 leaky, 2 coupled), derived
-// from a 14-pole transfer function of the FENICS front end. Zero DC gain is
-// imposed rather than fitted, so it cannot produce a baseline sag the real
-// front end does not have. Needs a reset, like the other two.
-generate
-if (PHASE_ON) begin : g_phase
-	shaper_fenics_f34_phase
-	#(
-		.BITS_IN(ENG_OUT_BITS),
-		.G_OUT_LOG(10),
-		.MEM_PH(MEM_PH_F34)
-	)sf
-	(
-		.clock(clk),
-		.rst(rst),
-		.in(event_bt),
-		.phase(ph_idx),
-		.out(shaper_out)
-	);
-end else begin : g_base
-	shaper_fenics_f34
-	#(
-		.BITS_IN(ENG_OUT_BITS),
-		.G_OUT_LOG(10)
-	)sf
-	(
-		.clock(clk),
-		.rst(rst),
-		.in(event_bt),
-		.out(shaper_out)
-	);
-end
-endgenerate
-`endif
-
-
-// event_bt/event_all are unsigned but feed the signed shaper input of the same
-// width (ENG_OUT_BITS). This is safe because the energy never reaches the top
-// bit: the three tables hold 12-bit magnitudes and energy_seg.v limits its
-// output to 2^(ENG_OUT_BITS-1) - 1 = 4095 (since 2026-10-14; it allowed 8191
-// before, which no ROM reached). Widen the shaper input if that ever changes.
-// The hit gates the energy with an AND: written as energy_out * hits_out, the
-// Quartus put each 13 x 1 product in a DSP block (2 DSPs for two ANDs).
-assign event_bt  = energy_out & {ENG_OUT_BITS{hits_out}};
-assign event_all = energy_out & {ENG_OUT_BITS{hits_orig}};
-
-wire signed [SHAPER_OUT_BITS-1:0] offset_extended = {{(SHAPER_OUT_BITS-ENG_OUT_BITS){offset[ENG_OUT_BITS-1]}},offset};
-
-noise_generator
-#(
-	.RNG_TYPE(RNG_TYPE),
-	.NOISE_TYPE(NOISE_TYPE),
-	.MEM_GAUSS(MEM_GAUSS),
-	.RAND_BITS(RAND_BITS_NOISE),
+	.ENERGY_TYPE(ENERGY_TYPE),
+	.MEM_SEG(MEM_SEG),
+	.RAND_BITS_NOISE(RAND_BITS_NOISE),
 	.NOISE_OUT_BITS(NOISE_OUT_BITS),
 	.MEM_NOISE_SIZE(MEM_NOISE_SIZE),
 	.MEM_NOISE0(MEM_NOISE0),
@@ -409,32 +203,38 @@ noise_generator
 	.MEM_NOISE_FRAC(MEM_NOISE_FRAC),
 	.MEM_NOISE0_THRESH(MEM_NOISE0_THRESH),
 	.MEM_NOISE1_THRESH(MEM_NOISE1_THRESH),
-	.XO_SEED(XO_SEED_NOISE)
-) noise_sim
+	.NOISE_TYPE(NOISE_TYPE),
+	.MEM_GAUSS(MEM_GAUSS),
+	.PHASE0(PHASE0),
+	.SIGMA_PS(SIGMA_PS),
+	.XO_SEED_PHASE(XO_SEED_PHASE),
+	.MEM_GAUSS_PHASE(MEM_GAUSS_PHASE),
+	.MEM_PH_F34(MEM_PH_F34),
+	.MEM_PH_CSA(MEM_PH_CSA)
+) core
 (
 	.clk(clk),
 	.rst(rst),
+	.occupancy(occupancy),
+	.offset(offset),
+	.occ_bypass(OCC_BYPASS != 0),
+	.train_active(BUNCH_TRAIN_ACTIVE != 0),
+	.orbit_last(ORBIT_LAST[$clog2(BUNCH_POS)-1:0]),
+	.phase0(PHASE0[5:0]),
+	.sigma_k(K_SIG[15:0]),
+	.mem_we(1'b0),
+	.mem_sel(3'd0),
+	.mem_addr(12'd0),
+	.mem_wdata(70'd0),
+	.hits_out(hits_out),
+	.bt_mask_out(bt_mask_out),
+	.energy_out(energy_out),
+	.event_bt(event_bt),
+	.event_all(event_all),
+	.shaper_out(shaper_out),
+	.shaper_corrupted(shaper_corrupted),
+	.shaper_clip(shaper_clip),
 	.noise_out(noise_out)
-);
-
-assign shaper_corrupted = (shaper_out + {{(SHAPER_OUT_BITS-NOISE_OUT_BITS){noise_out[NOISE_OUT_BITS-1]}},noise_out});
-
-adc
-#(
-	.BITS_IN(SHAPER_OUT_BITS),
-	.BITS_OUT(CLIP_OUT_BITS),
-`ifdef USE_ADC_FLOOR
-	.ROUND(0)
-`else
-	.ROUND(1)
-`endif
-)clip
-(
-	.clk(clk),
-	.rst(rst),
-	.in(shaper_corrupted),
-	.offset(offset_extended),
-	.out(shaper_clip)
 );
 
 endmodule

@@ -27,6 +27,10 @@ module noise_generator
 )
 (
 	input clk, rst,
+	// write port of the Gaussian ROM (NOISE_TYPE "gauss" only), for the configuration bus
+	input gauss_wr_en,
+	input [7:0] gauss_wr_addr,
+	input [45:0] gauss_wr_data,
 	output signed [NOISE_OUT_BITS-1:0] noise_out
 );
 
@@ -65,6 +69,9 @@ if (NOISE_TYPE == "gauss") begin : gauss
 		.clk(clk),
 		.rst(rst),
 		.rnd(w_out),
+		.wr_en(gauss_wr_en),
+		.wr_addr(gauss_wr_addr),
+		.wr_data(gauss_wr_data),
 		.noise_out(noise_out)
 	);
 end else begin : tables
