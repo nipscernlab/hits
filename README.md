@@ -14,7 +14,7 @@ in ROM, electronic noise, analog pulse shaping and digitization.
 Occupancy and pedestal are configurable at runtime from the embedded ARM
 processor (HPS). It is used to validate online energy-reconstruction techniques
 without access to the experiment; those techniques are not part of the
-simulator and live in `reconstruction/`.
+simulator.
 
 Developed by [NIPS-CERN](https://nipscern.com) (Federal University of Juiz de
 Fora, Brazil).
@@ -38,8 +38,6 @@ them is `rtl/hits.v`.
              offset (pedestal, from the HPS) ---------------> adc/ (offset, round, clip 0..4095)
                                                                   |
                                                              shaper_clip  = THE SIMULATOR OUTPUT
-                                                                  |
-                                   (optional, not the simulator) reconstruction/<technique> --> pzc_out
 ```
 
 Outputs of `hits`, all on the same clock:
@@ -66,8 +64,7 @@ vvp tb.vvp                  # writes hits_tb.vcd: open it in GTKWave or Surfer
 ```
 
 Or open `projects/hits/aurora/hits.spf` in Aurora and press the wave
-button. That is the simulator alone; `projects/hits_reco/aurora/` is the simulator plus a
-reconstruction technique (see *Simulating without hardware*).
+button (see *Simulating without hardware*).
 
 **Check that nothing broke** after any change to the RTL:
 
@@ -81,8 +78,7 @@ python verification/regress.py      # exit 0 = every build bit-identical to its 
 
 Everything that changes what is built. With nothing set you get the default
 simulator: xoshiro generator, F34 shaper (the FENICS Phase-II pulse), Gaussian
-noise with sigma = 4 ADC. The reconstruction side has no default technique yet: when no
-macro is set, the wrapper in `reconstruction/` instantiates the PZC.
+noise with sigma = 4 ADC.
 
 | Choice | Options | How to choose | Default |
 |---|---|---|---|
@@ -92,7 +88,6 @@ macro is set, the wrapper in `reconstruction/` instantiates the PZC.
 | Noise | Gaussian (segmented inverse CDF), the sigma = 4 tables, the sigma = 8 tables | macro `USE_NOISE_TABLES` or `USE_NOISE_SIGMA8`; the round_robin and leap generators always use the tables | Gaussian, sigma = 4 (since 2026-10-02) |
 | ADC quantization | round to nearest, truncate | macro `USE_ADC_FLOOR` (truncate) | round (since 2026-10-03) |
 | CSA + CR-4RC pipeline | on, off | macro `USE_SHAPER_NO_PIPE` (off) | on (input register since 2026-10-03; full pipeline, latency 5, since 2026-10-14) |
-| Reconstruction technique | PZC, adaptive baseline estimator | macro `USE_BASELINE_EST` (only in `reconstruction/` builds) | none yet (no macro builds the PZC) |
 | Occupancy, pedestal | 16-bit occupancy (hit probability occupancy/65536; the round_robin and leap generators use its top 7 bits), 13-bit offset | runtime inputs `occupancy`, `offset`; on the board with the ARM, the top 7 bits from the HPS (`./change_occupancy`) | set by the testbench / HPS |
 | Occupancy bypass | `OCC_BYPASS` = 1: a hit on every filled bunch crossing | synthesis parameter of `hits` | no bypass |
 | Pulse phase (F34, CSA + CR-4RC) | fixed phase `PHASE0` (−32..31 steps of 0.390625 ns); Gaussian jitter per hit `SIGMA_PS` (ps, no cut) | synthesis parameters of `hits`; in `hits_tb.v`, `-DUSE_PHASE0=<n>` and `-DUSE_PHASE_SIGMA_PS=<ps>` | none (`PHASE0` = 0, `SIGMA_PS` = 0: the shaper of before, bit for bit; since 2026-10-17) |
@@ -119,8 +114,8 @@ knew the repo then, this is where things went:
 | `rtl/random_number_generator.v`, `rtl/select_rand.v`, `rtl/rand_LFSR.v` | `rtl/random/rng_round_robin.v` + `lfsr42.v`, chosen through `rtl/random/rng.v` |
 | `rtl/filtros/` | `rtl/shaper/` |
 | `rtl/clip_shaper.v` | `rtl/adc/adc.v` |
-| `rtl_test/` | `reconstruction/pzc/`, `reconstruction/baseline_estimator/` and the wrapper `reconstruction/hits_reco.v` |
-| `projects/aurora/` (simulator + PZC) | `projects/hits_reco/aurora/`; the simulator alone is `projects/hits/aurora/` |
+| `rtl_test/` | `projects/hits_reco/quartus/reconstruction/` (PZC, baseline estimator and the wrapper `hits_reco.v`) |
+| `projects/aurora/` (simulator + PZC) | removed on 2026-10-21 (tag `last-with-reconstruction`); the simulator alone is `projects/hits/aurora/` |
 | `projects/quartus/` (board with the ARM) | `projects/hits_reco/quartus/`; the simulator alone on the board is `projects/hits/quartus/` |
 | comparing VCDs by hand | `python verification/regress.py`, also run by CI and by the pre-commit hook |
 
@@ -195,16 +190,12 @@ rtl/energy/           Energy amplitude (segmented inverse CDF; the 3 tables rema
 rtl/shaper/           Pulse shapers: three shapes, selectable at synthesis time (see below)
 rtl/noise/            Electronic noise (Gaussian by segmented inverse CDF, or 3 inverse-CDF tables)
 rtl/adc/              Pedestal, quantization and saturation: the simulator output
-reconstruction/         Reconstruction techniques under test and the core+technique wrapper (not the simulator)
-reconstruction/pzc/                 Pole-zero cancellation + pedestal tracking
-reconstruction/baseline_estimator/  Adaptive baseline estimator (+ its recip.mem ROM)
 projects/hits/          The simulator alone, up to the ADC (what the paper describes)
 projects/hits/aurora/   Aurora project (simulation)
 projects/hits/quartus/  Quartus project for the DE10-Nano: no HPS, no Qsys, occupancy and pedestal fixed in the top
 projects/hits/vivado/   Vivado example: hits_vivado.tcl synthesizes the core out of context for any part (default xc7z010clg400-1)
-projects/hits_reco/          Simulator + reconstruction technique
-projects/hits_reco/aurora/   Aurora project (simulation); choices.v picks the technique and the shaper
-projects/hits_reco/quartus/  Quartus project for the DE10-Nano SoC (FPGA + ARM/HPS, Qsys, SignalTap)
+projects/hits_reco/quartus/  Quartus project for the DE10-Nano SoC (FPGA + ARM/HPS, Qsys, SignalTap): simulator + reconstruction technique
+projects/hits_reco/quartus/reconstruction/  Reconstruction techniques built by this board (PZC, baseline estimator) and the wrapper hits_reco.v
 projects/hits_reco/quartus/software/change_occupancy/  ARM program that sets occupancy and pedestal (main.c, Makefile, prebuilt binary)
 projects/hits_reco/quartus/tools/  MATLAB script that plots a SignalTap capture (output_files/stp1.csv)
 verification/         Regression baseline: golden VCD + comparison script
@@ -323,28 +314,18 @@ against it; rerun it after regenerating a base shaper. Cost on the DE10-Nano
 84.7 MHz. CSA + CR-4RC with jitter 1186 ALMs, 30 DSP, 14 M10K, 71.7 MHz; without
 phase 883 ALMs, 23 DSP, 7 M10K, 83.5 MHz.
 
-### Reconstruction techniques (`reconstruction/`)
+### Reconstruction techniques (board with the ARM only)
 
-The reconstruction techniques are **not part of the simulator**: they are
-downstream stages validated with the synthesized pulse train, one subfolder
-each. Today there are two, `pzc/` (pole-zero cancellation, `pzc_ped_track.v`)
-and `baseline_estimator/` (adaptive baseline estimator, selected by the
-`USE_BASELINE_EST` macro). There is no default technique yet; with no macro the
-wrapper builds the PZC. The `reconstruction/hits_reco.v` wrapper
-composes the core with the technique under test. How to add a new technique:
-[`reconstruction/README.md`](reconstruction/README.md).
-
-The two techniques drive the same `pzc_out` port, but **not on the same
-scale**: the PZC output carries a gain of (M+1) = 455, while the estimator
-outputs plain ADC counts. ⚠️ The estimator's anchor parameters are calibrated
-for the F34 shaper only (the simulator default): combining it with another
-shaper compiles but is silently mis-anchored (see the SHAPER COMBINATIONS
-warning in the wrapper header). Its golden is `est` in the table of
-*Regression check*.
+The reconstruction techniques are **not part of the simulator**. The board with
+the ARM builds one after the simulator: they live in
+`projects/hits_reco/quartus/reconstruction/` (PZC and adaptive baseline
+estimator, joined to the core by the wrapper `hits_reco.v`), and the regression
+no longer simulates them. Their testbench and goldens are at the tag
+`last-with-reconstruction`; see
+[`projects/hits_reco/quartus/reconstruction/README.md`](projects/hits_reco/quartus/reconstruction/README.md).
 
 Top-level modules: `rtl/hits.v` (the simulator core, no
-reconstruction), `reconstruction/hits_reco.v` (core plus the technique
-under test, the top used in simulation and on the board), and
+reconstruction) and
 `projects/hits_reco/quartus/de10_nano_soc_ghrd.v` (board top, entity `DE10_NANO_SoC_GHRD`:
 connected to the HPS via Qsys, it takes `occupancy` and `offset` from bits [6:0]
 and [19:7] of the HPS-to-FPGA register).
@@ -352,11 +333,11 @@ and [19:7] of the HPS-to-FPGA register).
 ## Simulating without hardware
 
 The simulator core is plain Verilog (no ARM/PLL/Qsys) and runs in open-source
-simulators. The testbench (`projects/hits_reco/aurora/hits_reco_tb.v`) drives 3 full
+simulators. The testbench (`projects/hits/aurora/hits_tb.v`) drives 3 full
 orbits (3 × 3564 bunch crossings) with an occupancy step 25 → 80 halfway through.
 
 All paths are relative, so the project works from any clone location. The one
-requirement is that the simulation runs with cwd = `projects/hits_reco/aurora/`, because
+requirement is that the simulation runs with cwd = `projects/hits/aurora/`, because
 the `.mif` memories are loaded via the relative `RTL_DIR` of the testbench.
 
 ### Two Aurora projects
@@ -364,25 +345,15 @@ the `.mif` memories are loaded via the relative `RTL_DIR` of the testbench.
 | Project | Testbench | What runs | Compiles |
 |---|---|---|---|
 | `projects/hits/aurora/hits.spf` | `hits_tb.v` | the simulator ALONE, up to the ADC quantization (`shaper_clip`) | `rtl/` only |
-| `projects/hits_reco/aurora/hits_reco.spf` | `hits_reco_tb.v` | simulator + the reconstruction technique under test | `rtl/` + `reconstruction/` |
 
 With [Aurora](https://nipscern.com): open the `.spf` and press the wave button
 (Icarus Verilog, then GTKWave or Surfer, chosen in the toolbar). Requires an
 Aurora build from 2026-07-17 or newer (older builds ran the simulation from
 Aurora's temp dir and cannot resolve the relative paths).
 
-**Shaper** (both projects): the `` `define `` lines at the top of
-`rtl/hits.v`, see *Selecting the shaper*.
-
-**Technique** (`projects/hits_reco/aurora/` only): `projects/hits_reco/aurora/choices.v` is the
-menu, `USE_BASELINE_EST` or (no line) the PZC; it can also pick the shaper for
-that project. It is a file of its own, the first entry of the `.spf`, because
-Icarus applies a `` `define `` only to the files compiled after it and Aurora
-compiles the testbench last. Two shapers at once stop the compilation with an
-`Unknown module type: ERROR_...` that names the problem.
-
-Commit every one of these files with the choice lines commented: the
-regression passes its own macros with `-D` and refuses to run otherwise.
+**Shaper**: the `` `define `` lines at the top of `rtl/hits.v`, see *Selecting
+the shaper*. Commit it with the choice lines commented: the regression passes
+its own macros with `-D` and refuses to run otherwise.
 
 With Icarus Verilog directly (`-D` to choose):
 
@@ -390,11 +361,6 @@ With Icarus Verilog directly (`-D` to choose):
 cd projects/hits/aurora        # the simulator alone
 iverilog -s hits_tb -o tb.vvp ../../../rtl/*.v ../../../rtl/*/*.v hits_tb.v
 vvp tb.vvp                          # writes hits_tb.vcd here
-
-cd projects/hits_reco/aurora                  # simulator + technique
-iverilog -s hits_reco_tb -o tb.vvp choices.v ../../../rtl/*.v ../../../rtl/*/*.v \
-    ../../../reconstruction/*.v ../../../reconstruction/*/*.v hits_reco_tb.v
-vvp tb.vvp                          # writes hits_reco_tb.vcd here
 ```
 
 ## Regression check
@@ -406,13 +372,12 @@ bless it forever):
 
 ```sh
 python verification/regress.py            # exit 0 = every build bit-identical
-python verification/regress.py sim est    # a subset
+python verification/regress.py sim paper  # a subset
 ```
 
-The builds come in two groups, one per Aurora project, so a failure says what
-broke: if a `core` build fails, the core changed (these compile only
-`rtl/` and stop at the ADC quantization); if only `reconstruction` builds fail,
-the technique changed and the simulator is intact.
+The `core` builds compile only `rtl/` and stop at the ADC quantization: if one
+fails, the core changed. The `bus` builds test the configuration bus (see
+`docs/develop/regression.md`).
 
 | Build | Group | Macros | Golden (`verification/`) |
 |---|---|---|---|
@@ -431,14 +396,10 @@ the technique changed and the simulator is intact.
 | `sim_jitter` | core | `USE_PHASE_SIGMA_PS=1000` (sigma = 1 ns) | `hits_tb_golden_jitter.vcd` |
 | `sim_phase_csa_cr4rc` | core | `USE_SHAPER_CSA_CR4RC USE_PHASE0=8` | `hits_tb_golden_phase_csa_cr4rc.vcd` |
 | `sim_jitter_csa_cr4rc` | core | `USE_SHAPER_CSA_CR4RC USE_PHASE_SIGMA_PS=1000` | `hits_tb_golden_jitter_csa_cr4rc.vcd` |
-| `pzc` | reconstruction | (none: PZC, F34) | `hits_reco_tb_golden_pzc.vcd` |
-| `pzc_legacy` | reconstruction | `USE_SHAPER_LEGACY` | `hits_reco_tb_golden_pzc_legacy.vcd` |
-| `pzc_csa_cr4rc` | reconstruction | `USE_SHAPER_CSA_CR4RC` | `hits_reco_tb_golden_pzc_csa_cr4rc.vcd` |
-| `est` | reconstruction | `USE_BASELINE_EST` (F34) | `hits_reco_tb_golden_est.vcd` |
 
 The comparator ignores only run metadata (`$date`, `$version` and the testbench
 `RTL_DIR` path parameter). Intentional behavior changes require regenerating the
-golden VCD, by hand, in the same commit. A NEW build (a new technique) gets its
+golden VCD, by hand, in the same commit. A NEW build gets its
 golden with `python verification/regress.py --gera <build>`, which only creates
 goldens that do not exist yet.
 
@@ -446,7 +407,7 @@ goldens that do not exist yet.
 
 - **before each commit**, on your machine, if you enable the hook once per
   clone: `git config core.hooksPath .githooks`. A commit that touches `rtl/`,
-  `reconstruction/`, either Aurora project or `verification/` runs the regression
+  either Aurora project or `verification/` runs the regression
   first and is blocked if it fails. It tests the working tree.
 - **on every pull request and every push to `main`**, in CI
   (`.github/workflows/regression.yml`). Its `regression` check is required

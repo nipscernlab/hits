@@ -1,7 +1,7 @@
 # Golden regression on every pull request and every push to main.
 # The job "regression" is the status check required by the protection of main:
 # no branch gets in unless every build is bit-identical to its golden (HITS alone
-# and HITS + a reconstruction technique).
+# and the configuration bus).
 name: regression
 
 on:

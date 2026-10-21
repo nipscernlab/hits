@@ -7,7 +7,7 @@ repository:
 
 ```sh
 python verification/regress.py            # exit 0: every build identical to its golden
-python verification/regress.py sim est    # a subset
+python verification/regress.py sim paper  # a subset
 ```
 
 It needs Python 3 and Icarus Verilog (tested with Python 3.13 and Icarus Verilog
@@ -17,10 +17,8 @@ from a broken run would otherwise bless it.
 
 ## The builds
 
-The builds come in three groups. The `core` builds compile only `rtl/` and the
-testbench of the simulator alone, and stop at the ADC sample; the
-`reconstruction` builds add a reconstruction technique. When only `reconstruction`
-builds fail, the technique changed and the simulator is intact. The `bus` builds
+The builds come in two groups. The `core` builds compile only `rtl/` and the
+testbench of the simulator alone, and stop at the ADC sample. The `bus` builds
 test the configuration bus ([The configuration bus](config-bus.md)): the
 testbench loads through the bus, into a `hits_bus` whose memories start with
 every bit at 1, the configuration a `hits` next to it gets from its parameters,
@@ -47,10 +45,6 @@ Table 1: the builds of the regression and their goldens (in `verification/`).
 | `sim_jitter` | core | `USE_PHASE_SIGMA_PS=1000` | `hits_tb_golden_jitter.vcd` |
 | `sim_phase_csa_cr4rc` | core | `USE_SHAPER_CSA_CR4RC USE_PHASE0=8` | `hits_tb_golden_phase_csa_cr4rc.vcd` |
 | `sim_jitter_csa_cr4rc` | core | `USE_SHAPER_CSA_CR4RC USE_PHASE_SIGMA_PS=1000` | `hits_tb_golden_jitter_csa_cr4rc.vcd` |
-| `pzc` | reconstruction | none (PZC, F34) | `hits_reco_tb_golden_pzc.vcd` |
-| `pzc_legacy` | reconstruction | `USE_SHAPER_LEGACY` | `hits_reco_tb_golden_pzc_legacy.vcd` |
-| `pzc_csa_cr4rc` | reconstruction | `USE_SHAPER_CSA_CR4RC` | `hits_reco_tb_golden_pzc_csa_cr4rc.vcd` |
-| `est` | reconstruction | `USE_BASELINE_EST` | `hits_reco_tb_golden_est.vcd` |
 | `bus` | bus | none (F34) | `hits_bus_tb_golden.vcd` |
 | `bus_phase` | bus | `TB_PHASE` (fixed phase +8, F34) | `hits_bus_tb_golden_phase.vcd` |
 | `bus_phase_csa` | bus | `TB_PHASE USE_SHAPER_CSA_CR4RC` | `hits_bus_tb_golden_phase_csa.vcd` |
@@ -68,7 +62,7 @@ about the paper, not a fix.
 
 - Before each commit, on your machine, once the hook is enabled
   (`git config core.hooksPath .githooks`). A commit that touches `rtl/`,
-  `reconstruction/`, the AURORA projects or `verification/` runs the regression
+  the AURORA projects or `verification/` runs the regression
   first and is refused if it fails. It tests the working tree.
 - On every push to `main` and every pull request, in CI
   (`.github/workflows/regression.yml`, check `regression`).

@@ -3,7 +3,7 @@
 //
 // The DUT is hits (rtl/) and nothing else: the chain ends at the
 // ADC quantization, `shaper_clip`. No reconstruction technique is compiled or
-// instantiated here; those are tested by projects/hits_reco/aurora/ (hits_reco_tb.v).
+// instantiated here.
 // Aurora project: hits.spf in this folder, which lists only rtl/ files.
 //
 // Shaper: chosen where the simulator chooses it, the `define lines at the top

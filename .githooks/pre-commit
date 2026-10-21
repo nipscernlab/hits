@@ -1,6 +1,6 @@
 #!/bin/sh
 # pre-commit: runs the golden regression before any commit that touches the
-# RTL, the techniques, the two Aurora projects or the goldens. A failing build
+# RTL, the two Aurora projects or the goldens. A failing build
 # blocks the commit.
 #
 # Enable it once per clone (git does not do it by itself):
@@ -12,7 +12,7 @@
 # error before it leaves the machine.
 # Skipping it (git commit --no-verify) is possible, and the CI will still run.
 
-if ! git diff --cached --name-only | grep -qE '^(rtl|reconstruction|projects/hits_reco/aurora|projects/hits/aurora|verification)/'; then
+if ! git diff --cached --name-only | grep -qE '^(rtl|projects/hits/aurora|projects/hits_bus/aurora|verification)/'; then
     exit 0
 fi
 

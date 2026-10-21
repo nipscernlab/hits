@@ -3,15 +3,12 @@
 each one bit-for-bit against its frozen baseline.
 
     python verification/regress.py                  # every build
-    python verification/regress.py sim est          # a subset
+    python verification/regress.py sim paper        # a subset
     python verification/regress.py --create <build> # CREATE a missing golden
 
-Three groups of builds, so a failure says WHAT broke:
+Two groups of builds, so a failure says WHAT broke:
   core            HITS ALONE, up to the ADC quantization (projects/hits/aurora/,
                   hits_tb.v, only rtl/ is compiled). If one fails, the CORE changed.
-  reconstruction  HITS + the technique under test (projects/hits_reco/aurora/,
-                  hits_reco_tb.v, rtl/ + reconstruction/). If only these fail,
-                  the TECHNIQUE changed, not the core.
   bus             the configuration bus (projects/hits_bus/aurora/, hits_bus_tb.v):
                   hits_bus loaded through the bus against a hits built with the same
                   configuration, compared word by word and cycle by cycle.
@@ -49,10 +46,6 @@ PROJECTS = {
     "core": (os.path.join(ROOT, "projects", "hits", "aurora"),
                   "hits_tb.v", "hits_tb", "hits_tb.vcd",
                   ("rtl/*.v", "rtl/*/*.v")),
-    "reconstruction": (os.path.join(ROOT, "projects", "hits_reco", "aurora"),
-                     "hits_reco_tb.v", "hits_reco_tb", "hits_reco_tb.vcd",
-                     ("rtl/*.v", "rtl/*/*.v", "reconstruction/*.v",
-                      "reconstruction/*/*.v")),
     # the configuration bus (hits_bus): a self-checking testbench that loads through the
     # bus what a hits next to it gets from its parameters, and compares both
     "bus": (os.path.join(ROOT, "projects", "hits_bus", "aurora"),
@@ -62,8 +55,6 @@ PROJECTS = {
 
 # name: (project, macros, golden)
 # The default simulator is xoshiro + F34 shaper + segmented energy + Gaussian noise, sigma = 4 (no macro).
-# The reconstruction group has no default technique: every build names the one
-# it runs (pzc, est).
 BUILDS = {
     # HITS alone, default generator (RNG_TYPE = "xoshiro")
     "sim":           ("core", [], "hits_tb_golden.vcd"),
@@ -117,15 +108,6 @@ BUILDS = {
     "bus_phase":     ("bus", ["TB_PHASE"], "hits_bus_tb_golden_phase.vcd"),
     "bus_phase_csa": ("bus", ["TB_PHASE", "USE_SHAPER_CSA_CR4RC"], "hits_bus_tb_golden_phase_csa.vcd"),
     "bus_jitter":    ("bus", ["TB_JITTER", "USE_SHAPER_CSA_CR4RC"], "hits_bus_tb_golden_jitter.vcd"),
-    # HITS + technique; the wrapper instantiates the PZC when
-    # USE_BASELINE_EST is not set
-    "pzc":           ("reconstruction", [], "hits_reco_tb_golden_pzc.vcd"),
-    "pzc_legacy":    ("reconstruction", ["USE_SHAPER_LEGACY"],
-                      "hits_reco_tb_golden_pzc_legacy.vcd"),
-    "pzc_csa_cr4rc": ("reconstruction", ["USE_SHAPER_CSA_CR4RC"],
-                      "hits_reco_tb_golden_pzc_csa_cr4rc.vcd"),
-    "est":           ("reconstruction", ["USE_BASELINE_EST"],
-                      "hits_reco_tb_golden_est.vcd"),
 }
 
 # Goldens that must NEVER change: sha256 of the file with LF line endings.
@@ -145,8 +127,7 @@ FROZEN = {
 
 # where a choice can be left on by hand; the builds pass their own macros
 # with -D, so every one of these must be committed with the lines commented
-CHOICES = ("projects/hits_reco/aurora/choices.v", "rtl/hits.v",
-            "reconstruction/hits_reco.v")
+CHOICES = ("rtl/hits.v",)
 
 # builds run serially and every artifact is deleted before and after each one
 # (a stale tb.vvp once produced a false OK -- F15 lesson, 2026-07-21)
@@ -303,9 +284,6 @@ def main():
         if "core" in groups:
             print("THE CORE changed (rtl/): a build of HITS alone failed, "
                   "which only goes up to the ADC quantization.")
-        elif groups == {"reconstruction"}:
-            print("Only builds with a technique failed: the core is intact, "
-                  "the technique changed (reconstruction/).")
         elif groups == {"bus"}:
             print("Only builds of the configuration bus failed: the core is intact, "
                   "hits_bus, hits_cfg or their testbench changed.")

@@ -699,10 +699,10 @@ set_global_assignment -name VERILOG_FILE ../../../rtl/noise/noise_icdf.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/noise/noise_gauss.v
 set_global_assignment -name MIF_FILE ../../../rtl/noise/noise_gauss_s4.mif
 set_global_assignment -name VERILOG_FILE ../../../rtl/noise/noise_generator.v
-set_global_assignment -name VERILOG_FILE ../../../reconstruction/pzc/pzc_ped_track.v
-set_global_assignment -name VERILOG_FILE ../../../reconstruction/baseline_estimator/baseline_estimator.v
-set_global_assignment -name VERILOG_FILE ../../../reconstruction/baseline_estimator/anchor_generator.v
-set_global_assignment -name MIF_FILE ../../../reconstruction/baseline_estimator/recip.mem
+set_global_assignment -name VERILOG_FILE reconstruction/pzc/pzc_ped_track.v
+set_global_assignment -name VERILOG_FILE reconstruction/baseline_estimator/baseline_estimator.v
+set_global_assignment -name VERILOG_FILE reconstruction/baseline_estimator/anchor_generator.v
+set_global_assignment -name MIF_FILE reconstruction/baseline_estimator/recip.mem
 set_global_assignment -name MIF_FILE ../../../rtl/hits/bunch_train_mask.mif
 set_global_assignment -name MIF_FILE ../../../rtl/energy/energy_icdf_paper_2.mif
 set_global_assignment -name MIF_FILE ../../../rtl/energy/energy_icdf_paper_1.mif
@@ -752,7 +752,7 @@ set_global_assignment -name VERILOG_FILE ../../../rtl/shaper/iir_order1.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/hits/hit_draw.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/hits/hit_generator.v
 set_global_assignment -name VERILOG_FILE hits_reco_soc.v
-set_global_assignment -name VERILOG_FILE ../../../reconstruction/hits_reco.v
+set_global_assignment -name VERILOG_FILE reconstruction/hits_reco.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/hits.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/hits_core.v
 set_global_assignment -name VERILOG_FILE ../../../rtl/energy/energy_icdf.v
@@ -772,8 +772,8 @@ set_global_assignment -name SEARCH_PATH ../../../rtl/adc
 # One SEARCH_PATH per reconstruction technique (reconstruction/<technique>/).
 # The estimator's recip.mem ROM ($readmemh "recip.mem", a bare name) is
 # resolved through this path (checked with Quartus 24.1, 2026-09-25).
-set_global_assignment -name SEARCH_PATH ../../../reconstruction/pzc
-set_global_assignment -name SEARCH_PATH ../../../reconstruction/baseline_estimator
+set_global_assignment -name SEARCH_PATH reconstruction/pzc
+set_global_assignment -name SEARCH_PATH reconstruction/baseline_estimator
 set_global_assignment -name VERILOG_FILE ip/intr_capturer/intr_capturer.v
 set_global_assignment -name VERILOG_FILE ip/edge_detect/altera_edge_detector.v
 set_global_assignment -name VERILOG_FILE ip/debounce/debounce.v

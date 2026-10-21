@@ -12,7 +12,7 @@
 # IDENTICAL.
 #
 # Usage:  python compare_vcd.py <new.vcd> [golden.vcd]
-#         (golden default: hits_reco_tb_golden.vcd next to this script)
+#         (golden default: hits_tb_golden.vcd next to this script)
 # Exits with code 0 if identical, 1 if different.
 
 import sys
@@ -69,7 +69,7 @@ def main():
         print(__doc__ or "usage: python compare_vcd.py <new.vcd> [golden.vcd]")
         return 2
     new = Path(sys.argv[1])
-    golden = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(__file__).parent / "hits_reco_tb_golden.vcd"
+    golden = Path(sys.argv[2]) if len(sys.argv) > 2 else Path(__file__).parent / "hits_tb_golden.vcd"
 
     a, b = body(golden), body(new)
     if a == b:

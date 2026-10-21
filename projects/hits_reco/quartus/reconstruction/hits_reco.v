@@ -7,8 +7,7 @@
 // instead of the PZC, or define USE_BASELINE_EST externally without touching
 // this file:
 //
-//   Icarus / Verilator : iverilog -DUSE_BASELINE_EST ...
-//   Quartus            : set_global_assignment -name VERILOG_MACRO "USE_BASELINE_EST=1"
+//   Quartus : set_global_assignment -name VERILOG_MACRO "USE_BASELINE_EST=1"
 //
 // The `define line below ships commented out, so an external define always wins.
 //
@@ -26,8 +25,8 @@
 // comparing the two. Plotting them together without this makes the PZC look
 // 455x noisier, which is an artifact.
 //
-// ⚠️ Each technique has its own golden VCD in verification/ (builds pzc* and
-// est of verification/regress.py).
+// ⚠️ Since 2026-10-21 neither technique is simulated by the regression; the
+// testbench and the goldens (pzc*, est) are at tag last-with-reconstruction.
 //
 // ⚠️⚠️ SHAPER COMBINATIONS: every estimator parameter below that is marked
 // MEASURED (EST_LATENCY, EST_K_EMPTY, EST_N_ANCHORS/recip.mem, EST_IA_INIT) was
@@ -36,8 +35,8 @@
 // MIS-ANCHORED: the CSA pulse has a different latency (5 cycles vs 7) and does
 // not vanish at gap+13 (about 1.5% of the peak remains, since it decays
 // geometrically instead of ending with a FIR head), so anchors carry pulse
-// residue and bias the baseline. No error is raised anywhere, and only the
-// F34+estimator build has a golden (hits_reco_tb_golden_est.vcd).
+// residue and bias the baseline. No error is raised anywhere; the F34+estimator
+// build was the only one with a golden (hits_reco_tb_golden_est.vcd).
 // Re-calibrating for another shaper is a measurement campaign, not a
 // parameter tweak (F15 recipe): changing K_EMPTY changes the anchor count,
 // which regenerates recip.mem / EST_N_ANCHORS and re-measures EST_IA_INIT.

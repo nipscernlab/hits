@@ -21,7 +21,6 @@ c5_pin_model_dump.txt
 # --- Simulation artifacts (Aurora / Icarus Verilog) ---
 .aurora-wave/
 .aurora-missing-files.log
-projects/hits_reco/aurora/testbench/
 projects/hits/aurora/testbench/
 .aurora/
 *.vcd

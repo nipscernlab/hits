@@ -49,8 +49,6 @@ files and the release process.
   the pre-commit hook and the CI check, and how to add a build.
 - [Generated files](develop/generated-files.md): the files that are produced
   by a generator and must not be edited by hand.
-- [Reconstruction techniques](develop/reconstruction.md): the techniques under
-  test, which are not part of the simulator.
 - [The board with the ARM processor](develop/board-with-arm.md): the DE10-Nano
   project with the hard processor system.
 - [Releases](develop/releases.md): versions, what goes into a release and the
@@ -84,7 +82,6 @@ reference/parameters
 develop/repository
 develop/regression
 develop/generated-files
-develop/reconstruction
 develop/board-with-arm
 develop/releases
 develop/config-bus

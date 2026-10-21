@@ -3,9 +3,8 @@
 The repository holds two kinds of thing. The product is the simulator, `rtl/`,
 with the examples that show how to use it; that is what a release ships and what
 the first part of this manual describes. Everything else is development: the
-tools that keep the product correct, the projects for the boards of the
-laboratory, and the reconstruction techniques that use the simulator but are not
-part of it. Table 1 shows where each part lives.
+tools that keep the product correct and the projects for the boards of the
+laboratory. Table 1 shows where each part lives.
 
 Table 1: what is product and what is development.
 
@@ -18,9 +17,7 @@ Table 1: what is product and what is development.
 | `docs/`, `VERSION` | product | this manual and the version it describes |
 | `verification/` | development | the regression: golden waveforms and the scripts that compare them |
 | `.githooks/`, `.github/` | development | the pre-commit hook and the CI workflows |
-| `reconstruction/` | development | reconstruction techniques under test, see [Reconstruction techniques](reconstruction.md) |
-| `projects/hits_reco/aurora/` | development | the simulator followed by a technique, in simulation |
-| `projects/hits_reco/quartus/` | development | the DE10-Nano with the ARM processor, see [The board with the ARM processor](board-with-arm.md) |
+| `projects/hits_reco/quartus/` | development | the DE10-Nano with the ARM processor and the reconstruction techniques it builds, see [The board with the ARM processor](board-with-arm.md) |
 
 The examples are not tied to the product: the core does not depend on any board,
 and a change to an example does not change the simulator. The regression

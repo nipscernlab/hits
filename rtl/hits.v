@@ -81,8 +81,8 @@
 // ADC range). The digitized sample `shaper_clip` IS the simulator output.
 //
 // The pole-zero cancellation (PZC) is NOT part of the simulator: it is a
-// downstream reconstruction stage under test. It lives in reconstruction/pzc/ and
-// is composed with this core by the hits_reco wrapper.
+// downstream reconstruction stage. Only the board with the ARM builds it, in
+// projects/hits_reco/quartus/reconstruction/, through the hits_reco wrapper.
 module hits
 #(
 	// pseudo-random generator: "xoshiro" (xoshiro128**, default since

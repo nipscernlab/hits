@@ -8,6 +8,17 @@ while it runs. It is development, not product: it ties the simulator to one
 board, to the Platform Designer (Qsys) system of that board and to an operating
 system image.
 
+The reconstruction techniques live inside the project, in `reconstruction/`:
+`pzc/` (pole-zero cancellation with pedestal tracking, built when no macro is
+set) and `baseline_estimator/` (adaptive baseline estimator, macro
+`USE_BASELINE_EST`), joined to the simulator by the wrapper `hits_reco.v`. Both
+drive `pzc_out`, on different scales: the pole-zero cancellation carries a gain
+of 455, the estimator gives ADC counts. The estimator is calibrated for the F34
+shaper only. The wrapper does not pass `PHASE0` and `SIGMA_PS` on, so the
+simulator runs here without a phase. The techniques are not simulated by the
+regression since 2026-10-21; their testbench and goldens are at the tag
+`last-with-reconstruction` (see `reconstruction/README.md`).
+
 The top is `de10_nano_soc_ghrd.v`. It takes the occupancy and the offset from
 bits [6:0] and [19:7] of a register that the HPS writes, and brings them into
 the clock domain of the simulator through a two-flop synchronizer, accepting a value only
