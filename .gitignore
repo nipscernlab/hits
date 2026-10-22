@@ -39,7 +39,9 @@ projects/de10_nano_arm/**/stp1.csv
 # --- Simulation artifacts (Aurora / Icarus Verilog) ---
 .aurora-wave/
 .aurora-missing-files.log
-projects/aurora/testbench/
+# the Aurora project: only the .spf is versioned, whatever Aurora writes next to it
+projects/aurora/*
+!projects/aurora/hits.spf
 .aurora/
 *.vcd
 *.vvp
