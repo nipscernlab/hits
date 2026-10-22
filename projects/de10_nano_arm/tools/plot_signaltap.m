@@ -3,7 +3,7 @@ clear all
 m_fac = 454;
 
 % Name of the CSV file exported from SignalTap
-filename = '../output_files/stp1.csv'; % replace with the name of your file
+filename = '../hardware/output_files/stp1.csv'; % replace with the name of your file
 %filename = 'low_high.csv';
 %filename = 'high_low.csv';
 %filename = 'm454.csv';

@@ -8,7 +8,7 @@ while it runs. It is development, not product: it ties the simulator to one
 board, to the Platform Designer (Qsys) system of that board and to an operating
 system image.
 
-The reconstruction techniques live inside the project, in `reconstruction/`:
+The reconstruction techniques live inside the project, in `hardware/reconstruction/`:
 `pzc/` (pole-zero cancellation with pedestal tracking, built when no macro is
 set) and `baseline_estimator/` (adaptive baseline estimator, macro
 `USE_BASELINE_EST`), joined to the simulator by the wrapper `hits_reco.v`. Both
@@ -17,9 +17,10 @@ of 455, the estimator gives ADC counts. The estimator is calibrated for the F34
 shaper only. The wrapper does not pass `PHASE0` and `SIGMA_PS` on, so the
 simulator runs here without a phase. The techniques are not simulated by the
 regression since 2026-10-21; their testbench and goldens are at the tag
-`last-with-reconstruction` (see `reconstruction/README.md`).
+`last-with-reconstruction` (see `hardware/reconstruction/README.md`).
 
-The top is `de10_nano_soc_ghrd.v`. It takes the occupancy and the offset from
+The project is split in `hardware/` (the Quartus project) and `software/` (the
+ARM side). The top is `hardware/de10_nano_soc_ghrd.v`. It takes the occupancy and the offset from
 bits [6:0] and [19:7] of a register that the HPS writes, and brings them into
 the clock domain of the simulator through a two-flop synchronizer, accepting a value only
 when two consecutive samples agree. The register has room for 7 bits of
@@ -39,16 +40,16 @@ To run it:
 4. Run `./change_occupancy` and use its menu to change the occupancy or the
    pedestal. Its source, with a Makefile for the Intel SoC EDS, is in
    `software/change_occupancy/`.
-5. To watch the signals, open `DE10_NANO_SoC_GHRD.qpf` in Quartus, connect the
-   USB-Blaster II, open `stp1.stp` in Signal Tap and start the analysis.
+5. To watch the signals, open `hardware/DE10_NANO_SoC_GHRD.qpf` in Quartus, connect the
+   USB-Blaster II, open `hardware/signaltap/stp1.stp` in Signal Tap and start the analysis.
 
-The prebuilt `.sof` and `.rbf` in `output_files/` date from 2026-07-17 and
+The prebuilt `.sof` and `.rbf` in `hardware/output_files/` date from 2026-07-17 and
 predate the synchronizer; compiling the project gives the current design. Shipping
 a current bitstream with each release is
 [issue #10](https://github.com/nipscernlab/hits/issues/10).
 
 The files that Platform Designer, Quartus and the SoC EDS generate are not in git.
 Before the first compilation, generate the HPS system with
-`qsys-generate soc_system.qsys --synthesis=VERILOG`; the README of the folder,
+`qsys-generate soc_system.qsys --synthesis=VERILOG` in `hardware/`; the README of the folder,
 [`projects/de10_nano_arm/README.md`](https://github.com/nipscernlab/hits/blob/main/projects/de10_nano_arm/README.md),
 lists every generated file and how to make it.

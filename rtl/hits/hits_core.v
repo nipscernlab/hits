@@ -19,7 +19,7 @@
 //
 // The pole-zero cancellation (PZC) is NOT part of the simulator: it is a
 // downstream reconstruction stage. Only the board with the ARM builds it, in
-// projects/de10_nano_arm/reconstruction/, through the hits_reco wrapper.
+// projects/de10_nano_arm/hardware/reconstruction/, through the hits_reco wrapper.
 module hits_core
 #(
 	// pseudo-random generator: "xoshiro" (xoshiro128**, default since

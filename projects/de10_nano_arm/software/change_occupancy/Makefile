@@ -14,7 +14,7 @@
     CPPSRCS                 =
      
     # Here we add the paths to all include directories
-    INCS                    = ../..
+    INCS                    = ..
      
      
     # Compiler settings

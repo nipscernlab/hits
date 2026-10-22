@@ -473,7 +473,7 @@ set_global_assignment -name UNIPHY_SEQUENCER_DQS_CONFIG_ENABLE ON
 set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
 set_global_assignment -name ECO_REGENERATE_REPORT ON
 set_global_assignment -name ENABLE_SIGNALTAP ON
-set_global_assignment -name USE_SIGNALTAP_FILE stp1.stp
+set_global_assignment -name USE_SIGNALTAP_FILE signaltap/stp1.stp
 set_global_assignment -name SLD_NODE_CREATOR_ID 110 -section_id auto_signaltap_0
 set_global_assignment -name SLD_NODE_ENTITY_NAME sld_signaltap -section_id auto_signaltap_0
 set_instance_assignment -name CONNECT_TO_SLD_NODE_ENTITY_PORT acq_clk -to "hits_reco:sim|clk" -section_id auto_signaltap_0
@@ -688,28 +688,28 @@ set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[10] -
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[13] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[15] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[27] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
-set_global_assignment -name VERILOG_FILE ../../rtl/components/adc/adc.v
-set_global_assignment -name MIF_FILE ../../rtl/components/noise/noise_s4_icdf2.mif
-set_global_assignment -name MIF_FILE ../../rtl/components/noise/noise_s8_icdf2.mif
-set_global_assignment -name MIF_FILE ../../rtl/components/noise/noise_s4_icdf1.mif
-set_global_assignment -name MIF_FILE ../../rtl/components/noise/noise_s8_icdf1.mif
-set_global_assignment -name MIF_FILE ../../rtl/components/noise/noise_s4_icdf0.mif
-set_global_assignment -name MIF_FILE ../../rtl/components/noise/noise_s8_icdf0.mif
-set_global_assignment -name VERILOG_FILE ../../rtl/components/noise/noise_icdf.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/noise/noise_gauss.v
-set_global_assignment -name MIF_FILE ../../rtl/components/noise/noise_gauss_s4.mif
-set_global_assignment -name VERILOG_FILE ../../rtl/components/noise/noise_generator.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/adc/adc.v
+set_global_assignment -name MIF_FILE ../../../rtl/components/noise/noise_s4_icdf2.mif
+set_global_assignment -name MIF_FILE ../../../rtl/components/noise/noise_s8_icdf2.mif
+set_global_assignment -name MIF_FILE ../../../rtl/components/noise/noise_s4_icdf1.mif
+set_global_assignment -name MIF_FILE ../../../rtl/components/noise/noise_s8_icdf1.mif
+set_global_assignment -name MIF_FILE ../../../rtl/components/noise/noise_s4_icdf0.mif
+set_global_assignment -name MIF_FILE ../../../rtl/components/noise/noise_s8_icdf0.mif
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/noise/noise_icdf.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/noise/noise_gauss.v
+set_global_assignment -name MIF_FILE ../../../rtl/components/noise/noise_gauss_s4.mif
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/noise/noise_generator.v
 set_global_assignment -name VERILOG_FILE reconstruction/pzc/pzc_ped_track.v
 set_global_assignment -name VERILOG_FILE reconstruction/baseline_estimator/baseline_estimator.v
 set_global_assignment -name VERILOG_FILE reconstruction/baseline_estimator/anchor_generator.v
 set_global_assignment -name MIF_FILE reconstruction/baseline_estimator/recip.mem
-set_global_assignment -name MIF_FILE ../../rtl/components/hit_generation/bunch_train_mask.mif
-set_global_assignment -name MIF_FILE ../../rtl/components/energy/energy_icdf_paper_2.mif
-set_global_assignment -name MIF_FILE ../../rtl/components/energy/energy_icdf_paper_1.mif
-set_global_assignment -name MIF_FILE ../../rtl/components/energy/energy_icdf_paper_0.mif
-set_global_assignment -name VERILOG_FILE ../../rtl/components/energy/energy_seg.v
-set_global_assignment -name MIF_FILE ../../rtl/components/energy/energy_seg_default.mif
-set_global_assignment -name MIF_FILE ../../rtl/components/energy/energy_seg_lorenzetti.mif
+set_global_assignment -name MIF_FILE ../../../rtl/components/hit_generation/bunch_train_mask.mif
+set_global_assignment -name MIF_FILE ../../../rtl/components/energy/energy_icdf_paper_2.mif
+set_global_assignment -name MIF_FILE ../../../rtl/components/energy/energy_icdf_paper_1.mif
+set_global_assignment -name MIF_FILE ../../../rtl/components/energy/energy_icdf_paper_0.mif
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/energy/energy_seg.v
+set_global_assignment -name MIF_FILE ../../../rtl/components/energy/energy_seg_default.mif
+set_global_assignment -name MIF_FILE ../../../rtl/components/energy/energy_seg_lorenzetti.mif
 # Shaper selection: the default is F34 (the FENICS Phase-II pulse); uncomment
 # ONE line for another one. Each choice has its own golden VCD (see README).
 #set_global_assignment -name VERILOG_MACRO "USE_SHAPER_LEGACY=1"
@@ -734,38 +734,38 @@ set_global_assignment -name MIF_FILE ../../rtl/components/energy/energy_seg_lore
 # NOISE_SIGMA8, ADC_FLOOR and SHAPER_NO_PIPE macros above + RNG_TYPE = "round_robin". Same behaviour; the circuit differs
 # from the tag (tables in M10K, rotating LFSR bank), so the paper's resource
 # numbers come only from checking out the tag.
-set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_fenics_f34.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_fenics_f34_phase.v
-set_global_assignment -name MIF_FILE ../../rtl/components/shaper/shaper_fenics_f34_phase.mif
-set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_fenics.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_csa_cr4rc.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_csa_cr4rc_phase.v
-set_global_assignment -name MIF_FILE ../../rtl/components/shaper/shaper_csa_cr4rc_phase.mif
-set_global_assignment -name VERILOG_FILE ../../rtl/components/random/rng.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/random/rng_round_robin.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/random/rng_leap.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/random/rng_xoshiro.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/random/lfsr42.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/iir_order2.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/iir_order1.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/hit_generation/hit_draw.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/hit_generation/hit_generator.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/shaper/shaper_fenics_f34.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/shaper/shaper_fenics_f34_phase.v
+set_global_assignment -name MIF_FILE ../../../rtl/components/shaper/shaper_fenics_f34_phase.mif
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/shaper/shaper_fenics.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/shaper/shaper_csa_cr4rc.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/shaper/shaper_csa_cr4rc_phase.v
+set_global_assignment -name MIF_FILE ../../../rtl/components/shaper/shaper_csa_cr4rc_phase.mif
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/random/rng.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/random/rng_round_robin.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/random/rng_leap.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/random/rng_xoshiro.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/random/lfsr42.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/shaper/iir_order2.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/shaper/iir_order1.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/hit_generation/hit_draw.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/hit_generation/hit_generator.v
 set_global_assignment -name VERILOG_FILE reconstruction/hits_reco.v
-set_global_assignment -name VERILOG_FILE ../../rtl/hits/hits_core.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/energy/energy_icdf.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/energy/energy_generator.v
-set_global_assignment -name VERILOG_FILE ../../rtl/components/hit_generation/bunch_train_mask.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/hits/hits_core.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/energy/energy_icdf.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/energy/energy_generator.v
+set_global_assignment -name VERILOG_FILE ../../../rtl/components/hit_generation/bunch_train_mask.v
 set_global_assignment -name SDC_FILE DE10_NANO_SOC_GHRD.sdc
 # One SEARCH_PATH per rtl/ subfolder: the board top asks for the .mif
 # memories by bare name ("bunch_train_mask.mif", ...), and Quartus resolves
 # a bare $readmemb name through these paths.
-set_global_assignment -name SEARCH_PATH ../../rtl
-set_global_assignment -name SEARCH_PATH ../../rtl/components/random
-set_global_assignment -name SEARCH_PATH ../../rtl/components/hit_generation
-set_global_assignment -name SEARCH_PATH ../../rtl/components/energy
-set_global_assignment -name SEARCH_PATH ../../rtl/components/shaper
-set_global_assignment -name SEARCH_PATH ../../rtl/components/noise
-set_global_assignment -name SEARCH_PATH ../../rtl/components/adc
+set_global_assignment -name SEARCH_PATH ../../../rtl
+set_global_assignment -name SEARCH_PATH ../../../rtl/components/random
+set_global_assignment -name SEARCH_PATH ../../../rtl/components/hit_generation
+set_global_assignment -name SEARCH_PATH ../../../rtl/components/energy
+set_global_assignment -name SEARCH_PATH ../../../rtl/components/shaper
+set_global_assignment -name SEARCH_PATH ../../../rtl/components/noise
+set_global_assignment -name SEARCH_PATH ../../../rtl/components/adc
 # One SEARCH_PATH per reconstruction technique (reconstruction/<technique>/).
 # The estimator's recip.mem ROM ($readmemh "recip.mem", a bare name) is
 # resolved through this path (checked with Quartus 24.1, 2026-09-25).
@@ -775,8 +775,8 @@ set_global_assignment -name VERILOG_FILE ip/edge_detect/altera_edge_detector.v
 set_global_assignment -name VERILOG_FILE ip/debounce/debounce.v
 set_global_assignment -name QIP_FILE ip/altsource_probe/hps_reset.qip
 set_global_assignment -name QIP_FILE soc_system/synthesis/soc_system.qip
-set_global_assignment -name QIP_FILE pll_40mhz.qip
-set_global_assignment -name SIGNALTAP_FILE stp1.stp
+set_global_assignment -name QIP_FILE ip/pll_40mhz/pll_40mhz.qip
+set_global_assignment -name SIGNALTAP_FILE signaltap/stp1.stp
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[6] -to auto_signaltap_0|gnd -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[11] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[16] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
