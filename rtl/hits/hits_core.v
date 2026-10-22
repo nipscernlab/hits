@@ -167,7 +167,7 @@ energy_generator
 	.rst(rst),
 	.seg_wr_en(mem_we && mem_sel == 3'd1),
 	.seg_wr_addr(mem_addr[8:0]),
-	.seg_wr_data(mem_wdata),
+	.seg_wr_data(mem_wdata[69:0]),
 	.energy_out(energy_out)
 );
 

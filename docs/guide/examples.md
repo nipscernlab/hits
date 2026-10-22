@@ -37,8 +37,15 @@ not find the memory files.
 `projects/de10_nano/` puts the core alone on a Terasic DE10-Nano
 (Cyclone V 5CSEBA6U23I7), with no processor. The top
 `top_hits_de10.v` makes the sampling clock from the oscillator of the
-board with a phase-locked loop (PLL), holds the occupancy at 99.991% and the pedestal at 146, and resets the core from the push
-button KEY0, releasing the reset in step with the clock. Its `.qsf` sets the
+board with a phase-locked loop (PLL), starts with the occupancy at 99.991% and the pedestal at 146, and resets the core from the push
+button KEY0, releasing the reset in step with the clock. The configuration bus of
+`hits` is on the two GPIO headers, for a controller outside the board: `addr`,
+`wdata`, `wr` and `rd` on GPIO_0[0..21], the 40 MHz clock of `hits` out on
+GPIO_0[22], and `rdata` on GPIO_1[0..15] (the pins are in `hits_de10.qsf`, from
+the user manual of the board). The signals are registered at the pins: a write
+reaches `hits` one clock cycle after it is sampled, and a read answers on the pins
+two cycles after. The switch SW0 enables the bus; with SW0 at 0 the headers are
+ignored and the board runs with the values of power-up. Its `.qsf` sets the
 macros `USE_SHAPER_CSA_CR4RC` and `USE_ENERGY_LORENZETTI`: this is the
 configuration of the revised paper, and after the reset the ADC samples must
 equal the simulation of that build bit for bit. The phase of the pulse is off;
@@ -52,8 +59,8 @@ see the samples on the board, add a Signal Tap instance on `shaper_clip`,
 triggered by the release of the reset.
 
 To use another board, keep `hits` and write a new top: the sampling clock,
-a reset released in step with it, and the occupancy and pedestal from wherever
-your design takes them.
+a reset released in step with it, and the configuration bus tied off or driven by
+your controller.
 
 ## Synthesis in Vivado
 

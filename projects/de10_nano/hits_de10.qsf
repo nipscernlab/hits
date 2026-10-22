@@ -35,7 +35,7 @@ set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_feni
 set_global_assignment -name MIF_FILE ../../rtl/components/shaper/shaper_fenics_f34_phase.mif
 set_global_assignment -name VERILOG_MACRO "USE_SHAPER_CSA_CR4RC=1"
 set_global_assignment -name VERILOG_MACRO "USE_ENERGY_LORENZETTI=1"
-# pins (DE10-Nano User Manual, Terasic): 50 MHz clock, KEY0, LED0-LED3
+# pins (DE10-Nano User Manual, Terasic): 50 MHz clock, KEY0, LED0-LED3, SW0
 set_location_assignment PIN_V11 -to FPGA_CLK1_50
 set_location_assignment PIN_AH17 -to KEY0
 set_location_assignment PIN_W15 -to LED[0]
@@ -48,5 +48,87 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED[0]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED[1]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED[2]
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LED[3]
+set_location_assignment PIN_Y24 -to SW0
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SW0
+# the configuration bus on the GPIO headers (DE10-Nano User Manual, Terasic, 2023-08-09, Table 3-10):
+# GPIO_0[0..21] the inputs, GPIO_0[22] the 40 MHz clock, GPIO_1[0..15] the read data
+set_location_assignment PIN_V12 -to BUS_ADDR[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_ADDR[0]
+set_location_assignment PIN_E8 -to BUS_ADDR[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_ADDR[1]
+set_location_assignment PIN_W12 -to BUS_ADDR[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_ADDR[2]
+set_location_assignment PIN_D11 -to BUS_ADDR[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_ADDR[3]
+set_location_assignment PIN_D8 -to BUS_WDATA[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[0]
+set_location_assignment PIN_AH13 -to BUS_WDATA[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[1]
+set_location_assignment PIN_AF7 -to BUS_WDATA[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[2]
+set_location_assignment PIN_AH14 -to BUS_WDATA[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[3]
+set_location_assignment PIN_AF4 -to BUS_WDATA[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[4]
+set_location_assignment PIN_AH3 -to BUS_WDATA[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[5]
+set_location_assignment PIN_AD5 -to BUS_WDATA[6]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[6]
+set_location_assignment PIN_AG14 -to BUS_WDATA[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[7]
+set_location_assignment PIN_AE23 -to BUS_WDATA[8]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[8]
+set_location_assignment PIN_AE6 -to BUS_WDATA[9]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[9]
+set_location_assignment PIN_AD23 -to BUS_WDATA[10]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[10]
+set_location_assignment PIN_AE24 -to BUS_WDATA[11]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[11]
+set_location_assignment PIN_D12 -to BUS_WDATA[12]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[12]
+set_location_assignment PIN_AD20 -to BUS_WDATA[13]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[13]
+set_location_assignment PIN_C12 -to BUS_WDATA[14]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[14]
+set_location_assignment PIN_AD17 -to BUS_WDATA[15]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WDATA[15]
+set_location_assignment PIN_AC23 -to BUS_WR
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_WR
+set_location_assignment PIN_AC22 -to BUS_RD
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RD
+set_location_assignment PIN_Y19 -to BUS_CLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_CLK
+set_location_assignment PIN_Y15 -to BUS_RDATA[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[0]
+set_location_assignment PIN_AC24 -to BUS_RDATA[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[1]
+set_location_assignment PIN_AA15 -to BUS_RDATA[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[2]
+set_location_assignment PIN_AD26 -to BUS_RDATA[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[3]
+set_location_assignment PIN_AG28 -to BUS_RDATA[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[4]
+set_location_assignment PIN_AF28 -to BUS_RDATA[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[5]
+set_location_assignment PIN_AE25 -to BUS_RDATA[6]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[6]
+set_location_assignment PIN_AF27 -to BUS_RDATA[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[7]
+set_location_assignment PIN_AG26 -to BUS_RDATA[8]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[8]
+set_location_assignment PIN_AH27 -to BUS_RDATA[9]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[9]
+set_location_assignment PIN_AG25 -to BUS_RDATA[10]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[10]
+set_location_assignment PIN_AH26 -to BUS_RDATA[11]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[11]
+set_location_assignment PIN_AH24 -to BUS_RDATA[12]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[12]
+set_location_assignment PIN_AF25 -to BUS_RDATA[13]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[13]
+set_location_assignment PIN_AG23 -to BUS_RDATA[14]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[14]
+set_location_assignment PIN_AF23 -to BUS_RDATA[15]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to BUS_RDATA[15]
 
 set_global_assignment -name LAST_QUARTUS_VERSION "24.1std.0 Lite Edition"

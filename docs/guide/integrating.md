@@ -121,11 +121,13 @@ Table 2: resources of the core without the bus (today, `hits_core`).
 | CSA + CR-4RC, jitter σ = 1 ns | 1186 ALMs, 1612 registers, 30 DSP, 14 M10K, 71.7 MHz | 2352 LUTs, 1620 FFs, 35 DSP, 3 RAMB36 + 5 RAMB18, 69.4 MHz |
 
 The bus adds about 2% of the logic and 140 to 180 registers when it is driven
-from outside, and no memory block or DSP (Table 6 of
-[The configuration bus](../develop/config-bus.md)). Tied off, it is removed: the
-DE10-Nano example (CSA + CR-4RC and the Lorenzetti spectrum) takes 804 ALMs,
-1191 registers, 7 M10K and 23 DSP with the bus idle, measured on 2026-10-21, the
-same as before the bus existed (measured at commit `741d8f5`).
+from outside, and no memory block or DSP (Table 1 of
+[The configuration bus](../develop/config-bus.md)). Tied off, it is removed. On the
+DE10-Nano example (CSA + CR-4RC and the Lorenzetti spectrum), with the bus idle
+the board took 804 ALMs, 1191 registers, 7 M10K and 23 DSP (2026-10-21), the same
+as before the bus existed; with the bus on the GPIO headers, registered at the
+pins, it takes 839 ALMs, 1386 registers, 7 M10K, 23 DSP and 46 pins, at 82.8 MHz
+in the worst corner (2026-10-22).
 
 The F34 shaper is built from shifts and adds: its constant multiplications are
 forced into logic (`multstyle = "logic"`), which keeps the default build at 3 DSP

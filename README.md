@@ -192,7 +192,7 @@ rtl/components/shaper/           Pulse shapers: three shapes, selectable at synt
 rtl/components/noise/            Electronic noise (Gaussian by segmented inverse CDF, or 3 inverse-CDF tables)
 rtl/components/adc/              Pedestal, quantization and saturation: the simulator output
 projects/aurora/                 Aurora project of the simulator alone (simulation; the testbench is verification/testbenches/hits_tb.v)
-projects/de10_nano/              Quartus project for the DE10-Nano: no HPS, no Qsys, the bus idle, occupancy and pedestal fixed in the top
+projects/de10_nano/              Quartus project for the DE10-Nano: no HPS, no Qsys, the configuration bus on the GPIO headers (enabled by SW0), occupancy and pedestal set at power-up
 projects/zybo/                   Vivado: hits_vivado.tcl synthesizes the core out of context for any part (default xc7z010clg400-1); not yet a board project
 projects/de10_nano_arm/          The DE10-Nano SoC (FPGA + ARM/HPS): simulator + reconstruction technique; its README says what is generated and how
 projects/de10_nano_arm/hardware/ The Quartus project (Qsys, SignalTap, PLL, reconstruction/, output_files/)
@@ -463,10 +463,12 @@ this repository.
 
 On the board, `projects/de10_nano/` is the simulator alone on the
 DE10-Nano: no HPS, no Qsys, no reconstruction technique, the 16-bit occupancy
-(65530/65536) and pedestal 146 fixed in the top, reset released synchronously, and the
+(65530/65536) and pedestal 146 as the values at power-up, the configuration bus on
+the GPIO headers (enabled by SW0), reset released synchronously, and the
 `paper_r1` macros already set in `hits_de10.qsf`. It compiles with Quartus
-Prime Lite 24.1 (at 741d8f5: 804 ALMs, 1191 registers, 7 M10K, 23 DSP, 1 PLL,
-79.0 MHz worst corner for the 40 MHz clock). After the reset its `shaper_clip`
+Prime Lite 24.1 (on 2026-10-22: 839 ALMs, 1386 registers, 7 M10K, 23 DSP, 1 PLL,
+46 pins, 82.8 MHz worst corner for the 40 MHz clock; with the bus idle instead of on
+the pins it was 804 ALMs, 1191 registers and 79.0 MHz). After the reset its `shaper_clip`
 must equal the simulation bit for bit; Signal Tap captures it.
 
 ## Running on the DE10-Nano board

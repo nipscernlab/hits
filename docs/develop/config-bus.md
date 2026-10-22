@@ -127,9 +127,11 @@ assembling register, the addresses and the piece counter), and no memory block
 or DSP: the memories that became writable use the same M10K blocks. The maximum
 frequency moves by less than the placement varies from one compilation to the
 next; the critical path stays in the loop of the shaper. With the bus tied off,
-the tools remove it: the DE10-Nano example takes 804 ALMs, 1191 registers, 7 M10K
+the tools remove it: the DE10-Nano example took 804 ALMs, 1191 registers, 7 M10K
 and 23 DSP with the bus idle (measured on 2026-10-21), the same as before the bus
-existed (measured at commit `741d8f5`).
+existed (measured at commit `741d8f5`). With the bus on its GPIO headers,
+registered at the pins and enabled by a switch, it takes 839 ALMs, 1386 registers,
+7 M10K and 23 DSP (2026-10-22).
 
 ## What stays at synthesis
 

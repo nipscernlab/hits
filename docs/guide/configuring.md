@@ -29,9 +29,9 @@ Table 1: the ports of the bus.
 | `rdata` | out | 16 | the word of `addr`, in the same cycle (it does not depend on `rd`) |
 
 A bus left idle (`wr` = `rd` = 0, `addr` and `wdata` constant) keeps the values
-of power-up. In a synthesis with the bus tied off this way the tools remove it:
-the DE10-Nano example, `projects/de10_nano/`, takes the same resources as
-the core without a bus.
+of power-up, and in a synthesis with the bus tied off this way the tools remove
+it. The DE10-Nano example, `projects/de10_nano/`, has the bus on its GPIO headers
+instead, for a controller outside the board ([Examples](examples.md)).
 
 ## Running and stopping
 
