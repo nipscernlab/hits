@@ -29,7 +29,10 @@ module adds the 9 low bits (506 with `USE_ENERGY_LORENZETTI`, 0 otherwise). The
 older round-robin and leap generators also draw only 7 bits and compare them with
 the top 7 bits of `occupancy`, so with them the occupancy moves in steps of 1/128.
 
-To run it:
+The README of the project folder,
+[`projects/de10_nano_arm/README.md`](https://github.com/nipscernlab/hits/blob/main/projects/de10_nano_arm/README.md),
+is a step-by-step guide to compile the design of today, load it on the board and
+check that it works. In short, with the bitstream that comes in the image:
 
 1. Write the Linux image of the release `linux-image-v1` to a micro-SD card of
    at least 2 GB (seven files of a split zip; extract `de10_backup_image.zip`).
