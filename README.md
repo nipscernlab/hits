@@ -437,7 +437,8 @@ the sigma = 8 ADC noise tables, a truncating ADC and no input register in the
 shaper.
 
 - **Its behaviour, on the current code:** `RNG_TYPE = "round_robin"` plus the
-  `USE_SHAPER_CSA_CR4RC`, `USE_NOISE_SIGMA8`, `USE_ADC_FLOOR` and `USE_SHAPER_NO_PIPE` macros, in simulation (`regress.py paper`) or on the
+  `USE_SHAPER_CSA_CR4RC`, `USE_NOISE_SIGMA8`, `USE_ADC_FLOOR` and `USE_SHAPER_NO_PIPE` macros (and, in the
+  testbench, `USE_OCC_PAPER` for the occupancies of the paper), in simulation (`regress.py paper`) or on the
   board (`de10_nano_soc_ghrd.v` and the `.qsf`). The `paper` build is the
   simulator outputs of the paper's code delayed exactly one cycle (the
   testbench releases reset one edge later since 9dc32b2), checked signal by
