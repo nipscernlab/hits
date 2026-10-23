@@ -82,6 +82,23 @@ module hits_tb;
     reg [6:0] occupancy = `OCC_A;
     reg signed [12:0] offset = 13'sd146;     // pedestal in ADC counts
 
+    // Stimulus that changes on a rising edge (rst, the occupancy): the initial block sets the
+    // next value on the falling edge before, and this always block applies it with a
+    // NONBLOCKING assignment on the rising edge, so every always block of the design sees
+    // the old value at that edge in any simulator. (An NBA inside the initial block, the
+    // form used before, is right by the standard, but Verilator 5.048 -- the one bundled
+    // with Aurora -- applies it before the flops of that edge sample, and the run came out
+    // one cycle early.) The registers of the next values live in the named block, so the
+    // $dumpvars of the testbench scope, and the VCD, are the same as before.
+    if (1) begin : stim
+        reg rst_next = 1'b1;
+        reg [6:0] occupancy_next = `OCC_A;
+        always @(posedge clk) begin
+            rst <= rst_next;
+            occupancy <= occupancy_next;
+        end
+    end
+
     wire hits_out, bt_mask_out;
     wire [12:0] energy_out, event_bt, event_all;
     wire signed [29:0] shaper_out, shaper_corrupted;
@@ -171,20 +188,21 @@ module hits_tb;
         // (to dive into the hierarchy, use Aurora's Wave Configuration)
         $dumpvars(1, hits_tb);
 
-        // reset for 4 cycles
-        // Stimulus changes on a clock edge use NONBLOCKING assignments: with
-        // `rst = 0` every always block saw rst as 0 or as 1 at that edge
-        // depending on Icarus's process order, so part of the design left
-        // reset one edge before the rest -- a state the hardware never
-        // produces, and one that any restructuring of the RTL could flip.
-        repeat (4) @(posedge clk);
-        rst <= 1'b0;
+        // reset for 4 cycles: rst falls on the 4th rising edge (block stim above).
+        // A blocking `rst = 0` on that edge would let each always block see rst
+        // as 0 or as 1 depending on the process order, so part of the design
+        // would leave reset one edge before the rest -- a state the hardware
+        // never produces.
+        repeat (3) @(posedge clk);
+        @(negedge clk) stim.rst_next = 1'b0;
+        @(posedge clk);
 
         // 1st half: low occupancy (OCC_A)
-        repeat (N_CYCLES/2) @(posedge clk);
+        repeat (N_CYCLES/2 - 1) @(posedge clk);
 
         // 2nd half: high occupancy (OCC_B) — watch the hit density change
-        occupancy <= `OCC_B;
+        @(negedge clk) stim.occupancy_next = `OCC_B;
+        @(posedge clk);
         $display("t=%0t ns: occupancy %0d -> %0d", $time, `OCC_A, `OCC_B);
 
         repeat (N_CYCLES/2) @(posedge clk);

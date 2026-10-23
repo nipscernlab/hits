@@ -110,6 +110,24 @@ module hits_config_tb;
 
     // ---------------------------------------------------------------- reference
     reg [15:0] r_occupancy = 16'd40000;
+
+    // Stimulus that changes on a rising edge (rst, the occupancy of the reference): the
+    // initial block sets the next value on the falling edge before, and this always block
+    // applies it with a NONBLOCKING assignment on the rising edge, so every always block
+    // sees the old value at that edge in any simulator. (An NBA inside the initial block,
+    // the form used before, is right by the standard, but Verilator 5.048 -- the one
+    // bundled with Aurora -- applies it before the flops of that edge sample: the
+    // reference took the new occupancy one cycle before the bus did.) The registers of the
+    // next values live in the named block, so the VCD is the same as before.
+    if (1) begin : stim
+        reg rst_next = 1'b1;
+        reg [15:0] r_occupancy_next = 16'd40000;
+        always @(posedge clk) begin
+            rst <= rst_next;
+            r_occupancy <= r_occupancy_next;
+        end
+    end
+
     wire r_hits, r_mask;
     wire [12:0] r_energy, r_ebt, r_eall;
     wire signed [29:0] r_shaper, r_corr;
@@ -177,8 +195,9 @@ module hits_config_tb;
         $dumpfile("hits_config_tb.vcd");
         $dumpvars(1, hits_config_tb);
 
-        repeat (4) @(posedge clk);
-        rst <= 1'b0;
+        repeat (3) @(posedge clk);                       // rst falls on the 4th rising edge (block stim)
+        @(negedge clk) stim.rst_next = 1'b0;
+        @(posedge clk);
         repeat (10) @(posedge clk);
 
         bus_write(4'd2, 16'd0);                         // CONTROL: RUN = 0
@@ -276,7 +295,7 @@ module hits_config_tb;
         repeat (N_RUN / 2) @(posedge clk);
         // a scalar while running: the occupancy, in both on the same edge
         @(negedge clk); addr = 4'd3; wdata = 16'd12000; wr = 1'b1;
-        @(posedge clk); r_occupancy <= 16'd12000;
+        stim.r_occupancy_next = 16'd12000;              // the reference takes it on the same rising edge
         @(negedge clk); wr = 1'b0;
         repeat (N_RUN / 2) @(posedge clk);
         comparing <= 1'b0;
