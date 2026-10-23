@@ -1,2 +1,5 @@
 # the hook runs under sh: CRLF would break it on a Windows checkout
 .githooks/* text eol=lf
+# scripts that go to the board (Linux): LF even on a Windows checkout
+*.sh text eol=lf
+projects/de10_nano_arm/software/linux/* text eol=lf

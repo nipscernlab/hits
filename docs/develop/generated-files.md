@@ -5,7 +5,7 @@ header says so. Editing one by hand breaks the link to the study that justifies
 its numbers; the change is made in the generator and the file is generated
 again. Table 1 lists them.
 
-Table 1: the generated files of `rtl/`.
+Table 1: the generated files of `rtl/components/`.
 
 | File | What it holds | Generator |
 |---|---|---|

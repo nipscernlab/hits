@@ -51,7 +51,8 @@ predate the synchronizer; compiling the project gives the current design. Shippi
 a current bitstream with each release is
 [issue #10](https://github.com/nipscernlab/hits/issues/10).
 
-The files that Platform Designer, Quartus and the SoC EDS generate are not in git.
+The files that Platform Designer, Quartus and the SoC EDS generate are not in git, except the prebuilt
+bitstreams in `hardware/output_files/` and the ARM program binary (to become release assets, issue #10).
 Before the first compilation, generate the HPS system with
 `qsys-generate soc_system.qsys --synthesis=VERILOG` in `hardware/`; the README of the folder,
 [`projects/de10_nano_arm/README.md`](https://github.com/nipscernlab/hits/blob/main/projects/de10_nano_arm/README.md),

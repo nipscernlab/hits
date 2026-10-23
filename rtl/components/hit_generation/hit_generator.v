@@ -11,8 +11,8 @@
 // their resolution is 1/128. occ_bypass = 1 makes every filled bunch crossing a
 // hit (cells with occupancy 1), whatever `occupancy` says; train_active = 0 ignores
 // the bunch-train mask. Both, orbit_last and the write port of the mask are inputs
-// for the configuration bus; hits ties them to its parameters (OCC_BYPASS,
-// BUNCH_TRAIN_ACTIVE, BUNCH_POS-1, no write).
+// for the configuration bus: hits drives them from its registers (hits_cfg), which
+// start at the parameters (OCC_BYPASS, BUNCH_TRAIN_ACTIVE, BUNCH_POS-1, no write).
 module hit_generator
 #(
 	parameter RNG_TYPE = "xoshiro",       // rng kind, see rtl/components/random/rng.v

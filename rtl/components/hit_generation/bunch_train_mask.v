@@ -3,7 +3,7 @@
 // The mask is a RAM initialized from BUNCH_MEM. The write port (wr_en, one bit per
 // write) and orbit_last, the last position of the orbit (its length minus 1, at
 // most BUNCH_POS-1), come from the configuration bus (docs/develop/config-bus.md);
-// hits ties them to 0 and BUNCH_POS-1, which gives the ROM and the orbit of before.
+// with the bus idle they stay at 0 and BUNCH_POS-1, which gives the ROM and the orbit of before.
 // orbit_last is changed only while the simulation is stopped (in reset).
 module bunch_train_mask
 #(

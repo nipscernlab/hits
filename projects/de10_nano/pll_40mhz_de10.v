@@ -1,8 +1,7 @@
 // ============================================================================
-// Transforma o relogio de 50 MHz da DE10-Nano no de 40 MHz do HITS.
-// E o mesmo PLL do projeto do HITS para a DE10-Nano
-// (projects/de10_nano_arm/hardware/ip/pll_40mhz/pll_40mhz/pll_40mhz_0002.v), so com as saidas que usamos.
-// Copy of the PLL used by the IC roadmaps of the group.
+// Turns the 50 MHz clock of the DE10-Nano into the 40 MHz clock of HITS.
+// The same PLL as the board project with the ARM
+// (projects/de10_nano_arm/hardware/ip/pll_40mhz/pll_40mhz/pll_40mhz_0002.v), with only the outputs used here.
 // ============================================================================
 `timescale 1ns/10ps
 module pll_40mhz_de10 (

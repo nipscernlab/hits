@@ -46,10 +46,8 @@ comparing them.
 
 ## Quartus
 
-`DE10_NANO_SoC_GHRD.qsf` lists the `.v` files of this folder and has one
-`SEARCH_PATH` per technique (`reconstruction/<technique>`). Quartus finds both
-the modules and the memory files by name in those folders; this is how the
-estimator and its `recip.mem` are found (checked with Quartus Prime Lite 24.1,
-2026-09-25). A new technique gets its own folder here, its files and
-`SEARCH_PATH` in the `.qsf`, and a branch of its own in the wrapper's
+`DE10_NANO_SoC_GHRD.qsf` lists the files of this folder one by one, with their
+paths (`reconstruction/<technique>/<file>`, as `VERILOG_FILE` and, for the
+estimator's `recip.mem`, `MIF_FILE`). A new technique gets its own folder here,
+its files listed in the `.qsf`, and a branch of its own in the wrapper's
 `` `ifdef USE_BASELINE_EST `` / `` `else `` chain, under a macro of its own.

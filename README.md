@@ -84,7 +84,7 @@ noise with sigma = 4 ADC.
 |---|---|---|---|
 | Random generator | `"xoshiro"`, `"round_robin"`, `"leap"` | `RNG_TYPE` parameter of `hits` (on the board: `de10_nano_soc_ghrd.v`); in `hits_tb.v`, `-DUSE_RNG_ROUND_ROBIN` or `-DUSE_RNG_LEAP` | `"xoshiro"` |
 | Pulse shape | F34 (FENICS Phase II), legacy, CSA + CR-4RC | macro `USE_SHAPER_LEGACY` or `USE_SHAPER_CSA_CR4RC` | F34 (since 2026-10-01) |
-| Energy spectrum | segmented inverse CDF (ROM `MEM_SEG`), the three tables | macro `USE_ENERGY_TABLES`; the round_robin and leap generators always use the tables; in `hits_tb.v`, `-DUSE_ENERGY_LORENZETTI` loads `energy_seg_lorenzetti.mif` with its occupancy (`OCC_LSB` 506) | segmented, ROM `energy_seg_default.mif` (since 2026-10-08) |
+| Energy spectrum | segmented inverse CDF (ROM `MEM_SEG`), the three tables | macro `USE_ENERGY_TABLES`; the round_robin and leap generators always use the tables; in `hits_tb.v`, `-DUSE_ENERGY_LORENZETTI` loads `energy_seg_lorenzetti.mif` with its occupancy (65530/65536) | segmented, ROM `energy_seg_default.mif` (since 2026-10-08) |
 | Noise | Gaussian (segmented inverse CDF), the sigma = 4 tables, the sigma = 8 tables | macro `USE_NOISE_TABLES` or `USE_NOISE_SIGMA8`; the round_robin and leap generators always use the tables | Gaussian, sigma = 4 (since 2026-10-02) |
 | ADC quantization | round to nearest, truncate | macro `USE_ADC_FLOOR` (truncate) | round (since 2026-10-03) |
 | CSA + CR-4RC pipeline | on, off | macro `USE_SHAPER_NO_PIPE` (off) | on (input register since 2026-10-03; full pipeline, latency 5, since 2026-10-14) |
@@ -115,7 +115,7 @@ knew the repo then, this is where things went:
 | `rtl/filtros/` | `rtl/components/shaper/` |
 | `rtl/clip_shaper.v` | `rtl/components/adc/adc.v` |
 | `rtl_test/` | `projects/de10_nano_arm/hardware/reconstruction/` (PZC, baseline estimator and the wrapper `hits_reco.v`) |
-| `projects/aurora/` (simulator + PZC) | removed on 2026-10-21 (tag `last-with-reconstruction`); the simulator alone is `projects/aurora/hits.spf` with `verification/testbenches/hits_tb.v` |
+| `projects/aurora/` (simulator + PZC) | the PZC project was removed on 2026-10-21 (tag `last-with-reconstruction`); `projects/aurora/` now holds `hits.spf`, the simulator alone, with `verification/testbenches/hits_tb.v` |
 | `projects/quartus/` (board with the ARM) | `projects/de10_nano_arm/`; the simulator alone on the board is `projects/de10_nano/` |
 | comparing VCDs by hand | `python verification/regress.py`, also run by CI and by the pre-commit hook |
 
@@ -205,14 +205,14 @@ verification/goldens/            The golden VCD of every build
 
 ## How it works
 
-The synthesizable simulator core (`rtl/hits.v`) chains the stages
+The simulator (`rtl/hits.v`, the top with the configuration bus, around the core `rtl/hits/hits_core.v`) chains the stages
 below, one sample per 25 ns clock cycle, ending at the digitized ADC sample.
 Each `.mif` memory lives next to the module that reads it.
 
 | Folder | Files | Description |
 |---|---|---|
 | `random/` | `lfsr42.v`, `rng.v`, `rng_round_robin.v`, `rng_leap.v`, `rng_xoshiro.v` | 42-bit LFSR step (the papers' primitive polynomial); `rng` picks the generator by `RNG_TYPE` (see *Random generators* below) |
-| `hits/` | `hit_generator.v`, `hit_draw.v`, `bunch_train_mask.v` + `.mif` | Bernoulli hit draw per bunch crossing (`rand < occupancy`), gated by the bunch-train mask (3564 slots) |
+| `hit_generation/` | `hit_generator.v`, `hit_draw.v`, `bunch_train_mask.v` + `.mif` | Bernoulli hit draw per bunch crossing (`rand < occupancy`), gated by the bunch-train mask (3564 slots) |
 | `energy/` | `energy_generator.v`, `energy_seg.v` + `energy_seg_default.mif` (default); `energy_icdf.v` + `energy_icdf_paper_0..2.mif` (the tables) | Energy amplitude per bunch crossing, in whole ADC counts. By default a segmented inverse CDF of one 32-bit xoshiro word: octaves of probability from both ends of the CDF, 8 segments per octave, a degree-2 polynomial per segment (512-word ROM, 464 used), no staircase and a tail down to 2^-32 of probability. The spectrum is the ROM (`MEM_SEG`); the default one is a placeholder (mean 34 ADC, 99% below 156 ADC) until a documented spectrum replaces it. The three-table inverse CDF of the paper (multi-memory approach) stays for the other generators and the paper build (`USE_ENERGY_TABLES` forces it). |
 | `shaper/` | one of the three `shaper_*.v` (see *Shaper filters* below), or the `*_phase.v` version of F34 / CSA + CR-4RC with its `*_phase.mif` (see *Pulse phase*) | the analog pulse shape of the front end |
 | `noise/` | `noise_generator.v`, `noise_gauss.v` + `noise_gauss_s4.mif` (default); `noise_icdf.v` + `noise_s4_icdf0..2.mif` / `noise_s8_*` (the tables) | Gaussian electronic noise, sigma = 4 ADC at 12 bits (the Phase-II scale; 8 before 2026-09-29). By default a segmented inverse CDF of one 32-bit xoshiro word (polynomial per segment, correct tail up to 6.34 sigma); the three-table inverse CDF stays for the other generators and the paper build. Why that level, how the tables deviate in the tail, and where the double-Gaussian noise model came from: [`rtl/components/noise/README.md`](rtl/components/noise/README.md) |
@@ -244,7 +244,7 @@ rather than of a defect, which grows with the sample.
 
 Change the default in `rtl/hits.v`, or pass `.RNG_TYPE("leap")` where
 it is instantiated. ⚠️ **Each generator has its own goldens**: the sequences
-differ, only the statistics agree. The regression builds the leap kind with
+differ, only the statistics agree. The regression builds the other generators with
 `-DUSE_RNG_ROUND_ROBIN` or `-DUSE_RNG_LEAP`, which `hits_tb.v` turns into the parameter.
 
 ### Shaper filters (`rtl/components/shaper/`)
@@ -257,7 +257,7 @@ shaper* below):
 |---|---|---|
 | `shaper_fenics_f34.v` | **default** (since 2026-10-01) | The FENICS Phase-II pulse. The FENICS testbeam pulse was fitted with a 14-pole transfer function, and this is its 40 MHz digital filter: a 13-tap FIR head plus 5 IIR sections (3 leaky, 2 coupled), derived from a 14-pole transfer function of the FENICS front end. Zero DC gain is **imposed** rather than fitted, so it cannot produce a baseline sag the real front end does not have. Shape error 0.026% of peak. Generated from the design study, not written by hand: see the header of the file. Latency 7 samples: four pipeline stages (the long product of the closing section split in two, the input of every component, its output, and the final sum; all but the output stage added on 2026-10-01), which keep the shape bit for bit and only delay it. |
 | `shaper_fenics.v` + `iir_order1.v` + `iir_order2.v` | `USE_SHAPER_LEGACY` | The shaper HITS was born with (the default until 2026-10-01): parallel IIR sections, coefficients at a 2**10 scale. An older approximation of the FENICS response; over a long run with the bunch-train mask its baseline settles about 5 ADC below the pedestal, where F34 converges to it (research phase F36). Input and final sum registered since 2026-10-03 (latency 2; HITS closed at 33.9 MHz with it before). |
-| `shaper_csa_cr4rc.v` | `USE_SHAPER_CSA_CR4RC` | The generic "paper" pulse: the exact readout chain of the group's papers (bi-exponential detector pulse, CSA with a 51 ns feedback pole, unbuffered CR-4RC with a 500 us CR and four 5 ns RC stages -- the Electronics 14:493 signal generator). 4-tap FIR head plus 3 first-order IIR sections; peak 60.1 ns on sample 2, FWHM 114 ns, shape error 1e-7 of peak. Generated, not written by hand: see the header of the file. Input registered since 2026-10-03 (latency 2; 37.6 MHz without it); `USE_SHAPER_NO_PIPE` removes that register, as the paper build does. |
+| `shaper_csa_cr4rc.v` | `USE_SHAPER_CSA_CR4RC` | The generic "paper" pulse: the exact readout chain of the group's papers (bi-exponential detector pulse, CSA with a 51 ns feedback pole, unbuffered CR-4RC with a 500 us CR and four 5 ns RC stages -- the Electronics 14:493 signal generator). 4-tap FIR head plus 3 first-order IIR sections; peak 60.1 ns on sample 2, FWHM 114 ns, shape error 1e-7 of peak. Generated, not written by hand: see the header of the file. Input registered since 2026-10-03 and fully pipelined since 2026-10-14 (latency 5); `USE_SHAPER_NO_PIPE` removes the pipeline (latency 1), as the paper build does. |
 
 All three share the same output scale (`2**G_OUT_LOG`), so nothing downstream
 changes. All three take a reset that clears their state, so the tail of
@@ -312,7 +312,8 @@ phase F07) copies the base shaper, swaps the head and checks phase 0 bit for bit
 against it; rerun it after regenerating a base shaper. Cost on the DE10-Nano
 (simulator alone, Quartus 24.1, worst-corner Fmax): F34 with jitter 1913 ALMs,
 20 DSP, 15 M10K, 86.3 MHz; F34 with a fixed phase only 1707 ALMs, 18 DSP, 13 M10K,
-84.6 MHz (the table stays a ROM); F34 without phase 1751 ALMs, 3 DSP, 7 M10K,
+84.6 MHz (measured on 2026-10-17, when the fixed phase still read the table; since
+2026-10-21 it takes one set of coefficients in a register, with no table); F34 without phase 1751 ALMs, 3 DSP, 7 M10K,
 84.7 MHz. CSA + CR-4RC with jitter 1186 ALMs, 30 DSP, 14 M10K, 71.7 MHz; without
 phase 883 ALMs, 23 DSP, 7 M10K, 83.5 MHz.
 
@@ -337,14 +338,15 @@ and [19:7] of the HPS-to-FPGA register).
 
 The simulator core is plain Verilog (no ARM/PLL/Qsys) and runs in open-source
 simulators. The testbench (`verification/testbenches/hits_tb.v`) drives 3 full
-orbits (3 × 3564 bunch crossings) with an occupancy step 25 → 80 halfway through.
+orbits (3 × 3564 bunch crossings) with an occupancy step from 25% to 75% halfway through
+(25/128 to 80/128 in the `paper` build).
 
 All paths are relative, so the project works from any clone location. The one
 requirement is that the simulation runs with cwd two levels below the root
 (`verification/testbenches/`, or `projects/aurora/` for Aurora), because
 the `.mif` memories are loaded via the relative `RTL_DIR` of the testbench.
 
-### Two Aurora projects
+### The Aurora project
 
 | Project | Testbench | What runs | Compiles |
 |---|---|---|---|
@@ -392,7 +394,8 @@ fails, the core changed. The `bus` builds test the configuration bus (see
 | `sim_energy_tables` | core | `USE_ENERGY_TABLES` | `hits_tb_golden_energy_tables.vcd` |
 | `sim_round_robin` | core | `USE_RNG_ROUND_ROBIN` | `hits_tb_golden_round_robin.vcd` |
 | `sim_round_robin_legacy` | core | `USE_RNG_ROUND_ROBIN USE_SHAPER_LEGACY` | `hits_tb_golden_round_robin_legacy.vcd` |
-| **`paper`** | core | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC USE_NOISE_SIGMA8 USE_ADC_FLOOR USE_SHAPER_NO_PIPE` | `hits_tb_golden_paper.vcd` (**frozen**, see below) |
+| **`paper`** | core | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC USE_NOISE_SIGMA8 USE_ADC_FLOOR USE_SHAPER_NO_PIPE USE_OCC_PAPER` | `hits_tb_golden_paper.vcd` (**frozen**, see below) |
+| `paper_r1` | core | `USE_SHAPER_CSA_CR4RC USE_ENERGY_LORENZETTI` | `hits_tb_golden_paper_r1.vcd` (to be frozen with the tag `paper-jsen-2026-r1`) |
 | `sim_leap` | core | `USE_RNG_LEAP` | `hits_tb_golden_leap.vcd` |
 | `sim_leap_legacy` | core | `USE_RNG_LEAP USE_SHAPER_LEGACY` | `hits_tb_golden_leap_legacy.vcd` |
 | `sim_leap_csa_cr4rc` | core | `USE_RNG_LEAP USE_SHAPER_CSA_CR4RC` | `hits_tb_golden_leap_csa_cr4rc.vcd` |
@@ -400,11 +403,15 @@ fails, the core changed. The `bus` builds test the configuration bus (see
 | `sim_jitter` | core | `USE_PHASE_SIGMA_PS=1000` (sigma = 1 ns) | `hits_tb_golden_jitter.vcd` |
 | `sim_phase_csa_cr4rc` | core | `USE_SHAPER_CSA_CR4RC USE_PHASE0=8` | `hits_tb_golden_phase_csa_cr4rc.vcd` |
 | `sim_jitter_csa_cr4rc` | core | `USE_SHAPER_CSA_CR4RC USE_PHASE_SIGMA_PS=1000` | `hits_tb_golden_jitter_csa_cr4rc.vcd` |
+| `bus` | bus | (none: F34) | `hits_config_tb_golden.vcd` |
+| `bus_phase` | bus | `TB_PHASE` (fixed phase +8, F34) | `hits_config_tb_golden_phase.vcd` |
+| `bus_phase_csa` | bus | `TB_PHASE USE_SHAPER_CSA_CR4RC` | `hits_config_tb_golden_phase_csa.vcd` |
+| `bus_jitter` | bus | `TB_JITTER USE_SHAPER_CSA_CR4RC` | `hits_config_tb_golden_jitter.vcd` |
 
 The comparator ignores only run metadata (`$date`, `$version` and the testbench
 `RTL_DIR` path parameter). Intentional behavior changes require regenerating the
 golden VCD, by hand, in the same commit. A NEW build gets its
-golden with `python verification/regress.py --gera <build>`, which only creates
+golden with `python verification/regress.py --create <build>`, which only creates
 goldens that do not exist yet.
 
 **When it runs by itself:**
@@ -414,8 +421,8 @@ goldens that do not exist yet.
   `projects/aurora/` or `verification/` runs the regression
   first and is blocked if it fails. It tests the working tree.
 - **on every pull request and every push to `main`**, in CI
-  (`.github/workflows/regression.yml`). Its `regression` check is required
-  to merge: this is the real gate, the hook only catches the error earlier.
+  (`.github/workflows/regression.yml`). Its `regression` check, and the
+  `manual` check of the documentation workflow, are required to merge: this is the real gate, the hook only catches the error earlier.
 
 A `vvp` that dies with no message (the machine short of memory) is re-run up to
 twice and listed at the end of the run; a complete but wrong waveform fails at
@@ -473,7 +480,7 @@ must equal the simulation bit for bit; Signal Tap captures it.
 
 ## Running on the DE10-Nano board
 
-Requirements: Quartus Prime Lite (23.1std or newer), Intel EDS, a DE10-Nano and a
+Requirements: Quartus Prime Lite 24.1std, Intel EDS, a DE10-Nano and a
 micro-SD card (2 GB minimum).
 
 1. Download the Linux SD-card image from the
@@ -500,9 +507,10 @@ prebuilt `.sof`/`.rbf` in `projects/de10_nano_arm/hardware/output_files/` are fr
 
 ## Contributing (branch workflow)
 
-Nobody commits directly to `main` (rule set 2026-09-14). Each contributor works
-on their own branch (e.g. `fabio/shaper-tweaks`) and what enters `main` is
-decided together, in review, before merging. `main` is the reference the
+Each contributor works on their own branch (e.g. `fabio/shaper-tweaks`) and
+opens a pull request; what enters `main` is decided together, in review, before
+merging. The maintainer commits directly to `main`, through the same gate (the
+pre-commit hook and the required CI checks). `main` is the reference the
 group's papers cite, so it must stay reproducible at all times: the regression
 against the golden VCDs (see *Regression check*) must pass on every merge --
 the `regression` CI check runs `verification/regress.py` on every pull

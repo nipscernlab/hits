@@ -100,7 +100,7 @@ module hits_core
 	input clk, rst,
 	input [15:0] occupancy,                // hit probability occupancy/65536 per filled bunch crossing
 	input signed [ENG_OUT_BITS-1:0] offset,
-	// configuration (hits ties these to its parameters)
+	// configuration (hits drives these from its registers, which start at its parameters)
 	input occ_bypass,                      // 1: hit on every filled bunch crossing (OCC_BYPASS)
 	input train_active,                    // 0: ignore the bunch-train mask (BUNCH_TRAIN_ACTIVE)
 	input [$clog2(BUNCH_POS)-1:0] orbit_last,   // last position of the orbit, length - 1 (BUNCH_POS-1)

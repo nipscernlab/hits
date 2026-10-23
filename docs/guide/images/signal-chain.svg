@@ -45,7 +45,7 @@
   <!-- the chain -->
   <rect class="blk" x="30" y="120" width="140" height="70" rx="10"/>
   <text class="tb" x="100" y="150">Hit draw</text>
-  <text class="t"  x="100" y="170">hits/</text>
+  <text class="t"  x="100" y="170">hit_generation/</text>
 
   <rect class="blk" x="255" y="120" width="140" height="70" rx="10"/>
   <text class="tb" x="325" y="150">Energy draw</text>

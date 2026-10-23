@@ -104,11 +104,12 @@ BUILDS = {
     "sim_jitter_csa_cr4rc": ("core", ["USE_SHAPER_CSA_CR4RC", "USE_PHASE_SIGMA_PS=1000"],
                       "hits_tb_golden_jitter_csa_cr4rc.vcd"),
     # the configuration bus: memories loaded and scalars set through the bus equal to a
-    # hits built with them (2026-10-21); with the jitter on the CSA shaper
+    # hits built with them (2026-10-21)
     "bus":           ("bus", [], "hits_config_tb_golden.vcd"),
     # the fixed phase by one loaded set of coefficients (2026-10-21), F34 and CSA
     "bus_phase":     ("bus", ["TB_PHASE"], "hits_config_tb_golden_phase.vcd"),
     "bus_phase_csa": ("bus", ["TB_PHASE", "USE_SHAPER_CSA_CR4RC"], "hits_config_tb_golden_phase_csa.vcd"),
+    # the jitter on the CSA shaper, its tables loaded through the bus
     "bus_jitter":    ("bus", ["TB_JITTER", "USE_SHAPER_CSA_CR4RC"], "hits_config_tb_golden_jitter.vcd"),
 }
 

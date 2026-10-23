@@ -77,4 +77,7 @@ Table 4: the macros read by `rtl/`.
 The testbench `verification/testbenches/hits_tb.v` also reads `USE_RNG_ROUND_ROBIN` and
 `USE_RNG_LEAP` (they set `RNG_TYPE`), `USE_ENERGY_LORENZETTI` (it sets `MEM_SEG`
 to the Lorenzetti spectrum and the occupancy to 65530),
-`USE_PHASE0=<n>` (`PHASE0`) and `USE_PHASE_SIGMA_PS=<ps>` (`SIGMA_PS`).
+`USE_PHASE0=<n>` (`PHASE0`), `USE_PHASE_SIGMA_PS=<ps>` (`SIGMA_PS`) and `USE_OCC_PAPER`
+(the occupancies 25/128 and 80/128 of the `paper` build). The bus testbench
+`verification/testbenches/hits_config_tb.v` reads `TB_PHASE` (a fixed phase
+loaded as one set of coefficients) and `TB_JITTER` (the jitter, with its tables).

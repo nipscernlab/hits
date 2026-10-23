@@ -1,6 +1,6 @@
 #!/bin/sh
 # pre-commit: runs the golden regression before any commit that touches the
-# RTL, the two Aurora projects or the goldens. A failing build
+# RTL, the Aurora project or the goldens. A failing build
 # blocks the commit.
 #
 # Enable it once per clone (git does not do it by itself):

@@ -134,6 +134,6 @@ forced into logic (`multstyle = "logic"`), which keeps the default build at 3 DS
 blocks in Quartus. Vivado has its own attribute for this (`use_dsp`) and does
 not act on `multstyle`, which is why the default build takes 28 DSP slices there
 (an inference from the attributes, not checked cell by cell). The phase versions put the multiplications by the table coefficients
-in DSP blocks, because the coefficients are no longer constants. A fixed phase
-costs almost as much as the jitter: the table stays a ROM even when its address
-is a constant.
+in DSP blocks, because the coefficients are no longer constants. Since 2026-10-21
+a fixed phase takes one set of coefficients in a register, loaded through the
+configuration bus, and no table; the jitter keeps the table of 64 phases.
