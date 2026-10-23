@@ -68,7 +68,7 @@
 //`define USE_SHAPER_NO_PIPE
 
 // hits: the HITS simulator, configured at run time through the configuration bus
-// (docs/develop/config-bus.md). It is the circuit hits_core (rtl/components/hit_generation/) with the
+// (docs/develop/config-bus.md). It is the circuit hits_core (rtl/hits/hits_core.v) with the
 // register core hits_cfg: the parameters below give what is built and the values at
 // power-up; a controller on the bus changes the values while the circuit runs.
 //

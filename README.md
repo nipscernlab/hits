@@ -482,7 +482,10 @@ must equal the simulation bit for bit; Signal Tap captures it.
 ## Running on the DE10-Nano board
 
 Requirements: Quartus Prime Lite 24.1std, Intel EDS, a DE10-Nano and a
-micro-SD card (2 GB minimum).
+micro-SD card (2 GB minimum). The Platform Designer system of this board was made
+with Quartus 23.1: generate it with `qsys-generate` from a clean copy, as
+`projects/de10_nano_arm/README.md` explains, and do not open it in the
+Platform Designer window of 24.1, which upgrades the IP.
 
 1. Download the Linux SD-card image from the
    [linux-image-v1 release](https://github.com/nipscernlab/hits/releases/tag/linux-image-v1)
@@ -510,8 +513,9 @@ prebuilt `.sof`/`.rbf` in `projects/de10_nano_arm/hardware/output_files/` are fr
 
 Each contributor works on their own branch (e.g. `fabio/shaper-tweaks`) and
 opens a pull request; what enters `main` is decided together, in review, before
-merging. The maintainer commits directly to `main`, through the same gate (the
-pre-commit hook and the required CI checks). `main` is the reference the
+merging. The maintainer commits directly to `main`; for those commits the gate is the
+pre-commit hook, and CI runs the same checks after the push (as an admin push,
+it does not wait for them). `main` is the reference the
 group's papers cite, so it must stay reproducible at all times: the regression
 against the golden VCDs (see *Regression check*) must pass on every merge --
 the `regression` CI check runs `verification/regress.py` on every pull

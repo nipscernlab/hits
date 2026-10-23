@@ -47,7 +47,10 @@ comparing them.
 ## Quartus
 
 `DE10_NANO_SoC_GHRD.qsf` lists the files of this folder one by one, with their
-paths (`reconstruction/<technique>/<file>`, as `VERILOG_FILE` and, for the
-estimator's `recip.mem`, `MIF_FILE`). A new technique gets its own folder here,
-its files listed in the `.qsf`, and a branch of its own in the wrapper's
+paths (`reconstruction/hits_reco.v` and `reconstruction/<technique>/<file>`, as
+`VERILOG_FILE`; the estimator's `recip.mem` also as `MIF_FILE`), and has one
+`SEARCH_PATH` per technique (`reconstruction/<technique>`): a memory read by a
+bare name, as the estimator's `$readmemh("recip.mem")`, is resolved through it
+(checked with Quartus Prime Lite 24.1, 2026-09-25). A new technique gets its own
+folder here, its files and its `SEARCH_PATH` in the `.qsf`, and a branch of its own in the wrapper's
 `` `ifdef USE_BASELINE_EST `` / `` `else `` chain, under a macro of its own.
