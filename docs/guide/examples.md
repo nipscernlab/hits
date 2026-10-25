@@ -30,7 +30,7 @@ and every output of the core) in `hits_tb.vcd`.
 In AURORA, open `hits.spf` and press the wave button. AURORA runs the
 simulation in the folder of the `.spf`, which the relative paths of the
 testbench require; builds of AURORA older than 2026-07-17 ran it elsewhere and do
-not find the memory files. To check a simulation by the Verilator of AURORA against the golden of the regression, from the root of the repository: `fst2vcd projects/aurora/hits_tb.vcd > aurora.vcd && python verification/compare_vcd.py --by-signal aurora.vcd` (the Verilator writes FST under the name `.vcd`, and `fst2vcd` comes with AURORA in its GTKWave package; the comparison is by signal, because the text of a Verilator VCD never equals that of the Icarus golden).
+not find the memory files. To check a simulation by the Verilator of AURORA against the golden of the regression, from the root of the repository: `fst2vcd projects/aurora/hits_tb.vcd > aurora.vcd && python verification/compare_vcd.py --by-signal aurora.vcd` (the Verilator writes FST under the name `.vcd`, and `fst2vcd` comes with AURORA in its GTKWave package; the comparison is by signal, because the text of a Verilator VCD never equals that of the Icarus golden). When AURORA simulates with Icarus, `hits_tb.vcd` is already a text VCD: skip `fst2vcd` and run `python verification/compare_vcd.py --by-signal projects/aurora/hits_tb.vcd`.
 
 ## Synthesis in Quartus: the DE10-Nano
 
