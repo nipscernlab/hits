@@ -175,9 +175,11 @@ energy_generator
 // ------------------------------------------------------------- phase of each hit ---
 // The shaper reads the phase of the hit that enters it in the same cycle. Without jitter
 // the index is 32 + phase0. With jitter, delta comes from its own xoshiro word through the
-// segmented inverse CDF of noise_gauss.v (MEM_GAUSS_PHASE, g = 4096 z):
+// segmented inverse CDF of noise_gauss.v (MEM_GAUSS_PHASE), taken before its rounding to
+// 2^-5 ADC (UNROUNDED, g = 2^17 z; rounded, z moved in steps of 1/128 and the step
+// boundaries fell on that grid, issue #8):
 //   index = 32 + phase0 + round(z * sigma_ps / 390.625 ps), saturated to 0..63,
-// the product written g * sigma_k / 2^20 (sigma_k = sigma_ps * 2^20 / (4096 * 390.625)).
+// the product written g * sigma_k / 2^25 (sigma_k = sigma_ps * 2^20 / (4096 * 390.625)).
 // The draw runs every cycle and is independent of the hits, so whichever hit enters
 // takes a fresh delta.
 wire [5:0] ph_idx;
@@ -205,11 +207,12 @@ if (JITTER) begin : jitter
 		.rand_out(w_ph),
 		.rand_next()
 	);
-	wire signed [16:0] g_ph;
+	wire signed [21:0] g_ph;
 	noise_gauss
 	#(
-		.NOISE_OUT_BITS(17),
-		.MEM_GAUSS(MEM_GAUSS_PHASE)
+		.NOISE_OUT_BITS(22),
+		.MEM_GAUSS(MEM_GAUSS_PHASE),
+		.UNROUNDED(1)
 	) gauss_ph
 	(
 		.clk(clk),
@@ -220,8 +223,8 @@ if (JITTER) begin : jitter
 		.wr_data(mem_wdata[45:0]),
 		.noise_out(g_ph)
 	);
-	wire signed [40:0] d_ph = g_ph * $signed({1'b0, sigma_k}) + (41'sd1 <<< 19);
-	wire signed [20:0] d_idx = d_ph >>> 20;
+	wire signed [40:0] d_ph = g_ph * $signed({1'b0, sigma_k}) + (41'sd1 <<< 24);
+	wire signed [20:0] d_idx = d_ph >>> 25;
 	wire signed [21:0] i_ph = 32 + phase0 + d_idx;
 	reg [5:0] idx = 32 + PHASE0;
 	always @(posedge clk or posedge rst)

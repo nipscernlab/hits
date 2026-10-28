@@ -146,6 +146,12 @@ phase, the error is 2e-4 of the peak for F34 (the precision of F34 itself) and
 
 The jitter draw is a xoshiro generator of its own (`XO_SEED_PHASE`, the long
 jump of 2^96 steps of `XO_SEED_HIT`) through the same Gaussian as the noise.
+It takes the Gaussian before the rounding of the noise output to 2^-5 ADC, so
+the boundaries between phase steps fall where a continuous Gaussian puts them:
+within ±2σ, the probability of each step is within 0.01% of the Gaussian's
+(σ = 1 and 3 ns, counted over every value of the generator). Until 2026-10-28
+the draw took the rounded noise, z in steps of 1/128, and the steps differed
+from the Gaussian by up to 1.9% (σ = 1 ns) and 4.2% (σ = 3 ns).
 The legacy shaper has no phase, nor does CSA + CR-4RC with `USE_SHAPER_NO_PIPE`;
 both stop the compilation if a phase is set.
 

@@ -23,10 +23,16 @@
 // Pipeline (no latency constraint in HITS, so every large block is registered):
 //   1 leading-zero count   2 normalize + ROM read   3 c2*t   4 (+c1)*t
 //   5 +c0, rounding, sign  -> noise_out, 5 cycles after the uniform word.
+//
+// UNROUNDED = 1 skips the rounding: noise_out is the signed magnitude of the
+// polynomial itself, in 2^-15 ADC (2^17 z with sigma = 4 ADC), and needs
+// NOISE_OUT_BITS >= 22. The jitter draw uses it, so that its phase steps are not
+// bounded on the 2^-5 ADC grid of the noise (issue #8).
 module noise_gauss
 #(
-	parameter NOISE_OUT_BITS = 17,                 // noise_out in 2^-10 ADC
-	parameter MEM_GAUSS = "noise_gauss_s4.mif"
+	parameter NOISE_OUT_BITS = 17,                 // noise_out in 2^-10 ADC (2^-15 ADC with UNROUNDED)
+	parameter MEM_GAUSS = "noise_gauss_s4.mif",
+	parameter UNROUNDED = 0
 )
 (
 	input clk, rst,
@@ -102,9 +108,9 @@ always @(posedge clk or posedge rst)
 	else     begin p4 <= h4 * t3; c0_4 <= c0_3; s4 <= s3; end
 
 // ---- stage 5: + c0, round to 2^-5 ADC, sign, to 2^-10 ADC --------------------
-wire signed [W0+1:0] h5  = (p4 >>> FT) + c0_4;
+wire signed [W0+1:0] h5  = (p4 >>> FT) + c0_4;              // magnitude in 2^-15 ADC
 wire signed [W0+1:0] mag = (h5 + (1 <<< (FC-1))) >>> FC;   // magnitude in 2^-5 ADC
-wire signed [NOISE_OUT_BITS-1:0] m10 = mag <<< 5;            // in 2^-10 ADC
+wire signed [NOISE_OUT_BITS-1:0] m10 = UNROUNDED ? h5 : mag <<< 5;   // in 2^-10 ADC (2^-15 unrounded)
 always @(posedge clk or posedge rst)
 	if (rst)     noise_out <= 0;
 	else if (s4) noise_out <= -m10;

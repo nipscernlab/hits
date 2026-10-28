@@ -120,6 +120,14 @@ Table 2: resources of the core without the bus (today, `hits_core`).
 | CSA + CR-4RC | 883 ALMs, 1155 registers, 23 DSP, 7 M10K, 83.5 MHz | |
 | CSA + CR-4RC, jitter σ = 1 ns | 1186 ALMs, 1612 registers, 30 DSP, 14 M10K, 71.7 MHz | 2352 LUTs, 1620 FFs, 35 DSP, 3 RAMB36 + 5 RAMB18, 69.4 MHz |
 
+The jitter draw changed on 2026-10-28 (issue #8: it reads the Gaussian before
+its rounding). Measured that day with the recipe of Table 2, on the core with
+the write ports of the bus, before and after the change: CSA + CR-4RC 1329 and
+1324 ALMs, 78.7 and 77.8 MHz; F34 2073 and 2076 ALMs, 80.8 and 86.0 MHz; Vivado,
+CSA + CR-4RC, 2369 and 2388 LUTs, 73.2 and 73.1 MHz; the same DSP and memory
+blocks in all. The change costs no measurable logic or speed; the differences are
+those of placement.
+
 The bus adds about 2% of the logic and 140 to 180 registers when it is driven
 from outside, and no memory block or DSP (Table 1 of
 [The configuration bus](../develop/config-bus.md)). Tied off, it is removed. On the
