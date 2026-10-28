@@ -43,7 +43,7 @@ Table 2: the parameters that size the datapath or name files.
 | `NOISE_TYPE` | `"gauss"` with xoshiro, else `"tables"` | noise draw; `USE_NOISE_TABLES` or `USE_NOISE_SIGMA8` force `"tables"` |
 | `MEM_GAUSS` | `"noise_gauss_s4.mif"` | ROM of the Gaussian noise (σ = 4 ADC counts) |
 | `MEM_NOISE_SIZE`, `MEM_NOISE0..2`, `MEM_NOISE_BITS`, `MEM_NOISE_FRAC`, `MEM_NOISE0_THRESH`, `MEM_NOISE1_THRESH` | 1024, `noise_s4_icdf0..2.mif` (σ = 8 files with `USE_NOISE_SIGMA8`), 10, 5, 1007, 1007 | the three noise tables |
-| `MEM_GAUSS_PHASE` | `"noise_gauss_s4.mif"` | Gaussian source of the jitter, read as 4096 z |
+| `MEM_GAUSS_PHASE` | `"noise_gauss_s4.mif"` | Gaussian source of the jitter, read before its rounding, as 2^17 z |
 | `MEM_PH_F34` | `"shaper_fenics_f34_phase.mif"` | the 64-phase table of F34 |
 | `MEM_PH_CSA` | `"shaper_csa_cr4rc_phase.mif"` | the 64-phase table of CSA + CR-4RC |
 
