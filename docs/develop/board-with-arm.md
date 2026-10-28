@@ -32,24 +32,24 @@ the top 7 bits of `occupancy`, so with them the occupancy moves in steps of 1/12
 The README of the project folder,
 [`projects/de10_nano_arm/README.md`](https://github.com/nipscernlab/hits/blob/main/projects/de10_nano_arm/README.md),
 is a step-by-step guide to compile the design of today, load it on the board and
-check that it works. In short, with the bitstream that comes in the image:
+check, sample by sample, that it equals the simulation. What it rests on, read
+from the image of the card on 2026-10-28:
 
-1. Write the Linux image of the release `linux-image-v1` to a micro-SD card of
-   at least 2 GB (seven files of a split zip; extract `de10_backup_image.zip`).
-2. Set every MSEL switch to ON, connect Ethernet and power the board. Linux boots
-   and programs the FPGA.
-3. Connect over SSH to the address of the board. The login of the image is in
-   the README of the repository.
-4. Run `./change_occupancy` and use its menu to change the occupancy or the
-   pedestal. Its source, with a Makefile for the Intel SoC EDS, is in
-   `software/change_occupancy/`.
-5. To watch the signals, open `hardware/DE10_NANO_SoC_GHRD.qpf` in Quartus, connect the
-   USB-Blaster II, open `hardware/signaltap/stp1.stp` in Signal Tap and start the analysis.
+- U-Boot programs the FPGA from `soc_system.rbf` on the FAT partition of the card,
+  before Linux starts; a new design goes there. The boot script `fpga_load` of the
+  image writes `/home/root/soc_system.rbf` to `/dev/fpga0`, which on its kernel
+  (4.5.0) is a plain file: it never programs the FPGA.
+- The `.rbf` is written without compression (7,007,204 bytes), with every MSEL
+  switch ON.
+- The bitstream on the card was compiled by Quartus Prime Lite 23.1std.1; the guide
+  asks for that version.
+- The ARM program is built statically (Arm GNU Toolchain), so it does not depend on
+  the libraries of the image (Angstrom v2014.12, glibc 2.20).
 
-The prebuilt `.sof` and `.rbf` in `hardware/output_files/` date from 2026-07-17 and
-predate the synchronizer; compiling the project gives the current design. Shipping
-a current bitstream with each release is
-[issue #10](https://github.com/nipscernlab/hits/issues/10).
+The bitstream on the card and the prebuilt `.sof` and `.rbf` in
+`hardware/output_files/` are those of 2025-06-12 and predate the synchronizer;
+compiling the project gives the current design. Shipping a current bitstream with
+each release is [issue #10](https://github.com/nipscernlab/hits/issues/10).
 
 The files that Platform Designer, Quartus and the SoC EDS generate are not in git, except the prebuilt
 bitstreams in `hardware/output_files/` and the ARM program binary (to become release assets, issue #10).

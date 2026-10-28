@@ -276,9 +276,13 @@ assign LED[0] = led_level;
   
   wire clk_40;
 
+	// The PLL is never reset (2026-10-28): KEY0 used to reset it too, and the
+	// simulator was released two cycles after the button while the PLL was
+	// still locking. This PLL has no locked output; it locks once, at
+	// configuration, and KEY0 resets only the simulator, as in projects/de10_nano.
 	pll_40mhz pll_40mhz_inst (
 			.refclk(FPGA_CLK1_50),   //  refclk.clk
-			.rst(~KEY[0]),      //   reset.reset
+			.rst(1'b0),         //   reset.reset
 			.outclk_0(clk_40)  // outclk0.clk
 		);
 		

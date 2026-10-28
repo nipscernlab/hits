@@ -61,8 +61,9 @@ int main() {
                     while (getchar() != '\n');
                     printf("Invalid occupancy value.\n");
                 } else {
-                    // Clear bits [7:0] and insert new occupancy
-                    led_reg &= ~0xFF;
+                    // Clear bits [6:0] and insert new occupancy (bit 7 is the
+                    // lowest bit of the pedestal: issue #7)
+                    led_reg &= ~0x7F;
                     led_reg |= (occupancy & 0x7F);
                     *(uint32_t *)h2p_lw_led_addr = led_reg;
                     printf("Occupancy updated to %u\n", occupancy);

@@ -481,9 +481,10 @@ must equal the simulation bit for bit; Signal Tap captures it.
 
 ## Running on the DE10-Nano board
 
-Requirements: Quartus Prime Lite 24.1std, Intel EDS, a DE10-Nano and a
-micro-SD card (2 GB minimum). The Platform Designer system of this board was made
-with Quartus 23.1: generate it with `qsys-generate` from a clean copy, as
+Requirements: Quartus Prime Lite 23.1std.1 (the version that compiled the
+bitstream on the card), a DE10-Nano and a micro-SD card (2 GB minimum). The
+Platform Designer system of this board was made with Quartus 23.1: generate it
+with `qsys-generate` from a clean copy, as
 `projects/de10_nano_arm/README.md` explains, and do not open it in the
 Platform Designer window of 24.1, which upgrades the IP.
 
@@ -492,22 +493,26 @@ Platform Designer window of 24.1, which upgrades the IP.
    (7 files of a split zip; put them in the same folder and extract
    `de10_backup_image.zip`) and write it to the SD card.
 2. Insert the SD card, set all MSEL switches to ON, connect Ethernet and power on.
-   Linux boots and programs the FPGA automatically.
+   U-Boot programs the FPGA from `soc_system.rbf` on the FAT partition of the
+   card, then Linux boots.
 3. Find the board IP (IP scanner or serial console) and connect over SSH
    (login `root`, password `simhits`).
 4. Run `./change_occupancy` and follow the menu to change the occupancy or the
-   pedestal offset at runtime. Its source is
-   `projects/de10_nano_arm/software/change_occupancy/` (`make` there, with Intel EDS,
-   rebuilds `build/change_occupancy`; it reads `hps_0.h` from `projects/de10_nano_arm/software/`,
-   written by `software/generate_hps_qsys_header.sh`).
+   pedestal offset at runtime. Its source and a
+   statically linked binary are in `projects/de10_nano_arm/software/change_occupancy/`;
+   the binary in the image (2025) has the bug of issue #7, and the guide of the
+   project replaces it.
 5. To observe the internal signals: open `projects/de10_nano_arm/hardware/DE10_NANO_SoC_GHRD.qpf`
    in Quartus, connect the USB-Blaster II, open `stp1.stp` (SignalTap) and press
    *Autorun Analysis*. The effect of the SSH menu is visible live.
 
 To rebuild the FPGA design instead of using the prebuilt bitstream: generate the
 HPS system and compile, as `projects/de10_nano_arm/README.md` explains (the
-prebuilt `.sof`/`.rbf` in `projects/de10_nano_arm/hardware/output_files/` are from
-2026-07-17; a current one with each release is issue #10).
+prebuilt `.sof`/`.rbf` in `projects/de10_nano_arm/hardware/output_files/` are the
+ones on the card, of 2025-06-12; a current one with each release is issue #10).
+The new `.rbf`, written without compression, replaces `soc_system.rbf` on the FAT
+partition of the card; that guide checks the capture against the simulation
+sample by sample.
 
 ## Contributing (branch workflow)
 
