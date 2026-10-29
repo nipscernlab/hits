@@ -83,6 +83,25 @@ git log --oneline -1
 **What you should see:** a commit equal to or later than the one that brought
 this guide (2026-10-28).
 
+**Shortcut: the ready bitstream.** The pre-release
+[`board-bitstream-v1`](https://github.com/nipscernlab/hits/releases/tag/board-bitstream-v1)
+has the `.rbf` and the `.sof` compiled with Quartus 23.1std.1 from commit
+`ef32eec`. With them, skip Steps 2 to 5: download its four files into
+`C:\hits\projects\de10_nano_arm\hardware\output_files\` (replacing the two that
+are there), and in PowerShell:
+
+```powershell
+cd C:\hits\projects\de10_nano_arm\hardware
+Get-Content output_files\SHA256SUMS
+Get-FileHash output_files\soc_system.rbf, output_files\DE10_NANO_SoC_GHRD.sof, signaltap\stp1.stp
+```
+
+**What you should see:** each hash equal to its line of `SHA256SUMS` (one in
+lowercase, the other in uppercase), including `signaltap\stp1.stp`: the window of
+Signal Tap needs the `.stp` of the same compilation as the `.sof`. If the `.stp`
+differs, the design changed after the release: go through Steps 2 to 5. Then go
+to Step 6. You still need Quartus 23.1 installed, for Signal Tap in Step 11.
+
 ### Step 2: generate the HPS system
 
 The files that Platform Designer generates are not in git. Generate them once,
@@ -187,7 +206,8 @@ copy C:\hits\projects\de10_nano_arm\hardware\output_files\soc_system.rbf E:\soc_
 
 Then eject the card in Windows before taking it out.
 
-**What you should see:** the two hashes equal. The copy of the old one
+**What you should see:** the two hashes equal (with the ready bitstream, also
+equal to the line of `soc_system.rbf` in `SHA256SUMS`). The copy of the old one
 (`soc_system_2025-06-12.rbf`) is how you go back (*Troubleshooting*).
 
 ### Step 8: boot the board
