@@ -381,8 +381,9 @@ tools/
 
 The SD-card image of the release `linux-image-v1` holds a bitstream of
 2025-06-12, older than the HITS of today, and so do the `.sof` and `.rbf` in
-`hardware/output_files/` until someone compiles. Shipping a current bitstream with
-each release is [issue #10](https://github.com/nipscernlab/hits/issues/10).
+`hardware/output_files/` until someone compiles. The pre-releases
+`board-bitstream-v<n>` hold compiled ones of a recent commit (the shortcut after
+Step 1).
 
 ## What is generated, and how
 

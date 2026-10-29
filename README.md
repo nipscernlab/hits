@@ -509,7 +509,8 @@ Platform Designer window of 24.1, which upgrades the IP.
 To rebuild the FPGA design instead of using the prebuilt bitstream: generate the
 HPS system and compile, as `projects/de10_nano_arm/README.md` explains (the
 prebuilt `.sof`/`.rbf` in `projects/de10_nano_arm/hardware/output_files/` are the
-ones on the card, of 2025-06-12; a current one with each release is issue #10).
+ones on the card, of 2025-06-12; the pre-releases `board-bitstream-v<n>` hold
+compiled ones of a recent commit).
 The new `.rbf`, written without compression, replaces `soc_system.rbf` on the FAT
 partition of the card; that guide checks the capture against the simulation
 sample by sample.
