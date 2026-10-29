@@ -21,9 +21,9 @@ pole-zero cancellation (PZC). No macro is set in the `.qsf`.
 ### Before you start: what was checked, and what was not
 
 On 2026-10-28 the steps that do not need the board were run here, from a clean
-clone: the HPS system generated, the project compiled, the `.rbf` written, the ARM
-program built and run in an emulator, and the image of the card opened and read.
-The setting of Signal Tap in its window (Step 3) was not done here, and the
+clone, with Quartus 23.1std.1: the HPS system generated, the trigger of Signal
+Tap set in its window, the project compiled, the `.rbf` written; the ARM program
+was built and run in an emulator, and the image of the card opened and read. The
 steps on the board were not run since the reorganization of 2026-10-21. The
 last design that ran on the board is the bitstream on the card of the image,
 written there on 2025-06-12 (the same file is the prebuilt `.rbf` of
@@ -42,7 +42,8 @@ the way they are:
 - **The Quartus version.** That bitstream was compiled by Quartus
   Prime Lite **23.1std.1** (Build 993), and the project was last saved by it. Use
   that version. Quartus 24.1std also compiles the project (checked 2026-10-28),
-  but no 24.1 bitstream has run on the board yet.
+  but no 24.1 bitstream has run on the board yet. The installer of 23.1std.1
+  needs administrator rights: run it as administrator.
 - The preloader of the card is U-Boot SPL 2013.01.01 of 2016, the Linux is
   Angstrom v2014.12 with kernel 4.5.0. None of them is rebuilt here.
 
@@ -98,43 +99,49 @@ It takes about two minutes.
 `Finished: Create HDL design files for synthesis`, and a folder
 `hardware/soc_system/` appears, with `synthesis/` inside.
 
-### Step 3: set the trigger of Signal Tap
+### Step 3: check the trigger of Signal Tap
 
 The capture of Step 11 has to start when the simulator leaves reset, so it can be
-compared with the simulation sample by sample. That needs the reset in the
-capture and a trigger on it, and Signal Tap is compiled into the design, so this
-comes before the compilation.
+compared with the simulation sample by sample. The Signal Tap of the repository
+already has it: `rst_sync[1]` (the reset of `hits_reco`) is among its signals,
+with the trigger on its falling edge and the trigger position *pre*. Signal Tap
+is compiled from the `.qsf`, not from `stp1.stp`, so check the `.qsf`:
 
-Open `C:\hits\projects\de10_nano_arm\hardware\DE10_NANO_SoC_GHRD.qpf` in Quartus,
-then *Tools > Signal Tap Logic Analyzer*, and in it *File > Open*
-`hardware/signaltap/stp1.stp`. In the *Setup* tab:
+```powershell
+cd C:\hits\projects\de10_nano_arm\hardware
+Select-String rst_sync DE10_NANO_SoC_GHRD.qsf
+Select-String SLD_DATA_BITS DE10_NANO_SoC_GHRD.qsf
+```
 
-1. Add the reset: right click in the list of signals, *Add Nodes*; in the Node
-   Finder, *Filter* = *Signal Tap: pre-synthesis*, *Named* = `rst_sync*`, *List*;
-   move `rst_sync[1]` to the right and *Insert*.
-2. In the line of `rst_sync[1]`, column *Trigger Conditions*, choose
-   **Falling Edge**. Every other signal stays at *Don't Care*.
-3. In *Signal Configuration* (on the right): the clock stays
-   `hits_reco:sim|clk`; *Sample depth* 2K; under *Trigger*, *Trigger position*
-   = **Pre trigger position**.
-4. *File > Save*. If Quartus asks whether to enable Signal Tap in the project,
-   answer yes.
+**What you should see:** two lines with `rst_sync[1]` (`acq_trigger_in[162]` and
+`acq_data_in[162]`), and `SLD_DATA_BITS=195`.
 
-**What you should see:** `rst_sync[1]` in the list with *Falling Edge*, and
-`git status` showing only `hardware/signaltap/stp1.stp` (and the `.qsf`, if
-Quartus touched it) as modified. Do not commit them.
+When you open the project in Quartus, a yellow bar *IP upgrade recommended*
+appears: close it with its X and do not upgrade. It is about `hps_reset`, made
+with Quartus 20.1, and the bitstream that works on the board was built with it
+as it is.
+
+To change the signals of Signal Tap one day: in a fresh copy, run *Processing >
+Start > Start Analysis & Elaboration* first (before it, the Node Finder shows
+*No nodes available*); then *Tools > Signal Tap Logic Analyzer*, tab *Setup*,
+*Add Nodes* with *Filter* = *Signal Tap: pre-synthesis*; *File > Save*, and close
+Quartus, which writes the `.qsf` when it closes. Commit the `.stp` and the `.qsf`
+together: the `.qsf` carries a CRC of the setting, and the window of Signal Tap
+compares it with the `.stp` it opens. Do not edit either file by hand.
 
 ### Step 4: compile
 
-In Quartus, *Processing > Start Compilation*. It takes about 35 minutes.
+In Quartus, *Processing > Start Compilation*. It takes from 15 to 35 minutes,
+depending on the PC.
 
 **What you should see:** `Full Compilation was successful. 0 errors` (several
 hundred warnings are normal) and no critical warning *Timing requirements not met*.
-In *Fitter > Summary*: about 5100 ALMs, about 9100 registers, 51 RAM blocks,
-7 DSP blocks, 1 PLL, 172 pins (Quartus 24.1 gave 5105 ALMs and 9112 registers
-on 2026-10-28, before the node of Step 3; a few dozen ALMs of difference are
-normal). The file `hardware/output_files/DE10_NANO_SoC_GHRD.sof` has the date and
-time of now.
+Two critical warnings *No exact pin location assignment(s)* are normal: they are
+about the memory pins of the HPS, in the design of Terasic. In *Fitter > Summary*:
+about 5100 ALMs, about 9200 registers, 51 RAM blocks, 7 DSP blocks, 1 PLL,
+172 pins (Quartus 23.1std.1 gave 5101 ALMs and 9194 registers on 2026-10-28; a
+few dozen of difference are normal). The file
+`hardware/output_files/DE10_NANO_SoC_GHRD.sof` has the date and time of now.
 
 ### Step 5: turn the `.sof` into the `.rbf` the board loads
 
