@@ -111,6 +111,8 @@ BUILDS = {
     "bus_phase_csa": ("bus", ["TB_PHASE", "USE_SHAPER_CSA_CR4RC"], "hits_config_tb_golden_phase_csa.vcd"),
     # the jitter on the CSA shaper, its tables loaded through the bus
     "bus_jitter":    ("bus", ["TB_JITTER", "USE_SHAPER_CSA_CR4RC"], "hits_config_tb_golden_jitter.vcd"),
+    # the same loading made through the SAPHO adapter, hits_sapho (2026-10-29, issue #14)
+    "bus_sapho":     ("bus", ["TB_SAPHO"], "hits_config_tb_golden_sapho.vcd"),
 }
 
 # Goldens that must NEVER change: sha256 of the file with LF line endings.

@@ -49,6 +49,7 @@ Table 1: the builds of the regression and their goldens (in `verification/golden
 | `bus_phase` | bus | `TB_PHASE` (fixed phase +8, F34) | `hits_config_tb_golden_phase.vcd` |
 | `bus_phase_csa` | bus | `TB_PHASE USE_SHAPER_CSA_CR4RC` | `hits_config_tb_golden_phase_csa.vcd` |
 | `bus_jitter` | bus | `TB_JITTER USE_SHAPER_CSA_CR4RC` | `hits_config_tb_golden_jitter.vcd` |
+| `bus_sapho` | bus | `TB_SAPHO` (through the SAPHO adapter, F34) | `hits_config_tb_golden_sapho.vcd` |
 
 The comparison ignores only what is not behavior: the `$date` and `$version`
 blocks, the `RTL_DIR` path of the testbench, and the order of value changes

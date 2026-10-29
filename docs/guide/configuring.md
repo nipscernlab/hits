@@ -33,6 +33,27 @@ of power-up, and in a synthesis with the bus tied off this way the tools remove
 it. The DE10-Nano example, `projects/de10_nano/`, has the bus on its GPIO headers
 instead, for a controller outside the board ([Examples](examples.md)).
 
+### With SAPHO
+
+The adapter `hits_sapho` (`rtl/hits/hits_sapho.v`) connects the ports of a
+SAPHO processor to the bus. Each register is a port: `out(p, x)` writes
+register `p` and `in(p)` reads it, so a program sets the occupancy with
+`out(3, x)` and checks that it talks to HITS with `in(0)`, which gives
+`0x4854`. The adapter is combinational and only turns the one-hot `out_en`
+and `req_in` of SAPHO into `addr`; SAPHO and `hits` run on the same clock.
+
+```verilog
+hits_sapho #(.NUBITS(32), .N_OUT(12), .N_IN(3)) adapter (
+    .out(out), .out_en(out_en), .req_in(req_in), .in(in),
+    .addr(addr), .wdata(wdata), .wr(wr), .rd(rd), .rdata(rdata));
+```
+
+`NUBITS` is the word of the program; `N_OUT` and `N_IN` are the widths of the
+`out_en` and `req_in` that YANC generated for it, at most 16. A program that
+writes registers up to `MEM_DATA` (11) needs 12 output ports, and one that
+reads `STATUS` (2) needs 3 input ports. Above 16 bits, the high bits of the
+word written are dropped and those of the word read are 0.
+
 ## Running and stopping
 
 The register `CONTROL` has one bit, `RUN`.
