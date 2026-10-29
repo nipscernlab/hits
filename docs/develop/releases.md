@@ -27,7 +27,16 @@ The versions of the papers are kept by their tags, not as releases:
 the code of the revision ([Papers](../guide/papers.md)).
 
 The release `linux-image-v1` is not a version of HITS: it holds the operating
-system image of the board with the ARM processor.
+system image of the board with the ARM processor. Neither are the pre-releases
+`board-bitstream-v<n>`: each holds the `.rbf`, the `.sof` and the `stp1.stp` of
+that board compiled with Quartus 23.1std.1 from the commit of its tag, with
+their hashes, so that the board can be tested without compiling
+(`projects/de10_nano_arm/README.md`). CI has no Quartus, so after a change to
+`projects/de10_nano_arm/hardware/` or to the RTL the board uses, the last
+pre-release no longer matches `main`; the next one is compiled from `main` when
+the board needs it. The first,
+`board-bitstream-v1`, is from commit `ef32eec`. A pre-release becomes a release
+once a capture on the board equals the simulation (Step 12 of that README).
 
 ## What a release contains
 
