@@ -48,11 +48,11 @@ from the image of the card on 2026-10-28:
 
 The bitstream on the card and the prebuilt `.sof` and `.rbf` in
 `hardware/output_files/` are those of 2025-06-12 and predate the synchronizer;
-compiling the project gives the current design. Shipping a current bitstream with
-each release is [issue #10](https://github.com/nipscernlab/hits/issues/10).
+compiling the project gives the current design. A compiled bitstream of a recent
+commit is in the pre-releases `board-bitstream-v<n>` ([Releases](releases.md)).
 
 The files that Platform Designer, Quartus and the SoC EDS generate are not in git, except the prebuilt
-bitstreams in `hardware/output_files/` and the ARM program binary (to become release assets, issue #10).
+bitstreams in `hardware/output_files/` and the ARM program binary.
 Before the first compilation, generate the HPS system with
 `qsys-generate soc_system.qsys --synthesis=VERILOG` in `hardware/`; the README of the folder,
 [`projects/de10_nano_arm/README.md`](https://github.com/nipscernlab/hits/blob/main/projects/de10_nano_arm/README.md),
