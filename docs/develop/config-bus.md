@@ -151,4 +151,5 @@ registered at the pins and enabled by a switch, it takes 839 ALMs, 1386 register
 - The assembling register against narrow write ports, by measurement.
 - The maximum orbit (`BUNCH_POS`) is not in `CAPS`; the program has to know it.
 - A controller on another clock.
-- The adapters (SAPHO, Avalon-MM, AXI4-Lite) are not written yet.
+- The adapters for Avalon-MM and AXI4-Lite are not written yet. The SAPHO adapter,
+  `rtl/hits/hits_sapho.v`, is (2026-10-29, [issue #14](https://github.com/nipscernlab/hits/issues/14)).

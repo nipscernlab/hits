@@ -184,7 +184,7 @@ To get the paper's behaviour on today's code, use the `paper` build (see
 
 ```
 rtl/hits.v                       THE SIMULATOR, its top: hits_core + the configuration bus
-rtl/hits/                        hits_core.v (the circuit) and hits_cfg.v (the registers of the bus)
+rtl/hits/                        hits_core.v (the circuit), hits_cfg.v (the registers of the bus) and hits_sapho.v (the SAPHO adapter)
 rtl/components/random/           Pseudo-random generators (three kinds, chosen by RNG_TYPE), used by every stage that draws
 rtl/components/hit_generation/   Hit draw + bunch-train mask
 rtl/components/energy/           Energy amplitude (segmented inverse CDF; the 3 tables remain)
@@ -407,6 +407,7 @@ fails, the core changed. The `bus` builds test the configuration bus (see
 | `bus_phase` | bus | `TB_PHASE` (fixed phase +8, F34) | `hits_config_tb_golden_phase.vcd` |
 | `bus_phase_csa` | bus | `TB_PHASE USE_SHAPER_CSA_CR4RC` | `hits_config_tb_golden_phase_csa.vcd` |
 | `bus_jitter` | bus | `TB_JITTER USE_SHAPER_CSA_CR4RC` | `hits_config_tb_golden_jitter.vcd` |
+| `bus_sapho` | bus | `TB_SAPHO` (through the SAPHO adapter, F34) | `hits_config_tb_golden_sapho.vcd` |
 
 The comparator ignores only run metadata (`$date`, `$version` and the testbench
 `RTL_DIR` path parameter). Intentional behavior changes require regenerating the

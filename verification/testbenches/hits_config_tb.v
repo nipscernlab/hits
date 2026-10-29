@@ -14,7 +14,9 @@
 //
 // The .mif files are loaded through RTL_DIR and testdata/, RELATIVE to this folder: run
 // with cwd = verification/testbenches. Builds of the regression: bus (F34), bus_phase (F34,
-// TB_PHASE), bus_phase_csa and bus_jitter (-DUSE_SHAPER_CSA_CR4RC with TB_PHASE, TB_JITTER).
+// TB_PHASE), bus_phase_csa and bus_jitter (-DUSE_SHAPER_CSA_CR4RC with TB_PHASE, TB_JITTER),
+// and bus_sapho (TB_SAPHO): the same loading and reads made as a SAPHO makes them, with out
+// and the one-hot out_en and req_in, through the adapter rtl/hits/hits_sapho.v.
 
 `timescale 1ns/100ps
 
@@ -54,10 +56,46 @@ module hits_config_tb;
 `endif
 
     // ---------------------------------------------------------------- the bus
+    wire [15:0] rdata;
+`ifdef TB_SAPHO
+    // the ports of a 32-bit SAPHO with 12 output and 3 input ports, through the adapter
+    reg  [31:0] s_out = 32'd0;
+    reg  [11:0] s_out_en = 12'd0;
+    reg  [2:0]  s_req_in = 3'd0;
+    wire [31:0] s_in;
+    wire [3:0]  addr;
+    wire [15:0] wdata;
+    wire        wr, rd;
+
+    hits_sapho #(.NUBITS(32), .N_OUT(12), .N_IN(3)) adapter (
+        .out(s_out), .out_en(s_out_en), .req_in(s_req_in), .in(s_in),
+        .addr(addr), .wdata(wdata), .wr(wr), .rd(rd), .rdata(rdata)
+    );
+
+    // out(a, d): the high 16 bits of the word are not 0, as a negative int of a program
+    // would leave them, and the adapter must drop them
+    task bus_write(input [3:0] a, input [15:0] d);
+        begin
+            @(negedge clk); s_out = {16'hA5C3, d}; s_out_en = 12'd1 << a;
+            @(negedge clk); s_out_en = 12'd0;
+        end
+    endtask
+
+    integer in_errors = 0;                      // reads whose high 16 bits were not 0
+    task bus_read(input [3:0] a, output [15:0] d);
+        begin
+            @(negedge clk); s_req_in = 3'd1 << a;
+            #1 d = s_in[15:0];
+            if (s_in[31:16] !== 16'd0) begin
+                $display("ERROR: in(%0d) high bits %h", a, s_in[31:16]); in_errors = in_errors + 1;
+            end
+            @(negedge clk); s_req_in = 3'd0;
+        end
+    endtask
+`else
     reg  [3:0]  addr = 4'd0;
     reg  [15:0] wdata = 16'd0;
     reg         wr = 1'b0, rd = 1'b0;
-    wire [15:0] rdata;
 
     task bus_write(input [3:0] a, input [15:0] d);
         begin
@@ -73,6 +111,7 @@ module hits_config_tb;
             @(negedge clk); rd = 1'b0;
         end
     endtask
+`endif
 
     // ---------------------------------------------------------------- dut
     wire d_hits, d_mask;
@@ -294,15 +333,24 @@ module hits_config_tb;
 
         repeat (N_RUN / 2) @(posedge clk);
         // a scalar while running: the occupancy, in both on the same edge
+`ifdef TB_SAPHO
+        @(negedge clk); s_out = 32'd12000; s_out_en = 12'd1 << 3;
+        stim.r_occupancy_next = 16'd12000;              // the reference takes it on the same rising edge
+        @(negedge clk); s_out_en = 12'd0;
+`else
         @(negedge clk); addr = 4'd3; wdata = 16'd12000; wr = 1'b1;
         stim.r_occupancy_next = 16'd12000;              // the reference takes it on the same rising edge
         @(negedge clk); wr = 1'b0;
+`endif
         repeat (N_RUN / 2) @(posedge clk);
         comparing <= 1'b0;
 
         bus_read(4'd0, v); if (v !== 16'h4854) begin $display("ERROR: ID %h", v); errors = errors + 1; end
         bus_read(4'd1, v); $display("CAPS %h", v);
         bus_read(4'd2, v); if (v !== 16'd1) begin $display("ERROR: STATUS %h", v); errors = errors + 1; end
+`ifdef TB_SAPHO
+        errors = errors + in_errors;
+`endif
 
         $display("compared %0d cycles: %0d differences", cycles, errors);
         if (errors == 0) $display("hits through the bus = hits_core with constants, bit for bit");
