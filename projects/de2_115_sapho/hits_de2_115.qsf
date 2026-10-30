@@ -1,0 +1,124 @@
+# HITS configured from a menu on SAPHO, with a PS/2 keyboard and a VGA screen, on the
+# DE2-115 (issue #14). hits is the default build (F34 pulse, no phase), as in sim/.
+set_global_assignment -name FAMILY "Cyclone IV E"
+set_global_assignment -name DEVICE EP4CE115F29C7
+set_global_assignment -name TOP_LEVEL_ENTITY top_hits_de2_115
+set_global_assignment -name SDC_FILE hits_de2_115.sdc
+set_global_assignment -name RESERVE_ALL_UNUSED_PINS_WEAK_PULLUP "AS INPUT TRI-STATED"
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name VERILOG_FILE top_hits_de2_115.v
+set_global_assignment -name VERILOG_FILE pll_de2_115.v
+# SAPHO: the processor generated from software/hits_menu.cpp and the blocks of YANC (sapho/)
+set_global_assignment -name VERILOG_FILE hits_menu.v
+set_global_assignment -name VERILOG_FILE sapho/addr_dec.v
+set_global_assignment -name VERILOG_FILE sapho/instr_dec.v
+set_global_assignment -name VERILOG_FILE sapho/processor.v
+set_global_assignment -name VERILOG_FILE sapho/core.v
+set_global_assignment -name VERILOG_FILE sapho/ula.v
+set_global_assignment -name VERILOG_FILE sapho/myKeyPS2.v
+set_global_assignment -name VERILOG_FILE sapho/myVGAText.v
+# the simulator
+set_global_assignment -name VERILOG_FILE ../../rtl/hits.v
+set_global_assignment -name VERILOG_FILE ../../rtl/hits/hits_core.v
+set_global_assignment -name VERILOG_FILE ../../rtl/hits/hits_cfg.v
+set_global_assignment -name VERILOG_FILE ../../rtl/hits/hits_sapho.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/adc/adc.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/energy/energy_generator.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/energy/energy_icdf.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/energy/energy_seg.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/hit_generation/bunch_train_mask.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/hit_generation/hit_draw.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/hit_generation/hit_generator.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/noise/noise_gauss.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/noise/noise_generator.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/noise/noise_icdf.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/random/lfsr42.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/random/rng.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/random/rng_leap.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/random/rng_round_robin.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/random/rng_xoshiro.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/iir_order1.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/iir_order2.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_csa_cr4rc.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_csa_cr4rc_phase.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_fenics.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_fenics_f34.v
+set_global_assignment -name VERILOG_FILE ../../rtl/components/shaper/shaper_fenics_f34_phase.v
+# pins (DE2-115 User Manual, Terasic, v2.3): Table 4-5 clock, 4-2 push-buttons, 4-3 LEDs,
+# 4-19 PS/2, 4-16 ADV7123. KEY and LEDG are on the banks of JP7, 2.5 V by default.
+set_location_assignment PIN_Y2 -to CLOCK_50
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to CLOCK_50
+set_location_assignment PIN_M23 -to KEY0
+set_instance_assignment -name IO_STANDARD "2.5 V" -to KEY0
+set_location_assignment PIN_E21 -to LEDG[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LEDG[0]
+set_location_assignment PIN_E22 -to LEDG[1]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LEDG[1]
+set_location_assignment PIN_E25 -to LEDG[2]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LEDG[2]
+set_location_assignment PIN_E24 -to LEDG[3]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LEDG[3]
+set_location_assignment PIN_G6 -to PS2_CLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PS2_CLK
+set_location_assignment PIN_H5 -to PS2_DAT
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to PS2_DAT
+set_location_assignment PIN_E12 -to VGA_R[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[0]
+set_location_assignment PIN_E11 -to VGA_R[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[1]
+set_location_assignment PIN_D10 -to VGA_R[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[2]
+set_location_assignment PIN_F12 -to VGA_R[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[3]
+set_location_assignment PIN_G10 -to VGA_R[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[4]
+set_location_assignment PIN_J12 -to VGA_R[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[5]
+set_location_assignment PIN_H8 -to VGA_R[6]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[6]
+set_location_assignment PIN_H10 -to VGA_R[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_R[7]
+set_location_assignment PIN_G8 -to VGA_G[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_G[0]
+set_location_assignment PIN_G11 -to VGA_G[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_G[1]
+set_location_assignment PIN_F8 -to VGA_G[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_G[2]
+set_location_assignment PIN_H12 -to VGA_G[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_G[3]
+set_location_assignment PIN_C8 -to VGA_G[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_G[4]
+set_location_assignment PIN_B8 -to VGA_G[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_G[5]
+set_location_assignment PIN_F10 -to VGA_G[6]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_G[6]
+set_location_assignment PIN_C9 -to VGA_G[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_G[7]
+set_location_assignment PIN_B10 -to VGA_B[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_B[0]
+set_location_assignment PIN_A10 -to VGA_B[1]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_B[1]
+set_location_assignment PIN_C11 -to VGA_B[2]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_B[2]
+set_location_assignment PIN_B11 -to VGA_B[3]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_B[3]
+set_location_assignment PIN_A11 -to VGA_B[4]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_B[4]
+set_location_assignment PIN_C12 -to VGA_B[5]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_B[5]
+set_location_assignment PIN_D11 -to VGA_B[6]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_B[6]
+set_location_assignment PIN_D12 -to VGA_B[7]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_B[7]
+set_location_assignment PIN_A12 -to VGA_CLK
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_CLK
+set_location_assignment PIN_F11 -to VGA_BLANK_N
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_BLANK_N
+set_location_assignment PIN_G13 -to VGA_HS
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_HS
+set_location_assignment PIN_C13 -to VGA_VS
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_VS
+set_location_assignment PIN_C10 -to VGA_SYNC_N
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to VGA_SYNC_N
+
+set_global_assignment -name LAST_QUARTUS_VERSION "24.1std.0 Lite Edition"

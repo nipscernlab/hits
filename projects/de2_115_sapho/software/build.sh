@@ -1,6 +1,7 @@
 #!/bin/sh
-# build.sh -- builds the SAPHO of hits_menu.cpp with YANC and puts the processor and its
-# memories in projects/de2_115_sapho/, where the simulation and the board project read them.
+# build.sh -- builds the SAPHO of hits_menu.cpp with YANC and puts the processor, its
+# memories and the blocks of SAPHO it needs (sapho/) in projects/de2_115_sapho/, where the
+# simulation and the board project read them.
 #
 #   YANC=/path/to/yanc sh build.sh
 #
@@ -18,6 +19,10 @@ TMP="$(mktemp -d)"
 for f in hits_menu.v hits_menu_data.mif hits_menu_inst.mif pc_hits_menu_mem.txt; do
     cp "$TMP/hits_menu/$f" "$OUT/$f"
 done
+mkdir -p "$OUT/sapho"
+for f in addr_dec instr_dec processor core ula myKeyPS2 myVGAText; do
+    cp "$YANC/SAPHO/$f.v" "$OUT/sapho/$f.v"
+done
 echo "yanc $(git -C "$YANC" log -1 --format='%h %cs')" > "$OUT/hits_menu.yanc"
 rm -rf "$TMP"
-echo "built: hits_menu.v and its memories, with $(cat "$OUT/hits_menu.yanc")"
+echo "built: hits_menu.v, its memories and sapho/, with $(cat "$OUT/hits_menu.yanc")"
