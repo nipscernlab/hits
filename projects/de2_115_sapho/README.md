@@ -33,7 +33,10 @@ case where `PHASE0` and `SIGMA` act.
 Both clocks come from one PLL fed by the 50 MHz of the board. SAPHO and `hits`
 share the 40 MHz clock, so the bus needs no synchronizer. The keyboard
 and the screen run on the 25 MHz pixel clock; the program reaches them through the
-links that cross clocks (`#define YANC_LINK_SYNC 0`). The program uses integers
+links that cross clocks (`#define YANC_LINK_SYNC 0`): each side synchronizes the
+bit of the other, SAPHO those of the blocks and the blocks those of SAPHO (their
+parameter `LINK_SYNC` = 0, the default since
+[yanc#64](https://github.com/nipscernlab/yanc/issues/64)). The program uses integers
 only, so SAPHO is built without a float unit, multiplier or divider, and its word
 is 16 bits, the width of the bus: occupancy and sigma (0 to 65535) are `unsigned`,
 the other values `int`.
@@ -201,21 +204,21 @@ Quartus Prime Lite 24.1, EP4CE115F29C7, this project, 2026-10-30:
 
 | Block | Logic elements | Registers |
 |---|---|---|
-| `hits` | 4042 | 1732 |
-| SAPHO `hits_menu`, 16 bits | 862 | 321 |
-| of which the data stack of SAPHO (8 words) | 159 | 131 |
-| of which the call stack of SAPHO (8 addresses) | 103 | 91 |
-| `myVGAText` | 342 | 135 |
-| `myKeyPS2` | 283 | 99 |
+| `hits` | 4023 | 1732 |
+| SAPHO `hits_menu`, 16 bits | 863 | 321 |
+| of which the data stack of SAPHO (8 words) | 160 | 131 |
+| of which the call stack of SAPHO (8 addresses) | 102 | 91 |
+| `myVGAText` | 345 | 137 |
+| `myKeyPS2` | 283 | 101 |
 | `hits_sapho` | 5 | 0 |
-| `hex_debug`, the displays | 542 | 267 |
-| Signal Tap (with its JTAG hub) | 1569 | 1367 |
-| Total | 7675 (7%) | 3964 |
+| `hex_debug`, the displays | 543 | 267 |
+| Signal Tap (with its JTAG hub) | 1568 | 1367 |
+| Total | 7656 (7%) | 3964 |
 
 Memory 721 678 bits (18%), of which 606 208 are Signal Tap (74 signals of 8192
 samples); 12 multipliers of 9 bits (2%), 1 PLL of 4. Fmax in the worst corner
-(Slow 1200mV 85C): **56.2 MHz** for the 40 MHz clock (7.2 ns of slack) and
-93.1 MHz for the 25 MHz one; hold met everywhere. The only ports left
+(Slow 1200mV 85C): **54.9 MHz** for the 40 MHz clock (6.8 ns of slack) and
+86.5 MHz for the 25 MHz one; hold met everywhere. The only ports left
 unconstrained are the JTAG pins of Signal Tap (`altera_reserved_*`). Without
 Signal Tap and the displays, the system was 5552 logic elements.
 
@@ -230,8 +233,3 @@ say "stack depths from the program", and the simulation fails if a stack overflo
 
 The test on the board (above): step 4 of issue #14. Then the captures of Signal Tap
 against the simulation, sample by sample.
-
-The bits of SAPHO cross to the 25 MHz clock through two flip-flops in the top
-(`toma_s`, `cade_s`), because the blocks of YANC take them with none
-([yanc#64](https://github.com/nipscernlab/yanc/issues/64)). When YANC fixes that,
-the two flip-flops move into the blocks.

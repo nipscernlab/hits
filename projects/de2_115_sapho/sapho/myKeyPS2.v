@@ -36,14 +36,21 @@
 //       .ps2_clk(PS2_CLK), .ps2_dat(PS2_DAT),
 //       .taqui(taqui_k), .dado(cade_dado_k), .cade(cade_k),
 //       .tem_tecla(tem));                         // optional, to an in() port
+// The program's C comes from another clock unless LINK_SYNC says otherwise:
+// with LINK_SYNC = 0 (the default) it goes through two flip-flops of this
+// block's clock before the queue sees it; with LINK_SYNC = 1 (the SAPHO on
+// this block's clock, cade_sync) they are left out (GitHub issue #64). The
+// wiring above is the SAPHO on the same clock: add .LINK_SYNC(1) to save two
+// cycles a key; without it the block works too.
 // Checked by Scripts/hw/tb_keyps2.v.
 
 module myKeyPS2
 #(
-	parameter LAYOUT  = "ABNT2", // "ABNT2" (the default) or "US"
-	parameter NUBITS  = 32,      // width of the word cade() returns
-	parameter DEPTH   = 4,       // characters the queue holds
-	parameter CLK_KHZ = 25000    // the clock, to count the 1 ms frame timeout
+	parameter LAYOUT    = "ABNT2", // "ABNT2" (the default) or "US"
+	parameter NUBITS    = 32,      // width of the word cade() returns
+	parameter DEPTH     = 4,       // characters the queue holds
+	parameter CLK_KHZ   = 25000,   // the clock, to count the 1 ms frame timeout
+	parameter LINK_SYNC = 0        // 1: the SAPHO on this block's clock (cade_sync)
 )
 (
 	input               clk,
@@ -266,7 +273,16 @@ end
 
 reg t, offered;                                    // T bit; a character is on dado
 
-assign pop   = offered & (cade == t);              // the program took it
+wire c_in;                                         // the program's C, on this block's clock
+generate if (LINK_SYNC) begin : csync
+	assign c_in = cade;
+end else begin : csync
+	reg s1 = 1'b0, s2 = 1'b0;
+	always @ (posedge clk) begin s1 <= cade; s2 <= s1; end
+	assign c_in = s2;
+end endgenerate
+
+assign pop   = offered & (c_in == t);              // the program took it
 assign taqui = t;
 assign tem_tecla = (count != 0);
 assign dado  = $signed(rdq);                       // sign-extended to NUBITS (a {0{..}} pad is not Verilog at NUBITS 8);
@@ -278,10 +294,10 @@ assign dado  = $signed(rdq);                       // sign-extended to NUBITS (a
 
 always @ (posedge clk) begin
 	if (rst) begin
-		t       <= cade;
+		t       <= c_in;
 		offered <= 1'b0;
 	end else if (offered) begin
-		if (cade == t) offered <= 1'b0;
+		if (c_in == t) offered <= 1'b0;
 	end else if (count != 0) begin
 		t       <= ~t;
 		offered <= 1'b1;

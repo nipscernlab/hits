@@ -7,9 +7,8 @@
 // screen (myVGAText) on the 25 MHz pixel clock, both clocks from one PLL. The
 // program reaches the keyboard and the screen through links that cross clocks
 // (YANC_LINK_SYNC 0), and the bus through the adapter, with no synchronizer.
-// The links synchronize only the blocks' bits, on the side of SAPHO; the bits of
-// SAPHO (T to the screen, C to the keyboard) cross here, through two flip-flops
-// of clk25, before the blocks use them (yanc#64: the blocks take them with none).
+// Each side of a link synchronizes the bit of the other: SAPHO those of the blocks,
+// the blocks (LINK_SYNC = 0, their default) those of SAPHO.
 // hits is the default build (F34 pulse, no phase), as in the simulation.
 //
 // Reset: KEY[0] (0 when pressed) or the PLL not locked. Asserted at once and
@@ -103,20 +102,11 @@ module top_hits_de2_115 (
         .shaper_clip(shaper_clip), .noise_out(noise_out));
 
     // ------------------------------------------------------------ keyboard and screen, 25 MHz
-    // the bits of SAPHO on clk25: the screen sees T only after the word, which SAPHO
-    // loads when T flips and holds until it sees C, has settled; the queue of the
-    // keyboard sees C on all its flip-flops at the same edge
-    reg [1:0] toma_s = 2'b00, cade_s = 2'b00;
-    always @(posedge clk25) begin
-        toma_s <= {toma_s[0], toma};
-        cade_s <= {cade_s[0], cade};
-    end
-
     myKeyPS2 #(.LAYOUT("ABNT2"), .NUBITS(16), .CLK_KHZ(25000)) kbd (.clk(clk25), .rst(rst25),
-        .ps2_clk(PS2_CLK), .ps2_dat(PS2_DAT), .taqui(taqui), .dado(kdado), .cade(cade_s[1]), .tem_tecla());
+        .ps2_clk(PS2_CLK), .ps2_dat(PS2_DAT), .taqui(taqui), .dado(kdado), .cade(cade), .tem_tecla());
 
     wire hs, vs, ativo, pixel;
-    myVGAText #(.NUBITS(16)) screen (.clk(clk25), .rst(rst25), .toma(toma_s[1]), .dado(tdado), .valeu(valeu),
+    myVGAText #(.NUBITS(16)) screen (.clk(clk25), .rst(rst25), .toma(toma), .dado(tdado), .valeu(valeu),
         .hs(hs), .vs(vs), .ativo(ativo), .pixel(pixel));
 
     assign VGA_R = {8{pixel & ativo}};

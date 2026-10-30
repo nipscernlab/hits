@@ -64,14 +64,11 @@ hits #(
     .shaper_clip(shaper_clip), .noise_out(noise_out));
 
 // ---------------------------------------------------------------- keyboard and screen, 25 MHz
-// the bits of SAPHO through two flip-flops of clk25, as in the top
-reg [1:0] toma_s = 2'b00, cade_s = 2'b00;
-always @(posedge clk25) begin toma_s <= {toma_s[0], toma}; cade_s <= {cade_s[0], cade}; end
 reg ps2_clk = 1, ps2_dat = 1;
 myKeyPS2 #(.LAYOUT("ABNT2"), .NUBITS(16), .CLK_KHZ(25000)) kbd (.clk(clk25), .rst(rst),
-    .ps2_clk(ps2_clk), .ps2_dat(ps2_dat), .taqui(taqui), .dado(kdado), .cade(cade_s[1]));
+    .ps2_clk(ps2_clk), .ps2_dat(ps2_dat), .taqui(taqui), .dado(kdado), .cade(cade));
 wire hs, vs, ativo, pixel;
-myVGAText #(.NUBITS(16)) screen (.clk(clk25), .rst(rst), .toma(toma_s[1]), .dado(tdado), .valeu(valeu),
+myVGAText #(.NUBITS(16)) screen (.clk(clk25), .rst(rst), .toma(toma), .dado(tdado), .valeu(valeu),
     .hs(hs), .vs(vs), .ativo(ativo), .pixel(pixel));
 
 // ---------------------------------------------------------------- the displays of the board
