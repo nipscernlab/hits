@@ -1,6 +1,8 @@
 # Release of HITS: pushing a tag v<version> (git tag v1.0.0 && git push origin v1.0.0)
-# checks the version, the regression and the manual, and only then builds the two
-# archives, creates the release and publishes the manual (docs/develop/releases.md).
+# checks the version, that the commit is on main, the regression, the menu of the DE2-115
+# and the manual, and only then builds the two archives, publishes the manual and, once
+# the manual is up, creates the release (docs/develop/releases.md). A tag with a hyphen
+# (v1.0.0-rc1) gives a pre-release.
 #
 #   hits-rtl-<version>.zip   rtl/, the examples (projects/aurora/, projects/de10_nano/,
 #                            projects/zybo/ and the testbench verification/testbenches/hits_tb.v),
@@ -22,17 +24,26 @@ permissions:
 jobs:
   check:
     name: version, regression, manual
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: The tag is the version in VERSION
         run: |
           v="$(tr -d '[:space:]' < VERSION)"
           test "v$v" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME but VERSION says $v"; exit 1; }
+      - name: The tagged commit is on main
+        run: |
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "$GITHUB_SHA is not on main"; exit 1; }
       - name: Install Icarus Verilog
         run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends iverilog
+      - name: Simulator version
+        run: iverilog -V | head -1
       - name: Regression (every build identical to its golden)
         run: python3 verification/regress.py
+      - name: The menu of HITS on SAPHO (DE2-115, issue #14)
+        run: sh projects/de2_115_sapho/sim/run.sh
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -50,18 +61,17 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs/_build/html
-      - name: Create the release
-        uses: softprops/action-gh-release@v2
+      - name: Keep the archives for the release
+        uses: actions/upload-artifact@v4
         with:
-          name: 'HITS ${{ github.ref_name }}'
-          generate_release_notes: true
-          files: |
+          name: archives
+          path: |
             hits-rtl-*.zip
             hits-docs-*.zip
 
   pages:
     name: publish the manual
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: check
     permissions:
       pages: write
@@ -73,3 +83,21 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deploy
         uses: actions/deploy-pages@v4
+
+  release:
+    name: create the release
+    runs-on: ubuntu-24.04
+    needs: pages
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: archives
+      - name: Create the release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: 'HITS ${{ github.ref_name }}'
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            hits-rtl-*.zip
+            hits-docs-*.zip

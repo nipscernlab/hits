@@ -87,7 +87,7 @@ Table 2: the registers.
 | 3 | `OCCUPANCY` | write | 16 | hit probability, `OCCUPANCY`/65536 per filled bunch crossing |
 | 4 | `PEDESTAL` | write | 13 | the pedestal in ADC counts, two's complement |
 | 5 | `MODE` | write | 2 | bit 0: a hit on every filled crossing; bit 1: the bunch-train mask is used |
-| 6 | `ORBIT_LEN` | write | 12 | bunch crossings per orbit, up to `BUNCH_POS`; only while stopped |
+| 6 | `ORBIT_LEN` | write | 16 | bunch crossings per orbit, 1 to `BUNCH_POS`; another value is ignored; only while stopped |
 | 7 | `PHASE0` | write | 6 | mean phase of the jitter, in steps of 1/64 of the period, two's complement |
 | 8 | `SIGMA` | write | 16 | the jitter, as the constant `K` below |
 | 9 | `MEM_SEL` | write | 3 | which vector the next writes to `MEM_DATA` go to (Table 4) |
@@ -113,8 +113,10 @@ The parameters of `hits` give the value of each scalar at power-up and after
 `rst` (Tables 1 and 3 of [Parameters and macros](../reference/parameters.md)):
 `OCCUPANCY_INIT`, `PEDESTAL_INIT`, `OCC_BYPASS`, `BUNCH_TRAIN_ACTIVE`, the full
 orbit `BUNCH_POS`, `PHASE0` and `SIGMA_PS`. What is built is fixed at synthesis:
-a fixed phase or a jitter that the bus will set needs `PHASE_SHAPER` = 1 or
-`JITTER` = 1, even when `PHASE0` and `SIGMA_PS` start at 0.
+a fixed phase that the bus will set needs `PHASE_SHAPER` = 1, and a jitter
+`JITTER` = 1, even when `PHASE0` and `SIGMA_PS` start at 0. `JITTER` = 1 builds
+the shaper with a phase by itself; with `PHASE_SHAPER` = 0 it stops the
+elaboration.
 
 ## Loading a vector
 

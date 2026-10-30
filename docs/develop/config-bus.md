@@ -64,6 +64,8 @@ reaching every register of the core.
 Each scalar fits in one word, so a write is atomic and there is no shadow copy.
 `ORBIT_LEN` is written only while stopped: changing it while running could leave
 the position past the new end, and checking for that would cost a comparator.
+A value outside 1 to `BUNCH_POS` is ignored, since 0 or a longer orbit would
+read past the end of the mask.
 The vectors are written only while stopped, a rule with no hardware to enforce
 it.
 

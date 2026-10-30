@@ -197,7 +197,7 @@ projects/zybo/                   Vivado: hits_vivado.tcl synthesizes the core ou
 projects/de10_nano_arm/          The DE10-Nano SoC (FPGA + ARM/HPS): simulator + reconstruction technique; its README says what is generated and how
 projects/de10_nano_arm/hardware/ The Quartus project (Qsys, SignalTap, PLL, reconstruction/, output_files/)
 projects/de10_nano_arm/software/ The ARM side: change_occupancy (sets occupancy and pedestal), the boot script, the hps_0.h generator
-projects/de10_nano_arm/tools/    MATLAB script that plots a SignalTap capture (hardware/output_files/stp1.csv)
+projects/de10_nano_arm/tools/    compare_capture.py (a SignalTap capture against the simulation, board_reference.v), plot_signaltap.m (plots a capture)
 projects/de2_115_sapho/          The DE2-115: HITS configured from a menu on SAPHO (PS/2 keyboard, VGA screen), displays and Signal Tap
 verification/regress.py          The regression (and compare_vcd.py, the comparison)
 verification/testbenches/        hits_tb.v (the simulator alone), hits_config_tb.v (the configuration bus), testdata/
@@ -521,9 +521,8 @@ sample by sample.
 
 Each contributor works on their own branch (e.g. `fabio/shaper-tweaks`) and
 opens a pull request; what enters `main` is decided together, in review, before
-merging. The maintainer commits directly to `main`; for those commits the gate is the
-pre-commit hook, and CI runs the same checks after the push (as an admin push,
-it does not wait for them). `main` is the reference the
+merging. Since 2026-10-27 this holds for the maintainer too: `main` takes no direct
+push, and a pull request merges only with its checks green. `main` is the reference the
 group's papers cite, so it must stay reproducible at all times: the regression
 against the golden VCDs (see *Regression check*) must pass on every merge --
 the `regression` CI check runs `verification/regress.py` on every pull

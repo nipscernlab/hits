@@ -18,7 +18,7 @@ Table 1: what is product and what is development.
 | `verification/` | development | the regression: `regress.py`, the testbenches (`testbenches/`) and the golden waveforms (`goldens/`) |
 | `.githooks/`, `.github/` | development | the pre-commit hook and the CI workflows |
 | `projects/de10_nano_arm/` | development | the DE10-Nano with the ARM processor and the reconstruction techniques it builds, see [The board with the ARM processor](board-with-arm.md) |
-| `projects/de2_115_sapho/` | development | HITS configured from a menu on SAPHO, with a PS/2 keyboard and a VGA screen, on the DE2-115 (issue #14): the program, its simulation and the Quartus project of the board, with the 7-segment displays showing what reached `hits` and a Signal Tap of its outputs; the simulation is not in CI |
+| `projects/de2_115_sapho/` | development | HITS configured from a menu on SAPHO, with a PS/2 keyboard and a VGA screen, on the DE2-115 (issue #14): the program, its simulation and the Quartus project of the board, with the 7-segment displays showing what reached `hits` and a Signal Tap of its outputs; CI runs its simulation |
 
 The examples are not tied to the product: the core does not depend on any board,
 and a change to an example does not change the simulator. The regression
