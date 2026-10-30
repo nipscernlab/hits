@@ -21,7 +21,7 @@ always #12.5 clk40 = ~clk40;
 always #20   clk25 = ~clk25;
 
 // ---------------------------------------------------------------- SAPHO and hits
-wire signed [31:0] s_in, s_out, kdado, tdado;
+wire signed [15:0] s_in, s_out, kdado, tdado;
 wire [2:0] s_req_in;
 wire [8:0] s_out_en;
 wire cade, taqui, toma, valeu;
@@ -33,7 +33,7 @@ hits_menu cpu (.clk(clk40), .rst(rst), .in(s_in), .out(s_out), .req_in(s_req_in)
 wire [3:0] addr;
 wire [15:0] wdata, rdata;
 wire wr, rd;
-hits_sapho #(.NUBITS(32), .N_OUT(9), .N_IN(3)) adapter (
+hits_sapho #(.NUBITS(16), .N_OUT(9), .N_IN(3)) adapter (
     .out(s_out), .out_en(s_out_en), .req_in(s_req_in), .in(s_in),
     .addr(addr), .wdata(wdata), .wr(wr), .rd(rd), .rdata(rdata));
 
@@ -65,10 +65,10 @@ hits #(
 
 // ---------------------------------------------------------------- keyboard and screen, 25 MHz
 reg ps2_clk = 1, ps2_dat = 1;
-myKeyPS2 #(.LAYOUT("ABNT2"), .NUBITS(32), .CLK_KHZ(25000)) kbd (.clk(clk25), .rst(rst),
+myKeyPS2 #(.LAYOUT("ABNT2"), .NUBITS(16), .CLK_KHZ(25000)) kbd (.clk(clk25), .rst(rst),
     .ps2_clk(ps2_clk), .ps2_dat(ps2_dat), .taqui(taqui), .dado(kdado), .cade(cade));
 wire hs, vs, ativo, pixel;
-myVGAText #(.NUBITS(32)) screen (.clk(clk25), .rst(rst), .toma(toma), .dado(tdado), .valeu(valeu),
+myVGAText #(.NUBITS(16)) screen (.clk(clk25), .rst(rst), .toma(toma), .dado(tdado), .valeu(valeu),
     .hs(hs), .vs(vs), .ativo(ativo), .pixel(pixel));
 
 // ---------------------------------------------------------------- the keyboard

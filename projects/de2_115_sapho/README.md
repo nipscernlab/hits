@@ -33,7 +33,14 @@ Both clocks come from one PLL fed by the 50 MHz of the board. SAPHO and `hits`
 share the 40 MHz clock, so the bus needs no synchronizer. The keyboard
 and the screen run on the 25 MHz pixel clock; the program reaches them through the
 links that cross clocks (`#define YANC_LINK_SYNC 0`). The program uses integers
-only, so SAPHO is built without a float unit, multiplier or divider.
+only, so SAPHO is built without a float unit, multiplier or divider, and its word
+is 16 bits, the width of the bus: occupancy and sigma (0 to 65535) are `unsigned`,
+the other values `int`.
+
+A known limit of the 16-bit word: `cin >>` of YANC does not catch a number too
+big for the word, it wraps. A value typed above 65535 is taken modulo 65536
+(70000 gives 4464), and one out of the `int` range (-32768 to 32767) may wrap
+into the accepted range instead of giving "out of range".
 
 The registers of the bus are write-only except `ID`, `CAPS` and `STATUS`
 ([Configuring HITS at run time](../../docs/guide/configuring.md)). The program
@@ -107,19 +114,19 @@ Quartus Prime Lite 24.1, EP4CE115F29C7, this project, 2026-10-29:
 
 | Block | Logic elements | Registers |
 |---|---|---|
-| `hits` | 4034 | 1727 |
-| SAPHO `hits_menu` | 1382 | 497 |
-| of which the data stack of SAPHO (8 words) | 298 | 259 |
+| `hits` | 4004 | 1727 |
+| SAPHO `hits_menu`, 16 bits | 889 | 321 |
+| of which the data stack of SAPHO (8 words) | 159 | 131 |
 | of which the call stack of SAPHO (8 addresses) | 102 | 91 |
-| `myVGAText` | 372 | 151 |
-| `myKeyPS2` | 289 | 99 |
+| `myVGAText` | 342 | 135 |
+| `myKeyPS2` | 288 | 99 |
 | `hits_sapho` | 6 | 0 |
-| Total | 6104 (5%) | 2503 |
+| Total | 5552 (5%) | 2311 |
 
-Memory 120 710 bits (3%), 12 multipliers of 9 bits (2%), 1 PLL of 4. Fmax in
-the worst corner (Slow 1200mV 85C): **49.9 MHz** for the
-40 MHz clock (5.0 ns of slack, on a path inside SAPHO, from its data memory to
-its program counter) and 79.2 MHz for the 25 MHz one.
+Memory 114 652 bits (3%), 12 multipliers of 9 bits (2%), 1 PLL of 4. Fmax in
+the worst corner (Slow 1200mV 85C): **58.4 MHz** for the
+40 MHz clock (7.9 ns of slack, on a path inside SAPHO, from its data memory to
+its program counter) and 84.8 MHz for the 25 MHz one.
 
 YANC sizes the two stacks of SAPHO from the program (8 and 8 here). With 7 or
 more labels on one line of the `.asm`, as a long `else if` chain gives, its
