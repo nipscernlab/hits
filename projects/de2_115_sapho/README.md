@@ -207,7 +207,7 @@ Quartus Prime Lite 24.1, EP4CE115F29C7, this project, 2026-10-30:
 | Signal Tap (with its JTAG hub) | 1569 | 1367 |
 | Total | 7683 (7%) | 3960 |
 
-Memory 721 094 bits (18%), of which 606 208 are Signal Tap (74 signals of 8192
+Memory 721 678 bits (18%), of which 606 208 are Signal Tap (74 signals of 8192
 samples); 12 multipliers of 9 bits (2%), 1 PLL of 4. Fmax in the worst corner
 (Slow 1200mV 85C): **56.7 MHz** for the 40 MHz clock (7.3 ns of slack) and
 80.8 MHz for the 25 MHz one; hold met everywhere. The only ports left
