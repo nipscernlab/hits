@@ -67,14 +67,16 @@ noise) from the menu is not there yet.
 | `sim/hits_menu_tb.v`, `sim/run.sh` | the simulation of the whole system |
 | `top_hits_de2_115.v`, `pll_de2_115.v` | the top of the board and its PLL (50 MHz to 40 and 25 MHz) |
 | `hex_debug.v` | what reached `hits`, on the 7-segment displays |
+| `BOARD_TEST.md` | the test on the board, step by step |
 | `signaltap/make_stp.py`, `signaltap/stp1.stp` | the Signal Tap: the script writes the `.stp` |
 | `hits_de2_115.qpf`, `.qsf`, `.sdc` | the Quartus project: sources, pins, timing |
 
 ## Building and simulating
 
-Changing the program needs a clone of YANC with its compilers built
-(`Scripts/regress.sh` leaves them in `.smoke/bin`), given by `YANC` (default
-`c:/nipscern/yanc`). The simulation needs only Icarus Verilog. From this folder:
+Changing the program needs a clone of YANC with its compilers built (`make` in
+it, which leaves them in `bin/`; `build.sh` also takes `stage/bin` and
+`.smoke/bin`), given by `YANC` (default `c:/nipscern/yanc`). The simulation needs
+only Icarus Verilog. From this folder:
 
     sh software/build.sh          # after changing hits_menu.cpp
     sh sim/run.sh                 # ends with "hits_menu: ok"
@@ -164,39 +166,10 @@ of the window; commit that only if the script is changed to match.
 
 ### The test
 
-The menu starts with occupancy 65530, pedestal 146, mode 2 (the mask), orbit 3564,
-running. The mask has 2340 filled crossings in the 3564 of an orbit, so the
-expected hit rates are, with the orbit of 3564:
-
-| Mode | Occupancy | Hits per second |
-|---|---|---|
-| 2 (mask) | 65530 | about 26 260 000 |
-| 2 (mask) | 20000 | about 8 015 000 (± a few thousand) |
-| 0 (no mask) | 20000 | about 12 207 000 (± a few thousand) |
-| 3 (every filled crossing) | any | about 26 263 000 |
-| 1 (every crossing) | any | 40 000 000 |
-| any, stopped or occupancy 0 | | 0 |
-
-A gate of 1 s holds 11 223 orbits and a third, so even the modes with no draw move
-by up to about a thousand from one second to the next.
-
-1. Load the `.sof`. LEDG0 blinks, LEDG1 is on, LEDG3 is off; the menu shows
-   `ID 4854  CAPS 1000  running`.
-2. SW17 down, SW3..SW0 = 3, 4, 5, 6 and 2 in turn: the displays show 65530, 146,
-   2, 3564 and 1, the values of the menu.
-3. SW17 up: about 26 260 000 hits per second.
-4. Option 1, 20000: SW = 3 shows 20000, and SW17 up about 8 015 000.
-5. Option 3 (mode) with 1, then with 3, then with 0: 40 000 000, about
-   26 263 000, about 12 207 000. Then mode 2 again.
-6. Option 2, -5: SW = 4 shows `-5`.
-7. Option 4, 9999: "out of range", the display of 6 unchanged; then 3000: SW = 6
-   shows 3000.
-8. Option 7: `stopped`, SW = 2 shows 0, the rate 0. Option 7 again: back to 1.
-9. Signal Tap, with the menu back at pedestal 146 and occupancy 655 (1%, so the
-   pulses stand apart; at 20000 they pile up inside the trains): the ADC samples
-   sit at the pedestal with a pulse on top of it after each hit; with pedestal 500
-   the whole trace moves up by 354.
-10. KEY0: the menu and the displays back at the values of step 2.
+The whole procedure, from installing the tools to the report, with what the
+screen, the displays and Signal Tap must show at each step and the expected hit
+rates, is in [BOARD_TEST.md](BOARD_TEST.md), written for the student who has the
+board and the assistant helping them.
 
 ## Size and speed
 
@@ -231,5 +204,5 @@ say "stack depths from the program", and the simulation fails if a stack overflo
 
 ## Still to do
 
-The test on the board (above): step 4 of issue #14. Then the captures of Signal Tap
+The test on the board ([BOARD_TEST.md](BOARD_TEST.md)): step 4 of issue #14. Then the captures of Signal Tap
 against the simulation, sample by sample.
