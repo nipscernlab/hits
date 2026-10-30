@@ -60,6 +60,8 @@ noise) from the menu is not there yet.
 | `hits_menu.yanc` | the YANC commit that generated them |
 | `sim/hits_menu_tb.v`, `sim/run.sh` | the simulation of the whole system |
 | `top_hits_de2_115.v`, `pll_de2_115.v` | the top of the board and its PLL (50 MHz to 40 and 25 MHz) |
+| `hex_debug.v` | what reached `hits`, on the 7-segment displays |
+| `signaltap/make_stp.py`, `signaltap/stp1.stp` | the Signal Tap: the script writes the `.stp` |
 | `hits_de2_115.qpf`, `.qsf`, `.sdc` | the Quartus project: sources, pins, timing |
 
 ## Building and simulating
@@ -75,7 +77,8 @@ Changing the program needs a clone of YANC with its compilers built
 The simulation types on the keyboard the options and values of the menu (the
 occupancy, a negative pedestal, an orbit out of range and then a valid one, stop,
 a letter where a number goes, run) and checks, after each, the registers inside
-`hits` and the text on the screen. It takes about a minute (9.7 ms of simulated
+`hits` and the text on the screen; at the end, what the 7-segment displays show
+for each register and for the hit count (over 4000 cycles instead of 1 s). It takes about a minute (9.7 ms of simulated
 time; the bench runs the PS/2 clock at 250 kHz instead of the 10 to 17 kHz of a
 keyboard). It is not in the regression of the repository: CI has no YANC.
 
@@ -103,30 +106,105 @@ the whole system, and the program writes the registers again when it starts.
 | LEDG3 | reset active |
 
 The pins are those of the DE2-115 User Manual (Terasic, v2.3): Table 4-5 (clock),
-4-2 (push-buttons), 4-3 (LEDs), 4-19 (PS/2) and 4-16 (the ADV7123 video DAC). KEY
-and LEDG are 2.5 V, the default of JP7. The screen goes to the DAC as white on
+4-1 (slide switches), 4-2 (push-buttons), 4-3 (LEDs), 4-4 (7-segment displays),
+4-19 (PS/2) and 4-16 (the ADV7123 video DAC). KEY, SW, LEDG and HEX0 to HEX3[1]
+are 2.5 V, the default of JP7; HEX3[2] to HEX7 are 3.3 V, the default of JP6
+(Table 4-11), except HEX7[6], always 3.3 V. The screen goes to the DAC as white on
 black, with `VGA_CLK = ~clk25` so the DAC latches each pixel in its middle: the
 mapping of `myVGAText`, checked on this board in YANC.
 
+### The 7-segment displays
+
+The registers of the bus are write-only, and the screen shows the copy the program
+keeps. The displays show what reached `hits` (`hex_debug.v`, watching the bus at
+the ports of `hits`), in decimal, chosen by the slide switches:
+
+| SW17 | SW3..SW0 | HEX7 | HEX5 | HEX4..HEX0 |
+|---|---|---|---|---|
+| down | 2 to 8 | the register | the sign | the last value written to it |
+| down | other | the number | | dashes |
+| up | | the hits per second, on all eight digits, once a second | | |
+
+`PEDESTAL` (4) and `PHASE0` (7) show with their sign; the others are unsigned.
+
+### Signal Tap
+
+`signaltap/stp1.stp` captures the outputs of `hits` on the 40 MHz clock: the ADC
+samples (`shaper_clip`), the shaped pulse (`shaper_out`), the noise
+(`noise_out`), the energy (`energy_out`), `hits_out` and `bt_mask_out`, 8192
+samples (two orbits and a bit) from the first hit, with the buses as line charts.
+Open it from Quartus (Tools, Signal Tap Logic Analyzer, with this project open),
+choose the USB Blaster and the `.sof`, and run.
+
+The `.stp` is written by `signaltap/make_stp.py`, not by the Signal Tap window, so
+a change of signals or depth is a change of the script, reviewed like the rest.
+Quartus compiles Signal Tap from assignments in the `.qsf`; after changing the
+script:
+
+    python signaltap/make_stp.py
+    quartus_stp hits_de2_115 --stp_file signaltap/stp1.stp --enable
+
+and compile again. Saving the `.stp` from the window rewrites it with the layout
+of the window; commit that only if the script is changed to match.
+
+### The test
+
+The menu starts with occupancy 65530, pedestal 146, mode 2 (the mask), orbit 3564,
+running. The mask has 2340 filled crossings in the 3564 of an orbit, so the
+expected hit rates are, with the orbit of 3564:
+
+| Mode | Occupancy | Hits per second |
+|---|---|---|
+| 2 (mask) | 65530 | about 26 260 000 |
+| 2 (mask) | 20000 | about 8 015 000 (± a few thousand) |
+| 0 (no mask) | 20000 | about 12 207 000 (± a few thousand) |
+| 3 (every filled crossing) | any | about 26 262 000 |
+| 1 (every crossing) | any | 40 000 000 |
+| any, stopped or occupancy 0 | | 0 |
+
+A gate of 1 s holds 11 223 orbits and a third, so even the modes with no draw move
+by up to about a thousand from one second to the next.
+
+1. Load the `.sof`. LEDG0 blinks, LEDG1 is on, LEDG3 is off; the menu shows
+   `ID 4854  CAPS 1000  running`.
+2. SW17 down, SW3..SW0 = 3, 4, 5, 6 and 2 in turn: the displays show 65530, 146,
+   2, 3564 and 1, the values of the menu.
+3. SW17 up: about 26 260 000 hits per second.
+4. Option 1, 20000: SW = 3 shows 20000, and SW17 up about 8 015 000.
+5. Option 3 (mode) with 1, then with 3, then with 0: 40 000 000, about
+   26 262 000, about 12 207 000. Then mode 2 again.
+6. Option 2, -5: SW = 4 shows `-5`.
+7. Option 4, 9999: "out of range", the display of 6 unchanged; then 3000: SW = 6
+   shows 3000.
+8. Option 7: `stopped`, SW = 2 shows 0, the rate 0. Option 7 again: back to 1.
+9. Signal Tap, with the menu back at pedestal 146: the ADC samples sit at the
+   pedestal with pulses on top of it after each hit; with pedestal 500 the whole
+   trace moves up by 354.
+10. KEY0: the menu and the displays back at the values of step 2.
+
 ## Size and speed
 
-Quartus Prime Lite 24.1, EP4CE115F29C7, this project, 2026-10-29:
+Quartus Prime Lite 24.1, EP4CE115F29C7, this project, 2026-10-30:
 
 | Block | Logic elements | Registers |
 |---|---|---|
-| `hits` | 4004 | 1727 |
-| SAPHO `hits_menu`, 16 bits | 889 | 321 |
+| `hits` | 4049 | 1732 |
+| SAPHO `hits_menu`, 16 bits | 862 | 321 |
 | of which the data stack of SAPHO (8 words) | 159 | 131 |
-| of which the call stack of SAPHO (8 addresses) | 102 | 91 |
-| `myVGAText` | 342 | 135 |
-| `myKeyPS2` | 288 | 99 |
-| `hits_sapho` | 6 | 0 |
-| Total | 5552 (5%) | 2311 |
+| of which the call stack of SAPHO (8 addresses) | 103 | 91 |
+| `myVGAText` | 345 | 135 |
+| `myKeyPS2` | 289 | 99 |
+| `hits_sapho` | 5 | 0 |
+| `hex_debug`, the displays | 541 | 267 |
+| Signal Tap (with its JTAG hub) | 1569 | 1367 |
+| Total | 7683 (7%) | 3960 |
 
-Memory 114 652 bits (3%), 12 multipliers of 9 bits (2%), 1 PLL of 4. Fmax in
-the worst corner (Slow 1200mV 85C): **58.4 MHz** for the
-40 MHz clock (7.9 ns of slack, on a path inside SAPHO, from its data memory to
-its program counter) and 84.8 MHz for the 25 MHz one.
+Memory 720 860 bits (18%), of which 606 208 are Signal Tap (74 signals of 8192
+samples); 12 multipliers of 9 bits (2%), 1 PLL of 4. Fmax in the worst corner
+(Slow 1200mV 85C): **56.7 MHz** for the 40 MHz clock (7.3 ns of slack) and
+80.8 MHz for the 25 MHz one; hold met everywhere. The only ports left
+unconstrained are the JTAG pins of Signal Tap (`altera_reserved_*`). Without
+Signal Tap and the displays, the system was 5552 logic elements.
 
 YANC sizes the two stacks of SAPHO from the program (8 and 8 here). With 7 or
 more labels on one line of the `.asm`, as a long `else if` chain gives, its
@@ -137,4 +215,5 @@ analysis gives up and leaves 128 each, which made SAPHO 7668 logic elements
 
 ## Still to do
 
-The test on the board, with Signal Tap against the simulation: step 4 of issue #14.
+The test on the board (above): step 4 of issue #14. Then the captures of Signal Tap
+against the simulation, sample by sample.

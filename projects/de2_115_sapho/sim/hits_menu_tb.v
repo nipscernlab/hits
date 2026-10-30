@@ -71,6 +71,23 @@ wire hs, vs, ativo, pixel;
 myVGAText #(.NUBITS(16)) screen (.clk(clk25), .rst(rst), .toma(toma), .dado(tdado), .valeu(valeu),
     .hs(hs), .vs(vs), .ativo(ativo), .pixel(pixel));
 
+// ---------------------------------------------------------------- the displays of the board
+// hex_debug as on the board, with a gate of 4000 cycles instead of 1 s
+localparam GATE = 4000;
+reg [3:0] sel = 0;
+reg rate_mode = 0;
+wire [6:0] hx [0:7];
+hex_debug #(.GATE(GATE)) debug (.clk(clk40), .rst(rst), .addr(addr), .wdata(wdata), .wr(wr),
+    .hits_out(hits_out), .sel(sel), .rate_mode(rate_mode),
+    .hex0(hx[0]), .hex1(hx[1]), .hex2(hx[2]), .hex3(hx[3]),
+    .hex4(hx[4]), .hex5(hx[5]), .hex6(hx[6]), .hex7(hx[7]));
+
+// the hits of each gate, counted here to compare with the displays
+integer bench_count = 0, bench_rate = 0;
+always @(posedge clk40)
+	if (debug.gate == GATE - 1) begin bench_rate <= bench_count + hits_out; bench_count <= 0; end
+	else if (hits_out) bench_count <= bench_count + 1;
+
 // ---------------------------------------------------------------- the keyboard
 localparam HALF = 2000;                     // ns: a 250 kHz PS/2 clock, faster than a real keyboard so
                                             // the bench runs faster; myKeyPS2 filters 8 cycles of 25 MHz
@@ -136,6 +153,27 @@ task dump_screen; integer r, c, last; reg [8*80-1:0] line; begin
 	end
 end endtask
 
+// the eight displays as text, HEX7 first: a digit, '-', ' ', or '?' for a pattern
+// that is none of them
+function [7:0] glyph; input [6:0] g; begin
+	case (g)
+		7'h40: glyph = "0"; 7'h79: glyph = "1"; 7'h24: glyph = "2"; 7'h30: glyph = "3";
+		7'h19: glyph = "4"; 7'h12: glyph = "5"; 7'h02: glyph = "6"; 7'h78: glyph = "7";
+		7'h00: glyph = "8"; 7'h10: glyph = "9"; 7'h3F: glyph = "-"; 7'h7F: glyph = " ";
+		default: glyph = "?";
+	endcase
+end endfunction
+
+task want_hex; input [3:0] r; input [8*8-1:0] expected; reg [8*8-1:0] got; integer k; begin
+	sel = r;
+	#2000;                                   // 80 cycles: the conversion takes 17
+	for (k = 0; k < 8; k = k + 1) got[8*k +: 8] = glyph(hx[k]);
+	if (got !== expected) begin
+		errors = errors + 1;
+		$display("ERROR: displays with SW = %0d: \"%s\", want \"%s\"", r, got, expected);
+	end
+end endtask
+
 task want; input [8*16-1:0] what; input [31:0] got, expected; begin
 	if (got !== expected) begin
 		errors = errors + 1;
@@ -175,6 +213,30 @@ initial begin
 	on_screen("options 1 to 7", 14);
 	type_line("7", 1);
 	want("run", sim.cfg.run, 1);
+
+	// the displays: what reached hits (pedestal -5 and phase0 0 are signed)
+	want_hex(2, "2      1");
+	want_hex(3, "3  20000");
+	want_hex(4, "4 -    5");
+	want_hex(5, "5      2");
+	want_hex(6, "6   3000");
+	want_hex(7, "7      0");
+	want_hex(8, "8      0");
+	want_hex(0, "0  -----");
+	// the hits per second (here per gate), against the count of the bench
+	rate_mode = 1;
+	@(posedge clk40); while (debug.gate != 0) @(posedge clk40);
+	@(posedge clk40); while (debug.gate != 0) @(posedge clk40);
+	#100;
+	begin : rate_check
+		reg [8*8-1:0] got, expected; integer k;
+		for (k = 0; k < 8; k = k + 1) got[8*k +: 8] = glyph(hx[k]);
+		$sformat(expected, "%8d", bench_rate);
+		if (got !== expected || bench_rate == 0) begin
+			errors = errors + 1;
+			$display("ERROR: hits per gate on the displays \"%s\", the bench counted %0d", got, bench_rate);
+		end else $display("hits per gate of %0d cycles: %0d", GATE, bench_rate);
+	end
 
 	// the stacks of SAPHO never overflowed (YANC sizes them from the program)
 	want("data stack full", cpu.p_hits_menu.core.sp.fl_full, 0);

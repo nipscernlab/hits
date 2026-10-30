@@ -18,12 +18,18 @@
 //
 // LEDG[0] blinks (clk40 alive), LEDG[1] = PLL locked, LEDG[2] = parity of
 // shaper_clip (keeps the chain from being optimized away), LEDG[3] = reset active.
+//
+// The displays HEX7..HEX0 show what reached hits (hex_debug.v): the last word
+// written to the register chosen on SW[3:0], or, with SW17 up, the hits per second.
+// Signal Tap (signaltap/stp1.stp) captures the outputs of hits as waveforms.
 module top_hits_de2_115 (
     input  wire       CLOCK_50,
     input  wire       KEY0,             // KEY[0] of the board
     output wire [3:0] LEDG,
     input  wire       PS2_CLK,
     input  wire       PS2_DAT,
+    input  wire [17:0] SW,
+    output wire [6:0] HEX0, HEX1, HEX2, HEX3, HEX4, HEX5, HEX6, HEX7,
     output wire [7:0] VGA_R,
     output wire [7:0] VGA_G,
     output wire [7:0] VGA_B,
@@ -109,6 +115,19 @@ module top_hits_de2_115 (
     assign VGA_CLK     = ~clk25;
     assign VGA_HS = hs;
     assign VGA_VS = vs;
+
+    // ------------------------------------------------------------ the displays
+    // SW is asynchronous: two flip-flops before it chooses anything
+    reg [4:0] sw_m, sw_s;
+    always @(posedge clk40) begin
+        sw_m <= {SW[17], SW[3:0]};
+        sw_s <= sw_m;
+    end
+
+    hex_debug debug (.clk(clk40), .rst(rst40), .addr(addr), .wdata(wdata), .wr(wr),
+        .hits_out(hits_out), .sel(sw_s[3:0]), .rate_mode(sw_s[4]),
+        .hex0(HEX0), .hex1(HEX1), .hex2(HEX2), .hex3(HEX3),
+        .hex4(HEX4), .hex5(HEX5), .hex6(HEX6), .hex7(HEX7));
 
     // ------------------------------------------------------------ LEDs
     reg [24:0] blink = 0;
