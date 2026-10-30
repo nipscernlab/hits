@@ -87,11 +87,11 @@ module hits_core
 	// what is built: the *_phase shaper, and the jitter draw. By default both come from
 	// PHASE0 and SIGMA_PS; hits passes its own, the values then coming from the inputs
 	// phase0, sigma_k.
-	parameter PHASE_SHAPER = (PHASE0 != 0) || (SIGMA_PS != 0),
 	parameter JITTER = (SIGMA_PS != 0),
+	parameter PHASE_SHAPER = (PHASE0 != 0) || JITTER,   // the jitter needs the *_phase shaper
 	// xoshiro state of the phase draw: the LONG jump (2^96) of XO_SEED_HIT (rtl/components/random/xoshiro_jump.py)
 	parameter [127:0] XO_SEED_PHASE  = {32'd3324829296, 32'd1325001476, 32'd2724274168, 32'd176110054},
-	// the Gaussian source of the draw: the sigma = 4 ADC noise ROM, read as 4096 z (2^-10 ADC)
+	// the Gaussian source of the draw: the sigma = 4 ADC noise ROM, read unrounded, 2^17 per z (2^-15 ADC)
 	parameter MEM_GAUSS_PHASE = "noise_gauss_s4.mif",
 	parameter MEM_PH_F34 = "shaper_fenics_f34_phase.mif",
 	parameter MEM_PH_CSA = "shaper_csa_cr4rc_phase.mif"
@@ -190,6 +190,9 @@ end
 if (SIGMA_PS < 0 || SIGMA_PS > 12500) begin : erro_sigma
 	ERROR_SIGMA_PS_must_be_in_0_to_12500 e ();
 end
+if (JITTER && !PHASE_SHAPER) begin : erro_jitter
+	ERROR_JITTER_needs_PHASE_SHAPER e ();   // the draw would move no pulse
+end
 if (JITTER) begin : jitter
 	wire [31:0] w_ph;
 	rng
@@ -256,8 +259,8 @@ endgenerate
 // CSA + CR-4RC shaper: the generic "paper simulator" pulse -- the exact
 // readout chain of the group's papers (bi-exponential detector pulse, CSA
 // with a 51 ns feedback pole, unbuffered CR-4RC with a 500 us CR and four
-// 5 ns RC stages). Peak = 1 (at scale 2**G_OUT_LOG) on sample 2; 1 cycle of
-// latency; needs a reset.
+// 5 ns RC stages). Peak = 1 (at scale 2**G_OUT_LOG) on sample 2; latency 5
+// (1 with USE_SHAPER_NO_PIPE, the paper build); needs a reset.
 generate
 if (PHASE_SHAPER) begin : g_phase
 `ifdef USE_SHAPER_NO_PIPE

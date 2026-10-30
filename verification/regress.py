@@ -145,7 +145,12 @@ VVP_ATTEMPTS = 3          # the run plus two retries
 
 def check_frozen():
     import hashlib
+    used = {golden for _, _, golden in BUILDS.values()}
     for name, h in FROZEN.items():
+        # a frozen golden no build compares against would protect nothing
+        if name not in used:
+            sys.exit("regress: no build compares against the FROZEN golden %s. "
+                     "Restore its build in BUILDS." % name)
         with open(os.path.join(GOLDENS, name), "rb") as f:
             # line endings normalized: a Windows checkout (autocrlf) gives CRLF,
             # the CI (Linux) gives LF, and the golden is the same

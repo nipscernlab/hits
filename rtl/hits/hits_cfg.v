@@ -92,7 +92,8 @@ always @(posedge clk or posedge rst)
 				A_OCCUPANCY: occupancy <= wdata;
 				A_PEDESTAL:  offset <= wdata[12:0];
 				A_MODE:      {train_active, occ_bypass} <= wdata[1:0];
-				A_ORBIT_LEN: orbit_last <= wdata[$clog2(BUNCH_POS)-1:0] - 1'b1;
+				A_ORBIT_LEN: if (wdata != 0 && wdata <= BUNCH_POS)   // else the position would
+				                 orbit_last <= wdata[$clog2(BUNCH_POS)-1:0] - 1'b1;   // leave the mask
 				A_PHASE0:    phase0 <= wdata[5:0];
 				A_SIGMA:     sigma_k <= wdata;
 				A_MEM_SEL:   begin mem_sel <= wdata[2:0]; chunk <= 4'd0; end

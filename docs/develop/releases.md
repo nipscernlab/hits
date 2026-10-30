@@ -53,12 +53,15 @@ A release is made by pushing a tag `v<version>`. The release workflow then
 checks, and stops at the first failure:
 
 1. the tag equals the content of `VERSION`;
-2. the regression passes, every build identical to its golden;
-3. the manual builds with every warning treated as an error (a broken link or a
+2. the tagged commit is on `main`;
+3. the regression passes, every build identical to its golden, and so does the
+   simulation of the menu of the DE2-115;
+4. the manual builds with every warning treated as an error (a broken link or a
    page outside the table of contents stops it).
 
-Only then does it build the two archives, create the release with them and
-publish the manual. Keeping the manual correct is part of every change, not of
+Only then does it build the two archives and publish the manual, and once the
+manual is up it creates the release with them. A tag with a hyphen, such as
+`v1.0.0-rc1`, gives a pre-release. Keeping the manual correct is part of every change, not of
 the release: a change that makes a sentence of this manual untrue fixes the
 sentence in the same commit. The manual is built in CI on every push for that
 reason.

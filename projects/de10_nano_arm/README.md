@@ -292,7 +292,9 @@ Then *File > Export*, format *Comma Separated Values File (.csv)*, and save as
 
 **What you should see:** the *Data* tab with `rst_sync[1]` at 1 at the start and
 falling to 0 at the trigger; after it, `shaper_clip` with a baseline around 146
-and pulses where `event_bt` has energy. `occupancy` = 64 and `offset` = 146.
+and pulses where `event_bt` has energy, and `offset` = 146. `occupancy` shows 0:
+the tapped bits 6 to 0 are the low bits of the 16-bit occupancy, which this build
+holds at 0, and the 64 of the ARM is in bits 15 to 9, which are not tapped.
 
 ### Step 12: compare the capture with the simulation
 
@@ -424,7 +426,10 @@ These files are not in git (`.gitignore`); each tool writes them.
    statically linked, so that it does not depend on the glibc 2.20 of the image:
 
    ```sh
-   arm-none-linux-gnueabihf-gcc -std=gnu99 -Wall -O2 -static -I../ -I$HWLIB -I$HWLIB/soc_cv_av \n       -Dsoc_cv_av -o build/change_occupancy main.c && arm-none-linux-gnueabihf-strip build/change_occupancy
+   cd projects/de10_nano_arm/software/change_occupancy
+   HWLIB=~/intel-socfpga-hwlib/armv7a/hwlib/include   # where that repository was cloned
+   arm-none-linux-gnueabihf-gcc -std=gnu99 -Wall -O2 -static -I../ -I$HWLIB -I$HWLIB/soc_cv_av \
+       -Dsoc_cv_av -o build/change_occupancy main.c && arm-none-linux-gnueabihf-strip build/change_occupancy
    ```
 
    It was run in `qemu-arm` with a file in place of `/dev/mem`: pedestal 147 and
@@ -440,8 +445,10 @@ These files are not in git (`.gitignore`); each tool writes them.
    folder):
 
    ```sh
-   git checkout 9664745 -- projects/de10_nano_arm/software/spl_bsp projects/de10_nano_arm/soc_system.dts projects/de10_nano_arm/soc_system.dtb
+   git restore --source=9664745 --worktree -- projects/de10_nano_arm/software/spl_bsp projects/de10_nano_arm/soc_system.dts projects/de10_nano_arm/soc_system.dtb
    ```
+
+   They come back as files outside git, not staged for the next commit.
 
    Regenerating them takes the SoC EDS (`bsp-editor` on
    `hardware/hps_isw_handoff/soc_system_hps_0`, and `sopc2dts` with the two

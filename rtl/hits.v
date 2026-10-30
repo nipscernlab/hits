@@ -77,7 +77,8 @@
 // OCCUPANCY_INIT and PEDESTAL_INIT. A bus left idle (wr = rd = 0) keeps them.
 //
 // PHASE_SHAPER and JITTER say what is built, whatever PHASE0 and SIGMA_PS are: a bus
-// that sets the jitter needs JITTER = 1 at synthesis.
+// that sets the jitter needs JITTER = 1 at synthesis, and JITTER = 1 builds the *_phase
+// shaper by itself (JITTER = 1 with PHASE_SHAPER = 0 stops the elaboration).
 //
 // Until 2026-10-21 this module was hits_bus, and hits was a variant with every value
 // fixed by its parameters; that variant is gone. Who wants the values fixed instantiates
@@ -151,12 +152,12 @@ module hits
 	                                       // (Gaussian tail to 6.34 sigma), saturated at -32..31
 	// xoshiro state of the phase draw: the LONG jump (2^96) of XO_SEED_HIT (rtl/components/random/xoshiro_jump.py)
 	parameter [127:0] XO_SEED_PHASE  = {32'd3324829296, 32'd1325001476, 32'd2724274168, 32'd176110054},
-	// the Gaussian source of the draw: the sigma = 4 ADC noise ROM, read as 4096 z (2^-10 ADC)
+	// the Gaussian source of the draw: the sigma = 4 ADC noise ROM, read unrounded, 2^17 per z (2^-15 ADC)
 	parameter MEM_GAUSS_PHASE = "noise_gauss_s4.mif",
 	parameter MEM_PH_F34 = "shaper_fenics_f34_phase.mif",
 	parameter MEM_PH_CSA = "shaper_csa_cr4rc_phase.mif",
-	parameter PHASE_SHAPER = (PHASE0 != 0) || (SIGMA_PS != 0),
 	parameter JITTER = (SIGMA_PS != 0),
+	parameter PHASE_SHAPER = (PHASE0 != 0) || JITTER,   // the jitter needs the *_phase shaper
 	parameter [15:0] OCCUPANCY_INIT = 16'd0,
 	parameter [12:0] PEDESTAL_INIT = 13'd0
 )
@@ -194,6 +195,7 @@ localparam [15:0] CAPS = {4'd1, 8'd0, (JITTER != 0), (PHASE_SHAPER != 0 && JITTE
 wire core_rst;
 wire [15:0] occupancy;
 wire [12:0] offset;
+wire signed [ENG_OUT_BITS-1:0] offset_core = $signed(offset);   // the 13 bits of PEDESTAL, sign-extended
 wire occ_bypass, train_active;
 wire [$clog2(BUNCH_POS)-1:0] orbit_last;
 wire signed [5:0] phase0;
@@ -292,7 +294,7 @@ hits_core
 	.clk(clk),
 	.rst(core_rst),
 	.occupancy(occupancy),
-	.offset(offset),
+	.offset(offset_core),
 	.occ_bypass(occ_bypass),
 	.train_active(train_active),
 	.orbit_last(orbit_last),

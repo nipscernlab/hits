@@ -32,7 +32,7 @@ Table 2: the parameters that size the datapath or name files.
 | `RAND_BITS_HITS` | 7 | draw width of the hits with the round-robin and leap generators |
 | `RAND_BITS_ENG` | 10 | address width of the energy tables |
 | `RAND_BITS_NOISE` | 10 | address width of the noise tables |
-| `ENG_OUT_BITS` | 13 | width of the energy and of `offset` |
+| `ENG_OUT_BITS` | 13 | width of the energy and of `offset` (the 13 bits of `PEDESTAL`, sign-extended) |
 | `CLIP_OUT_BITS` | `ENG_OUT_BITS` − 1 | width of the ADC sample (12) |
 | `SHAPER_OUT_BITS` | `ENG_OUT_BITS` + 17 | width of `shaper_out` (30) |
 | `NOISE_OUT_BITS` | 17 | width of `noise_out` |
@@ -53,8 +53,8 @@ Table 3: the parameters of the configuration bus.
 |---|---|---|
 | `OCCUPANCY_INIT` | 0 | the occupancy at power-up and after `rst`, occupancy/65536 (register `OCCUPANCY`) |
 | `PEDESTAL_INIT` | 0 | the pedestal at power-up and after `rst`, ADC counts (register `PEDESTAL`) |
-| `PHASE_SHAPER` | `PHASE0` ≠ 0 or `SIGMA_PS` ≠ 0 | 1: build the shaper with a phase, so the bus can set one |
 | `JITTER` | `SIGMA_PS` ≠ 0 | 1: build the jitter per hit, so the bus can set it |
+| `PHASE_SHAPER` | `PHASE0` ≠ 0 or `JITTER` = 1 | 1: build the shaper with a phase, so the bus can set one; `JITTER` = 1 needs it |
 
 ## Macros
 
@@ -80,4 +80,6 @@ to the Lorenzetti spectrum and the occupancy to 65530),
 `USE_PHASE0=<n>` (`PHASE0`), `USE_PHASE_SIGMA_PS=<ps>` (`SIGMA_PS`) and `USE_OCC_PAPER`
 (the occupancies 25/128 and 80/128 of the `paper` build). The bus testbench
 `verification/testbenches/hits_config_tb.v` reads `TB_PHASE` (a fixed phase
-loaded as one set of coefficients) and `TB_JITTER` (the jitter, with its tables).
+loaded as one set of coefficients), `TB_JITTER` (the jitter, with its tables)
+and `TB_SAPHO` (the same loading made as a SAPHO makes it, through the adapter
+`rtl/hits/hits_sapho.v`).

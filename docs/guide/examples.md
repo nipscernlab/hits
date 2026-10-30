@@ -78,9 +78,12 @@ The arguments are, in any order, the part (default `xc7z010clg400-1`), macros as
 `D:<NAME>` or `D:<NAME>:<value>`, and parameters as `G:<NAME>:<value>`. They use a
 colon because `vivado.bat` on Windows splits its arguments at `=`. The script
 copies the `.mif` files of `rtl/` into the folder, where Vivado reads them, and
-writes `utilization.rpt`, `timing.rpt` and a one-line `result.txt`. It ran with
-Vivado 2025.2 on the two builds above; their results are in
-[Table 2 of Using the core](integrating.md#resources).
+writes `utilization.rpt`, `timing.rpt` and a one-line `result.txt`. The results
+of the two builds above in
+[Table 2 of Using the core](integrating.md#resources) were measured with Vivado
+2025.2 on commit `c182636`, when the top was the core without the bus; today the
+script synthesizes `hits`, whose bus ports stay as ports out of context, so its
+numbers include the bus.
 
 To put the core on an AMD board, add the RTL files to a Vivado project, write a
 top as for Quartus, and check in the synthesis log that every memory file was

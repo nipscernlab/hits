@@ -90,7 +90,7 @@ Table 1: the memory files each part of the core reads.
 | `bunch_train_mask.mif` | `hit_generation/bunch_train_mask.v` | always |
 | `energy_seg_default.mif` (or the ROM in `MEM_SEG`) | `energy/energy_seg.v` | xoshiro, without `USE_ENERGY_TABLES` |
 | `energy_icdf_paper_0..2.mif` | `energy/energy_icdf.v` | the energy tables |
-| `noise_gauss_s4.mif` | `noise/noise_gauss.v` | Gaussian noise; also the jitter draw when `SIGMA_PS` > 0 |
+| `noise_gauss_s4.mif` | `noise/noise_gauss.v` | Gaussian noise; also the jitter draw when `JITTER` = 1 |
 | `noise_s4_icdf0..2.mif`, `noise_s8_icdf0..2.mif` | `noise/noise_icdf.v` | the noise tables |
 | `shaper_fenics_f34_phase.mif` | `shaper/shaper_fenics_f34_phase.v` | F34 with a phase |
 | `shaper_csa_cr4rc_phase.mif` | `shaper/shaper_csa_cr4rc_phase.v` | CSA + CR-4RC with a phase |

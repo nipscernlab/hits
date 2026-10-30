@@ -10,8 +10,10 @@ python verification/regress.py            # exit 0: every build identical to its
 python verification/regress.py sim paper  # a subset
 ```
 
-It needs Python 3 and Icarus Verilog (tested with Python 3.13 and Icarus Verilog
-13.0). It also fails on any error of Icarus Verilog or `vvp`, including a memory file
+It needs Python 3 and Icarus Verilog. It is run with Python 3.13 and Icarus
+Verilog 13.0 on the maintainer's machine, and with Icarus Verilog 12.0 in CI, the
+package of Ubuntu 24.04, to which the workflows are pinned: both give the same
+goldens. It also fails on any error of Icarus Verilog or `vvp`, including a memory file
 that `$readmemb` could not open, even when the waveform matches: a golden taken
 from a broken run would otherwise bless it.
 
@@ -66,7 +68,10 @@ about the paper, not a fix.
   `projects/aurora/` or `verification/` runs the regression
   first and is refused if it fails. It tests the working tree.
 - On every push to `main` and every pull request, in CI
-  (`.github/workflows/regression.yml`, check `regression`).
+  (`.github/workflows/regression.yml`, check `regression`), followed by the
+  simulation of the menu of the DE2-115 (`projects/de2_115_sapho/sim/run.sh`).
+- On every tag `v<version>`, before the release is made
+  (`.github/workflows/release.yml`).
 
 A `vvp` that dies without a message, which happens when the machine runs out of
 memory, is run again up to twice and listed at the end.
