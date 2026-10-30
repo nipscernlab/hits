@@ -64,11 +64,14 @@ hits #(
     .shaper_clip(shaper_clip), .noise_out(noise_out));
 
 // ---------------------------------------------------------------- keyboard and screen, 25 MHz
+// the bits of SAPHO through two flip-flops of clk25, as in the top
+reg [1:0] toma_s = 2'b00, cade_s = 2'b00;
+always @(posedge clk25) begin toma_s <= {toma_s[0], toma}; cade_s <= {cade_s[0], cade}; end
 reg ps2_clk = 1, ps2_dat = 1;
 myKeyPS2 #(.LAYOUT("ABNT2"), .NUBITS(16), .CLK_KHZ(25000)) kbd (.clk(clk25), .rst(rst),
-    .ps2_clk(ps2_clk), .ps2_dat(ps2_dat), .taqui(taqui), .dado(kdado), .cade(cade));
+    .ps2_clk(ps2_clk), .ps2_dat(ps2_dat), .taqui(taqui), .dado(kdado), .cade(cade_s[1]));
 wire hs, vs, ativo, pixel;
-myVGAText #(.NUBITS(16)) screen (.clk(clk25), .rst(rst), .toma(toma), .dado(tdado), .valeu(valeu),
+myVGAText #(.NUBITS(16)) screen (.clk(clk25), .rst(rst), .toma(toma_s[1]), .dado(tdado), .valeu(valeu),
     .hs(hs), .vs(vs), .ativo(ativo), .pixel(pixel));
 
 // ---------------------------------------------------------------- the displays of the board
@@ -123,6 +126,13 @@ end endtask
 
 // ---------------------------------------------------------------- the checks
 integer errors = 0;
+
+// the protocol: ORBIT_LEN is written only with the simulation stopped
+always @(posedge clk40)
+	if (!rst && wr && addr == 4'd6 && sim.cfg.run) begin
+		errors = errors + 1;
+		$display("ERROR: ORBIT_LEN written while running, at %0t", $time);
+	end
 
 function [6:0] at; input integer r, c; integer m; begin
 	m = r + screen.top; if (m >= 30) m = m - 30; at = screen.smem[m*80 + c];
@@ -244,6 +254,10 @@ initial begin
 	type_line("1", 1); type_line("65535", 5);
 	want("occupancy", sim.cfg.occupancy, 65535);
 	want_hex(3, "3  65535");
+	// a negative number for an unsigned register wraps, as cin >> does in C++: -5 is 65531
+	type_line("1", 1); type_line("-5", 2);
+	want("occupancy", sim.cfg.occupancy, 65531);
+	on_screen("1 occupancy  65531 / 65536", 26);
 
 	// options 5 and 6 are not listed in this build (CAPS 1000), so they are no option:
 	// the values after them are read as options and nothing is written

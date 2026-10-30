@@ -41,7 +41,9 @@ the other values `int`.
 A known limit of the 16-bit word: `cin >>` of YANC does not catch a number too
 big for the word, it wraps. A value typed above 65535 is taken modulo 65536
 (70000 gives 4464), and one out of the `int` range (-32768 to 32767) may wrap
-into the accepted range instead of giving "out of range".
+into the accepted range instead of giving "out of range". A negative number for
+an unsigned value wraps too, as `cin >>` does in C++: -5 for the occupancy gives
+65531 (the simulation checks it).
 
 The registers of the bus are write-only except `ID`, `CAPS` and `STATUS`
 ([Configuring HITS at run time](../../docs/guide/configuring.md)). The program
@@ -80,8 +82,10 @@ occupancy, a negative pedestal, an orbit out of range and then a valid one, stop
 a letter where a number goes, run) and checks, after each, the registers inside
 `hits` and the text on the screen; then what the 7-segment displays show for each
 register and for the hit count (over 4000 cycles instead of 1 s), the occupancy at
-65535, options 5 and 6 refused (this build has no phase), and the reset, after which
-the program writes its starting values again. It takes about a minute (15 ms of
+65535 and at -5 (which wraps to 65531), options 5 and 6 refused (this build has no
+jitter), and the reset, after which the program writes its starting values again.
+All along, a monitor checks that `ORBIT_LEN` is written only with the simulation
+stopped. It takes about a minute (15 ms of
 simulated time; the bench runs the PS/2 clock at 250 kHz instead of the 10 to 17 kHz
 of a keyboard). It needs only Icarus, since the generated files are in git, and CI
 runs it on every pull request; `run.sh` exits with 1 when the bench fails.
@@ -166,7 +170,7 @@ expected hit rates are, with the orbit of 3564:
 | 2 (mask) | 65530 | about 26 260 000 |
 | 2 (mask) | 20000 | about 8 015 000 (± a few thousand) |
 | 0 (no mask) | 20000 | about 12 207 000 (± a few thousand) |
-| 3 (every filled crossing) | any | about 26 262 000 |
+| 3 (every filled crossing) | any | about 26 263 000 |
 | 1 (every crossing) | any | 40 000 000 |
 | any, stopped or occupancy 0 | | 0 |
 
@@ -180,14 +184,15 @@ by up to about a thousand from one second to the next.
 3. SW17 up: about 26 260 000 hits per second.
 4. Option 1, 20000: SW = 3 shows 20000, and SW17 up about 8 015 000.
 5. Option 3 (mode) with 1, then with 3, then with 0: 40 000 000, about
-   26 262 000, about 12 207 000. Then mode 2 again.
+   26 263 000, about 12 207 000. Then mode 2 again.
 6. Option 2, -5: SW = 4 shows `-5`.
 7. Option 4, 9999: "out of range", the display of 6 unchanged; then 3000: SW = 6
    shows 3000.
 8. Option 7: `stopped`, SW = 2 shows 0, the rate 0. Option 7 again: back to 1.
-9. Signal Tap, with the menu back at pedestal 146: the ADC samples sit at the
-   pedestal with pulses on top of it after each hit; with pedestal 500 the whole
-   trace moves up by 354.
+9. Signal Tap, with the menu back at pedestal 146 and occupancy 655 (1%, so the
+   pulses stand apart; at 20000 they pile up inside the trains): the ADC samples
+   sit at the pedestal with a pulse on top of it after each hit; with pedestal 500
+   the whole trace moves up by 354.
 10. KEY0: the menu and the displays back at the values of step 2.
 
 ## Size and speed
@@ -196,21 +201,21 @@ Quartus Prime Lite 24.1, EP4CE115F29C7, this project, 2026-10-30:
 
 | Block | Logic elements | Registers |
 |---|---|---|
-| `hits` | 4049 | 1732 |
+| `hits` | 4042 | 1732 |
 | SAPHO `hits_menu`, 16 bits | 862 | 321 |
 | of which the data stack of SAPHO (8 words) | 159 | 131 |
 | of which the call stack of SAPHO (8 addresses) | 103 | 91 |
-| `myVGAText` | 345 | 135 |
-| `myKeyPS2` | 289 | 99 |
+| `myVGAText` | 342 | 135 |
+| `myKeyPS2` | 283 | 99 |
 | `hits_sapho` | 5 | 0 |
-| `hex_debug`, the displays | 541 | 267 |
+| `hex_debug`, the displays | 542 | 267 |
 | Signal Tap (with its JTAG hub) | 1569 | 1367 |
-| Total | 7683 (7%) | 3960 |
+| Total | 7675 (7%) | 3964 |
 
 Memory 721 678 bits (18%), of which 606 208 are Signal Tap (74 signals of 8192
 samples); 12 multipliers of 9 bits (2%), 1 PLL of 4. Fmax in the worst corner
-(Slow 1200mV 85C): **56.7 MHz** for the 40 MHz clock (7.3 ns of slack) and
-80.8 MHz for the 25 MHz one; hold met everywhere. The only ports left
+(Slow 1200mV 85C): **56.2 MHz** for the 40 MHz clock (7.2 ns of slack) and
+93.1 MHz for the 25 MHz one; hold met everywhere. The only ports left
 unconstrained are the JTAG pins of Signal Tap (`altera_reserved_*`). Without
 Signal Tap and the displays, the system was 5552 logic elements.
 
@@ -225,3 +230,8 @@ say "stack depths from the program", and the simulation fails if a stack overflo
 
 The test on the board (above): step 4 of issue #14. Then the captures of Signal Tap
 against the simulation, sample by sample.
+
+The bits of SAPHO cross to the 25 MHz clock through two flip-flops in the top
+(`toma_s`, `cade_s`), because the blocks of YANC take them with none
+([yanc#64](https://github.com/nipscernlab/yanc/issues/64)). When YANC fixes that,
+the two flip-flops move into the blocks.
