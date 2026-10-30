@@ -51,7 +51,7 @@ module top_hits_de2_115 (
     wire rst25 = rst25_sync[1];
 
     // ------------------------------------------------------------ SAPHO and hits, 40 MHz
-    wire signed [31:0] s_in, s_out, kdado, tdado;
+    wire signed [15:0] s_in, s_out, kdado, tdado;
     wire [2:0] s_req_in;
     wire [8:0] s_out_en;
     wire cade, taqui, toma, valeu;
@@ -63,7 +63,7 @@ module top_hits_de2_115 (
     wire [3:0]  addr;
     wire [15:0] wdata, rdata;
     wire        wr, rd;
-    hits_sapho #(.NUBITS(32), .N_OUT(9), .N_IN(3)) adapter (
+    hits_sapho #(.NUBITS(16), .N_OUT(9), .N_IN(3)) adapter (
         .out(s_out), .out_en(s_out_en), .req_in(s_req_in), .in(s_in),
         .addr(addr), .wdata(wdata), .wr(wr), .rd(rd), .rdata(rdata));
 
@@ -94,11 +94,11 @@ module top_hits_de2_115 (
         .shaper_clip(shaper_clip), .noise_out(noise_out));
 
     // ------------------------------------------------------------ keyboard and screen, 25 MHz
-    myKeyPS2 #(.LAYOUT("ABNT2"), .NUBITS(32), .CLK_KHZ(25000)) kbd (.clk(clk25), .rst(rst25),
+    myKeyPS2 #(.LAYOUT("ABNT2"), .NUBITS(16), .CLK_KHZ(25000)) kbd (.clk(clk25), .rst(rst25),
         .ps2_clk(PS2_CLK), .ps2_dat(PS2_DAT), .taqui(taqui), .dado(kdado), .cade(cade), .tem_tecla());
 
     wire hs, vs, ativo, pixel;
-    myVGAText #(.NUBITS(32)) screen (.clk(clk25), .rst(rst25), .toma(toma), .dado(tdado), .valeu(valeu),
+    myVGAText #(.NUBITS(16)) screen (.clk(clk25), .rst(rst25), .toma(toma), .dado(tdado), .valeu(valeu),
         .hs(hs), .vs(vs), .ativo(ativo), .pixel(pixel));
 
     assign VGA_R = {8{pixel & ativo}};

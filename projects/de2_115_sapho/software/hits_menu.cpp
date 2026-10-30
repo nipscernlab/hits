@@ -12,10 +12,16 @@
 // writes one again when it changes. ORBIT_LEN is written with the simulation stopped, as
 // the protocol asks. Integers only: no float operation, so SAPHO gets no float unit.
 //
+// A 16-bit SAPHO, the width of the bus: occupancy and sigma (0 to 65535) are unsigned,
+// the others int. cin >> does not catch a number too big for the word (it wraps), so a
+// value typed above 65535 is taken modulo 65536, and one out of the int range may wrap
+// into the accepted range.
+//
 // Build: build.sh in this folder (YANC). Simulation: ../sim/hits_menu_tb.v.
 
 #pragma yanc nuioou 9
 #pragma yanc nuioin 3
+#pragma yanc nubits 16
 #define YANC_LINK_SYNC 0
 #include <iostream>
 using namespace std;
@@ -24,12 +30,12 @@ using namespace std;
 const int ORBIT_MAX = 3564;
 
 // values written at the start
-int occupancy = 65530;      // per 65536 filled crossings
+unsigned occupancy = 65530;      // per 65536 filled crossings
 int pedestal = 146;         // ADC counts
 int mode = 2;               // bit 0: a hit on every filled crossing; bit 1: the bunch-train mask
 int orbit = 3564;           // crossings per orbit
 int phase0 = 0;             // 1/64 of the period
-int sigma = 0;              // the jitter, as the constant K of the guide
+unsigned sigma = 0;            // the jitter, as the constant K of the guide
 
 void write_all()
 {
@@ -56,6 +62,22 @@ int read_int(int lo, int hi)
         }
         cin.ignore(100, '\n');
         if (v >= lo && v <= hi) return v;
+        cout << "  out of range" << endl;
+    }
+}
+
+// the same for the unsigned registers, from 0 to hi
+unsigned read_uint(unsigned hi)
+{
+    unsigned v;
+    int ok;
+    while (1) {
+        cout << "  value (0 to " << hi << ")? ";
+        cin >> v;
+        ok = !cin.fail();
+        if (!ok) cin.clear();
+        cin.ignore(100, '\n');
+        if (ok && v <= hi) return v;
         cout << "  out of range" << endl;
     }
 }
@@ -92,7 +114,7 @@ int main()
         cin.ignore(100, '\n');
         switch (op) {
         case 1:
-            occupancy = read_int(0, 65535);
+            occupancy = read_uint(65535);
             out(3, occupancy);
             break;
         case 2:
@@ -115,7 +137,7 @@ int main()
             out(7, phase0);
             break;
         case 6:
-            sigma = read_int(0, 65535);
+            sigma = read_uint(65535);
             out(8, sigma);
             break;
         case 7:
