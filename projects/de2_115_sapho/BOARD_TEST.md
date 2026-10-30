@@ -93,7 +93,10 @@ Two ways through this guide:
        git checkout de2-115-bitstream-v2
 
    Git says you are in "detached HEAD": that is expected, you are on the exact
-   commit the bitstream was compiled from.
+   commit the bitstream was compiled from. That commit is older than this guide,
+   so the guide is not in that folder: keep it open on GitHub
+   (`projects/de2_115_sapho/BOARD_TEST.md` on the `main` branch). The design
+   files are the same.
 
 2. Download the three files of the pre-release
    [de2-115-bitstream-v2](https://github.com/nipscernlab/hits/releases/tag/de2-115-bitstream-v2):
