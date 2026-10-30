@@ -38,14 +38,23 @@
 //                               mid-pixel; not checked on the board)
 //   assign VGA_HS = hs;         assign VGA_VS = vs;
 //
+// The program's T comes from another clock unless LINK_SYNC says otherwise:
+// with LINK_SYNC = 0 (the default) it goes through two flip-flops of this
+// block's clock before anything uses it, and the word, which the SAPHO holds
+// still from the cycle T flips (core.v, toma_reg), has settled by then. With
+// LINK_SYNC = 1 (the SAPHO on this block's clock, toma_sync) the two
+// flip-flops are left out: two cycles less a word (GitHub issue #64).
+//
 // Wiring, link k:
 //   myVGAText vga (.clk(clk25), .rst(rst), .toma(toma_k), .dado(toma_dado),
 //       .valeu(valeu_k), .hs(hs), .vs(vs), .ativo(ativo), .pixel(pixel));
+//   with the SAPHO on clk25 too: myVGAText #(.LINK_SYNC(1)) vga (...);
 // Checked by Scripts/hw/tb_vgatext.v.
 
 module myVGAText
 #(
-	parameter NUBITS = 32                   // width of the word toma() sends (at least 8)
+	parameter NUBITS    = 32,               // width of the word toma() sends (at least 8)
+	parameter LINK_SYNC = 0                 // 1: the SAPHO on this block's clock (toma_sync)
 )
 (
 	input               clk,                // the 25 MHz pixel clock
@@ -541,10 +550,19 @@ assign valeu = c;
 // of three seeds, Quartus 24.1, Cyclone IV E; GitHub issue #6). T and the
 // word are sampled together; the SAPHO holds its word while it waits, so a
 // word costs one cycle more.
+wire              t_in;                     // the program's T, on this block's clock
+generate if (LINK_SYNC) begin : tsync
+	assign t_in = toma;
+end else begin : tsync
+	reg s1 = 1'b0, s2 = 1'b0;
+	always @ (posedge clk) begin s1 <= toma; s2 <= s1; end
+	assign t_in = s2;
+end endgenerate
+
 reg               tq;                       // the program's T, one cycle late
 reg  [NUBITS-1:0] wq;                       // its word, one cycle late
 always @ (posedge clk) begin
-	tq <= toma;
+	tq <= t_in;
 	wq <= dado;
 end
 
@@ -573,7 +591,7 @@ endtask
 always @ (posedge clk) begin
 	we <= 1'b0;
 	if (rst) begin
-		crow <= 5'd0; ccol <= 7'd0; top <= 5'd0; pend <= 2'd0; c <= toma;
+		crow <= 5'd0; ccol <= 7'd0; top <= 5'd0; pend <= 2'd0; c <= t_in;
 		fpos <= 12'd0; fend <= 12'd2399; fword <= 1'b0; state <= FILL;   // reset clears the screen
 	end else if (state == FILL) begin
 		we    <= 1'b1;

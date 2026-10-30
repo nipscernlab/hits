@@ -3,10 +3,10 @@ create_clock -name clk50 -period 20.000 [get_ports CLOCK_50]
 derive_pll_clocks
 derive_clock_uncertainty
 # The two PLL clocks meet only in the links between SAPHO and the keyboard and the screen.
-# Each handshake bit crosses through two flip-flops of the clock that reads it (those of
-# the blocks inside SAPHO, those of SAPHO in the top), and each word is held still from
-# before its bit flips until the other side answers, so no path between the clocks needs
-# timing.
+# Each handshake bit crosses through two flip-flops of the clock that reads it (inside
+# SAPHO for the bits of the blocks, inside the blocks for those of SAPHO), and each word
+# is held still from before its bit flips until the other side answers, so no path
+# between the clocks needs timing.
 set_clock_groups -asynchronous -group [get_clocks {*pll1|clk[0]}] -group [get_clocks {*pll1|clk[1]}]
 # KEY[0], the keyboard and the switches are asynchronous and synchronized inside; the LEDs
 # and the displays are slow.
