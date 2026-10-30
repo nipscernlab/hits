@@ -32,7 +32,7 @@ const int ORBIT_MAX = 3564;
 // values written at the start
 unsigned occupancy = 65530;      // per 65536 filled crossings
 int pedestal = 146;         // ADC counts
-int mode = 2;               // bit 0: a hit on every filled crossing; bit 1: the bunch-train mask
+int mode = 2;               // bit 0: a hit on every crossing the mask lets through; bit 1: the mask
 int orbit = 3564;           // crossings per orbit
 int phase0 = 0;             // 1/64 of the period
 unsigned sigma = 0;            // the jitter, as the constant K of the guide
@@ -90,11 +90,11 @@ void show()
     else           cout << "  stopped" << endl;
     cout << " 1 occupancy  " << occupancy << " / 65536" << endl;
     cout << " 2 pedestal   " << pedestal << " ADC" << endl;
-    cout << " 3 mode       " << mode << " (1: every filled crossing, 2: mask)" << endl;
+    cout << " 3 mode       " << mode << " (bit 0: a hit on every crossing, bit 1: the mask)" << endl;
     cout << " 4 orbit      " << orbit << " crossings" << endl;
-    if (caps & 12) {
+    if (caps & 8) {             // PHASE0 and SIGMA act only with the jitter (CAPS bit 3)
         cout << " 5 phase0     " << phase0 << " / 64 of 25 ns" << endl;
-        cout << " 6 sigma      " << sigma << endl;
+        cout << " 6 sigma      " << sigma << " (K: 1 ns is 655)" << endl;
     }
     cout << " 7 run / stop" << endl;
 }
@@ -112,8 +112,8 @@ int main()
             op = 0;
         }
         cin.ignore(100, '\n');
-        // 5 and 6 only when the build has the phase, as show() lists them
-        if ((op == 5 || op == 6) && !(in(1) & 12)) op = 0;
+        // 5 and 6 only when the build has the jitter, as show() lists them
+        if ((op == 5 || op == 6) && !(in(1) & 8)) op = 0;
         switch (op) {
         case 1:
             occupancy = read_uint(65535);

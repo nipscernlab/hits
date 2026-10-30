@@ -10,14 +10,15 @@ PS/2 input; the DE10-Nano has neither.
 HITS on SAPHO  ID 4854  CAPS 1000  running
  1 occupancy  20000 / 65536
  2 pedestal   -5 ADC
- 3 mode       2 (1: every filled crossing, 2: mask)
+ 3 mode       2 (bit 0: a hit on every crossing, bit 1: the mask)
  4 orbit      3000 crossings
  7 run / stop
 option?
 ```
 
 The screen in the simulation, after the first options. Options 5 (`phase0`) and 6 (`sigma`)
-show, and are taken, only when `CAPS` says the build has the phase of the pulse.
+show, and are taken, only when `CAPS` says the build has the jitter (bit 3), the only
+case where `PHASE0` and `SIGMA` act.
 
 ## How it is put together
 
