@@ -55,7 +55,7 @@ processor#(.NUBITS(16),
 .NBOPER(11),
 .NUGAIN(1),
 .MDATAS(597),
-.MINSTS(1152),
+.MINSTS(1165),
 .SDEPTH(8),
 .DDEPTH(8),
 .NBIOIN(2),
@@ -280,7 +280,7 @@ always @ (posedge clk) begin
    if (mem_addr_wr == 503 && mem_wr) me1_f_istream__ignore_v_delim_e_ <= out;
    if (mem_addr_wr == 504 && mem_wr) me1_f_istream__ignore_v_n_e_ <= out;
    if (mem_addr_wr == 506 && mem_wr) me1_f_istream__ignore_v_i_e_ <= out;
-   if (mem_wr && (pc_sim_val == 1009 || pc_sim_val == 1082)) me1_f_global_v_occupancy_e_ <= out;
+   if (mem_wr && (pc_sim_val == 1009 || pc_sim_val == 1095)) me1_f_global_v_occupancy_e_ <= out;
    if (mem_addr_wr == 508 && mem_wr) me1_f_global_v_pedestal_e_ <= out;
    if (mem_addr_wr == 509 && mem_wr) me1_f_global_v_mode_e_ <= out;
    if (mem_addr_wr == 510 && mem_wr) me1_f_global_v_orbit_e_ <= out;
@@ -295,7 +295,7 @@ always @ (posedge clk) begin
    if (mem_wr && (pc_sim_val == 760)) me1_f_show_v_caps_e_ <= out;
    if (mem_wr && (pc_sim_val == 1007)) me1_f_global_v_ORBIT_MAX_e_ <= out;
    if (mem_addr_wr == 585 && mem_wr) me1_f_main_v_op_e_ <= out;
-   if (mem_wr && (pc_sim_val == 1106 || pc_sim_val == 1129)) me1_f_main_v_running_e_ <= out;
+   if (mem_wr && (pc_sim_val == 1119 || pc_sim_val == 1142)) me1_f_main_v_running_e_ <= out;
 end
 
 // arrays ---------------------------------------------------------------------
@@ -564,7 +564,7 @@ reg [15:0] valr9 /* verilator public_flat */=0;
 reg [15:0] valr10 /* verilator public_flat */=0;
 /* verilator tracing_on */
 
-reg [19:0] min [0:1152-1];
+reg [19:0] min [0:1165-1];
 
 /* verilator tracing_off */ reg signed [19:0] linetab /* verilator public_flat */ =-1; /* verilator tracing_on */
 reg signed [19:0] linetabs=-1;
@@ -572,7 +572,7 @@ reg signed [19:0] linetabs=-1;
 initial	$readmemb("pc_hits_menu_mem.txt",min);
 
 always @ (posedge clk) begin
-if (pc_sim_val < 1152) linetab <= min[pc_sim_val];
+if (pc_sim_val < 1165) linetab <= min[pc_sim_val];
 linetabs <= linetab;   
 valr1    <= {{(5){1'b0}}, pc_sim_val};
 valr2    <= valr1;

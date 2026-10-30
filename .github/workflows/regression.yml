@@ -21,3 +21,5 @@ jobs:
         run: iverilog -V | head -1
       - name: Regression (every build with a golden)
         run: python3 verification/regress.py
+      - name: The menu of HITS on SAPHO (DE2-115, issue #14)
+        run: sh projects/de2_115_sapho/sim/run.sh

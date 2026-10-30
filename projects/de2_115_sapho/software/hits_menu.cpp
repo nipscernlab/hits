@@ -112,6 +112,8 @@ int main()
             op = 0;
         }
         cin.ignore(100, '\n');
+        // 5 and 6 only when the build has the phase, as show() lists them
+        if ((op == 5 || op == 6) && !(in(1) & 12)) op = 0;
         switch (op) {
         case 1:
             occupancy = read_uint(65535);
