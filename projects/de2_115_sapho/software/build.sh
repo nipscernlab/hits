@@ -5,16 +5,26 @@
 #
 #   YANC=/path/to/yanc sh build.sh
 #
-# YANC is a clone of github.com/nipscernlab/yanc with its compilers built (Scripts/regress.sh
-# leaves them in .smoke/bin); default c:/nipscern/yanc. The files written are generated:
-# change hits_menu.cpp and build again, never edit them by hand.
+# YANC is a clone of github.com/nipscernlab/yanc with its compilers built, default
+# c:/nipscern/yanc. The compilers are taken from the first of bin/ (`make`), stage/bin
+# (`make stage`, also what Scripts/aurora.bat builds) and .smoke/bin (Scripts/regress.sh)
+# that has them; build them again after every pull of YANC. The files written are
+# generated: change hits_menu.cpp and build again, never edit them by hand.
 #
 # Refuses a clone of YANC with uncommitted changes (hits_menu.yanc could not say what
 # built the files), and fails when YANC did not size the stacks of SAPHO from the
 # program: its fallback, 128 words each, makes SAPHO several times bigger (yanc#54).
 set -e
 YANC=${YANC:-c:/nipscern/yanc}
-BIN="$YANC/.smoke/bin"
+BIN=
+for d in "$YANC/bin" "$YANC/stage/bin" "$YANC/.smoke/bin"; do
+    if [ -x "$d/cppcomp.exe" ] && [ -x "$d/asmcomp.exe" ]; then BIN="$d"; break; fi
+done
+if [ -z "$BIN" ]; then
+    echo "build.sh: no compilers in $YANC (bin, stage/bin or .smoke/bin); run make there first" >&2
+    exit 1
+fi
+echo "build.sh: compilers from $BIN"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 OUT="$HERE/.."
 if [ -n "$(git -C "$YANC" status --porcelain --untracked-files=no)" ]; then
