@@ -176,6 +176,10 @@ initial begin
 	type_line("7", 1);
 	want("run", sim.cfg.run, 1);
 
+	// the stacks of SAPHO never overflowed (YANC sizes them from the program)
+	want("data stack full", cpu.p_hits_menu.core.sp.fl_full, 0);
+	want("call stack full", cpu.p_hits_menu.core.instr_fetch.isp_blk.isp.fl_full, 0);
+
 	if ($test$plusargs("screen")) dump_screen;  // vvp ... +screen: the screen at the end
 	if (errors == 0) $display("hits_menu: ok");
 	else             $display("hits_menu: FAIL, %0d errors", errors);
