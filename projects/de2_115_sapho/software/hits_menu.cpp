@@ -90,31 +90,39 @@ int main()
             op = 0;
         }
         cin.ignore(100, '\n');
-        if (op == 1) {
+        switch (op) {
+        case 1:
             occupancy = read_int(0, 65535);
             out(3, occupancy);
-        } else if (op == 2) {
+            break;
+        case 2:
             pedestal = read_int(-4096, 4095);
             out(4, pedestal);
-        } else if (op == 3) {
+            break;
+        case 3:
             mode = read_int(0, 3);
             out(5, mode);
-        } else if (op == 4) {
+            break;
+        case 4:
             orbit = read_int(1, ORBIT_MAX);
             running = in(2) & 1;
             out(2, 0);
             out(6, orbit);
             out(2, running);
-        } else if (op == 5) {
+            break;
+        case 5:
             phase0 = read_int(-32, 31);
             out(7, phase0);
-        } else if (op == 6) {
+            break;
+        case 6:
             sigma = read_int(0, 65535);
             out(8, sigma);
-        } else if (op == 7) {
+            break;
+        case 7:
             running = in(2) & 1;
             out(2, 1 - running);
-        } else {
+            break;
+        default:
             cout << "  options 1 to 7" << endl;
         }
     }

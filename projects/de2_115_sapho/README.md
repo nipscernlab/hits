@@ -107,19 +107,26 @@ Quartus Prime Lite 24.1, EP4CE115F29C7, this project, 2026-10-29:
 
 | Block | Logic elements | Registers |
 |---|---|---|
-| `hits` | 4038 | 1727 |
-| SAPHO `hits_menu` | 7668 | 5665 |
-| of which the data stack of SAPHO | 4925 | 4103 |
-| of which the call stack of SAPHO | 1757 | 1415 |
-| `myVGAText` | 371 | 151 |
-| `myKeyPS2` | 286 | 99 |
+| `hits` | 4034 | 1727 |
+| SAPHO `hits_menu` | 1382 | 497 |
+| of which the data stack of SAPHO (8 words) | 298 | 259 |
+| of which the call stack of SAPHO (8 addresses) | 102 | 91 |
+| `myVGAText` | 372 | 151 |
+| `myKeyPS2` | 289 | 99 |
 | `hits_sapho` | 6 | 0 |
-| Total | 12 391 (11%) | 7671 |
+| Total | 6104 (5%) | 2503 |
 
-Memory 121 732 bits (3%), 12 multipliers of 9 bits (2%), 1 PLL of 4. Fmax in
-the worst corner (Slow 1200mV 85C): **51.6 MHz** for the 40 MHz clock (5.6 ns of
-slack) and 79.2 MHz for the 25 MHz one. Most of SAPHO is its two stacks, kept in
-flip-flops: 128 words of 32 bits of data and 128 return addresses.
+Memory 120 710 bits (3%), 12 multipliers of 9 bits (2%), 1 PLL of 4. Fmax in
+the worst corner (Slow 1200mV 85C): **49.9 MHz** for the
+40 MHz clock (5.0 ns of slack, on a path inside SAPHO, from its data memory to
+its program counter) and 79.2 MHz for the 25 MHz one.
+
+YANC sizes the two stacks of SAPHO from the program (8 and 8 here). With 7 or
+more labels on one line of the `.asm`, as a long `else if` chain gives, its
+analysis gives up and leaves 128 each, which made SAPHO 7668 logic elements
+([yanc#54](https://github.com/nipscernlab/yanc/issues/54)); the menu uses a
+`switch`, which does not. After `build.sh`, the log of the assembler must say
+"stack depths from the program", and the simulation fails if a stack overflows.
 
 ## Still to do
 

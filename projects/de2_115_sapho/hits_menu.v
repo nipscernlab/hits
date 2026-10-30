@@ -54,10 +54,10 @@ processor#(.NUBITS(32),
 .NBEXPO(8),
 .NBOPER(11),
 .NUGAIN(1),
-.MDATAS(585),
-.MINSTS(1036),
-.SDEPTH(128),
-.DDEPTH(128),
+.MDATAS(548),
+.MINSTS(1045),
+.SDEPTH(8),
+.DDEPTH(8),
 .NBIOIN(2),
 .NBIOOU(4),
 .FFTSIZ(3),
@@ -186,6 +186,7 @@ reg [31:0] me1_f_yanc_put_uint_v_width_e_ = 0;
 reg [31:0] me1_f_yanc_put_uint_v_base_e_ = 0;
 reg [31:0] me1_f_yanc_put_uint_v_v_e_ = 0;
 reg [31:0] me1_f_yanc_put_uint_v_n_e_ = 0;
+reg [31:0] me1_f_yanc_put_uint_v_sign_e_ = 0;
 reg [31:0] me1_f_yanc_put_uint_v_nb_e_ = 0;
 reg [31:0] me1_f_yanc_put_uint_v_b_e_ = 0;
 reg [31:0] me1_f_yanc_put_uint_v_c_e_ = 0;
@@ -193,7 +194,6 @@ reg [31:0] me1_f_yanc_put_uint_v_i_e_ = 0;
 reg [31:0] me1_f_yanc_put_uint_v_t_e_ = 0;
 reg [31:0] me1_f_yanc_put_uint_v_sh_e_ = 0;
 reg [31:0] me1_f_yanc_put_uint_v_m_e_ = 0;
-reg [31:0] me1_f_yanc_put_uint_v_sign_e_ = 0;
 reg [31:0] me1_f_yanc_put_uint_v_x_e_ = 0;
 reg [31:0] me1_f_yanc_put_int_v_plus_e_ = 0;
 reg [31:0] me1_f_yanc_put_int_v_fill_e_ = 0;
@@ -229,60 +229,60 @@ reg [31:0] me1_f_main_v_op_e_ = 0;
 reg [31:0] me1_f_main_v_running_e_ = 0;
 
 always @ (posedge clk) begin
-   if (mem_addr_wr == 377 && mem_wr) me1_f_yanc_put_v_c_e_ <= out;
-   if (mem_addr_wr == 381 && mem_wr) me1_f_yanc_word_bits_v_x_e_ <= out;
-   if (mem_addr_wr == 382 && mem_wr) me1_f_yanc_word_bits_v_n_e_ <= out;
-   if (mem_addr_wr == 383 && mem_wr) me1_f_yanc_pad_v_fill_e_ <= out;
-   if (mem_addr_wr == 384 && mem_wr) me1_f_yanc_pad_v_n_e_ <= out;
-   if (mem_addr_wr == 385 && mem_wr) me1_f_yanc_put_uint_v_plus_e_ <= out;
-   if (mem_addr_wr == 386 && mem_wr) me1_f_yanc_put_uint_v_neg_e_ <= out;
-   if (mem_addr_wr == 387 && mem_wr) me1_f_yanc_put_uint_v_upper_e_ <= out;
-   if (mem_addr_wr == 388 && mem_wr) me1_f_yanc_put_uint_v_fill_e_ <= out;
-   if (mem_addr_wr == 389 && mem_wr) me1_f_yanc_put_uint_v_width_e_ <= out;
-   if (mem_addr_wr == 390 && mem_wr) me1_f_yanc_put_uint_v_base_e_ <= out;
-   if (mem_addr_wr == 391 && mem_wr) me1_f_yanc_put_uint_v_v_e_ <= out;
-   if (mem_addr_wr == 432 && mem_wr) me1_f_yanc_put_uint_v_n_e_ <= out;
-   if (mem_addr_wr == 434 && mem_wr) me1_f_yanc_put_uint_v_nb_e_ <= out;
-   if (mem_addr_wr == 435 && mem_wr) me1_f_yanc_put_uint_v_b_e_ <= out;
-   if (mem_addr_wr == 437 && mem_wr) me1_f_yanc_put_uint_v_c_e_ <= out;
-   if (mem_addr_wr == 438 && mem_wr) me1_f_yanc_put_uint_v_i_e_ <= out;
-   if (mem_addr_wr == 439 && mem_wr) me1_f_yanc_put_uint_v_t_e_ <= out;
-   if (mem_addr_wr == 445 && mem_wr) me1_f_yanc_put_uint_v_sh_e_ <= out;
-   if (mem_addr_wr == 446 && mem_wr) me1_f_yanc_put_uint_v_m_e_ <= out;
-   if (mem_addr_wr == 447 && mem_wr) me1_f_yanc_put_uint_v_sign_e_ <= out;
-   if (mem_addr_wr == 451 && mem_wr) me1_f_yanc_put_uint_v_x_e_ <= out;
-   if (mem_addr_wr == 454 && mem_wr) me1_f_yanc_put_int_v_plus_e_ <= out;
-   if (mem_addr_wr == 455 && mem_wr) me1_f_yanc_put_int_v_fill_e_ <= out;
-   if (mem_addr_wr == 456 && mem_wr) me1_f_yanc_put_int_v_width_e_ <= out;
-   if (mem_addr_wr == 457 && mem_wr) me1_f_yanc_put_int_v_v_e_ <= out;
-   if (mem_addr_wr == 458 && mem_wr) me1_f_global_v_yanc_line_len_e_ <= out;
-   if (mem_addr_wr == 459 && mem_wr) me1_f_global_v_yanc_line_pos_e_ <= out;
-   if (mem_addr_wr == 460 && mem_wr) me1_f_yanc_read_line_v_c_e_ <= out;
-   if (mem_addr_wr == 465 && mem_wr) me1_f_yanc_get_v_c_e_ <= out;
-   if (mem_addr_wr == 466 && mem_wr) me1_f_yanc_blank_v_c_e_ <= out;
-   if (mem_addr_wr == 468 && mem_wr) me1_f_yanc_get_int_v_neg_e_ <= out;
-   if (mem_addr_wr == 469 && mem_wr) me1_f_yanc_get_int_v_v_e_ <= out;
-   if (mem_addr_wr == 470 && mem_wr) me1_f_yanc_get_int_v_n_e_ <= out;
-   if (mem_addr_wr == 471 && mem_wr) me1_f_yanc_get_int_v_c_e_ <= out;
-   if (mem_addr_wr == 475 && mem_wr) me1_f_ostream__op_shl_Opi_v_v_e_ <= out;
-   if (mem_addr_wr == 482 && mem_wr) me1_f_istream__op_shr_OpI_v_ok_e_ <= out;
-   if (mem_addr_wr == 484 && mem_wr) me1_f_istream__op_shr_OpI_v_x_e_ <= out;
-   if (mem_addr_wr == 485 && mem_wr) me1_f_istream__ignore_v_delim_e_ <= out;
-   if (mem_addr_wr == 486 && mem_wr) me1_f_istream__ignore_v_n_e_ <= out;
-   if (mem_addr_wr == 488 && mem_wr) me1_f_istream__ignore_v_i_e_ <= out;
-   if (mem_addr_wr == 489 && mem_wr) me1_f_global_v_occupancy_e_ <= out;
-   if (mem_addr_wr == 490 && mem_wr) me1_f_global_v_pedestal_e_ <= out;
-   if (mem_addr_wr == 491 && mem_wr) me1_f_global_v_mode_e_ <= out;
-   if (mem_addr_wr == 492 && mem_wr) me1_f_global_v_orbit_e_ <= out;
-   if (mem_addr_wr == 493 && mem_wr) me1_f_global_v_phase0_e_ <= out;
-   if (mem_addr_wr == 494 && mem_wr) me1_f_global_v_sigma_e_ <= out;
-   if (mem_addr_wr == 495 && mem_wr) me1_f_read_int_v_hi_e_ <= out;
-   if (mem_addr_wr == 496 && mem_wr) me1_f_read_int_v_lo_e_ <= out;
-   if (mem_addr_wr == 502 && mem_wr) me1_f_read_int_v_v_e_ <= out;
-   if (mem_addr_wr == 510 && mem_wr) me1_f_show_v_caps_e_ <= out;
-   if (mem_addr_wr == 567 && mem_wr) me1_f_global_v_ORBIT_MAX_e_ <= out;
-   if (mem_addr_wr == 571 && mem_wr) me1_f_main_v_op_e_ <= out;
-   if (mem_addr_wr == 576 && mem_wr) me1_f_main_v_running_e_ <= out;
+   if (mem_wr && (pc_sim_val == 4)) me1_f_yanc_put_v_c_e_ <= out;
+   if (mem_wr && (pc_sim_val == 26 || pc_sim_val == 34)) me1_f_yanc_word_bits_v_x_e_ <= out;
+   if (mem_wr && (pc_sim_val == 28 || pc_sim_val == 37)) me1_f_yanc_word_bits_v_n_e_ <= out;
+   if (mem_addr_wr == 382 && mem_wr) me1_f_yanc_pad_v_fill_e_ <= out;
+   if (mem_addr_wr == 383 && mem_wr) me1_f_yanc_pad_v_n_e_ <= out;
+   if (mem_wr && (pc_sim_val == 58)) me1_f_yanc_put_uint_v_plus_e_ <= out;
+   if (mem_wr && (pc_sim_val == 59)) me1_f_yanc_put_uint_v_neg_e_ <= out;
+   if (mem_wr && (pc_sim_val == 60)) me1_f_yanc_put_uint_v_upper_e_ <= out;
+   if (mem_wr && (pc_sim_val == 61)) me1_f_yanc_put_uint_v_fill_e_ <= out;
+   if (mem_addr_wr == 388 && mem_wr) me1_f_yanc_put_uint_v_width_e_ <= out;
+   if (mem_wr && (pc_sim_val == 63)) me1_f_yanc_put_uint_v_base_e_ <= out;
+   if (mem_addr_wr == 389 && mem_wr) me1_f_yanc_put_uint_v_v_e_ <= out;
+   if (mem_addr_wr == 430 && mem_wr) me1_f_yanc_put_uint_v_n_e_ <= out;
+   if (mem_wr && (pc_sim_val == 176)) me1_f_yanc_put_uint_v_sign_e_ <= out;
+   if (mem_wr && (pc_sim_val == 71)) me1_f_yanc_put_uint_v_nb_e_ <= out;
+   if (mem_wr && (pc_sim_val == 80 || pc_sim_val == 132)) me1_f_yanc_put_uint_v_b_e_ <= out;
+   if (mem_wr && (pc_sim_val == 87 || pc_sim_val == 107 || pc_sim_val == 110)) me1_f_yanc_put_uint_v_c_e_ <= out;
+   if (mem_wr && (pc_sim_val == 89 || pc_sim_val == 116)) me1_f_yanc_put_uint_v_i_e_ <= out;
+   if (mem_addr_wr == 434 && mem_wr) me1_f_yanc_put_uint_v_t_e_ <= out;
+   if (mem_wr && (pc_sim_val == 147)) me1_f_yanc_put_uint_v_sh_e_ <= out;
+   if (mem_wr && (pc_sim_val == 152)) me1_f_yanc_put_uint_v_m_e_ <= out;
+   if (mem_wr && (pc_sim_val == 222)) me1_f_yanc_put_uint_v_x_e_ <= out;
+   if (mem_wr && (pc_sim_val == 242)) me1_f_yanc_put_int_v_plus_e_ <= out;
+   if (mem_wr && (pc_sim_val == 243)) me1_f_yanc_put_int_v_fill_e_ <= out;
+   if (mem_wr && (pc_sim_val == 244)) me1_f_yanc_put_int_v_width_e_ <= out;
+   if (mem_wr && (pc_sim_val == 245)) me1_f_yanc_put_int_v_v_e_ <= out;
+   if (mem_addr_wr == 445 && mem_wr) me1_f_global_v_yanc_line_len_e_ <= out;
+   if (mem_addr_wr == 446 && mem_wr) me1_f_global_v_yanc_line_pos_e_ <= out;
+   if (mem_wr && (pc_sim_val == 277 || pc_sim_val == 310)) me1_f_yanc_read_line_v_c_e_ <= out;
+   if (mem_wr && (pc_sim_val == 343)) me1_f_yanc_get_v_c_e_ <= out;
+   if (mem_wr && (pc_sim_val == 350)) me1_f_yanc_blank_v_c_e_ <= out;
+   if (mem_addr_wr == 452 && mem_wr) me1_f_yanc_get_int_v_neg_e_ <= out;
+   if (mem_addr_wr == 453 && mem_wr) me1_f_yanc_get_int_v_v_e_ <= out;
+   if (mem_addr_wr == 454 && mem_wr) me1_f_yanc_get_int_v_n_e_ <= out;
+   if (mem_wr && (pc_sim_val == 391 || pc_sim_val == 410)) me1_f_yanc_get_int_v_c_e_ <= out;
+   if (mem_wr && (pc_sim_val == 461)) me1_f_ostream__op_shl_Opi_v_v_e_ <= out;
+   if (mem_addr_wr == 462 && mem_wr) me1_f_istream__op_shr_OpI_v_ok_e_ <= out;
+   if (mem_wr && (pc_sim_val == 520)) me1_f_istream__op_shr_OpI_v_x_e_ <= out;
+   if (mem_addr_wr == 464 && mem_wr) me1_f_istream__ignore_v_delim_e_ <= out;
+   if (mem_addr_wr == 465 && mem_wr) me1_f_istream__ignore_v_n_e_ <= out;
+   if (mem_addr_wr == 467 && mem_wr) me1_f_istream__ignore_v_i_e_ <= out;
+   if (mem_wr && (pc_sim_val == 900 || pc_sim_val == 974)) me1_f_global_v_occupancy_e_ <= out;
+   if (mem_addr_wr == 469 && mem_wr) me1_f_global_v_pedestal_e_ <= out;
+   if (mem_addr_wr == 470 && mem_wr) me1_f_global_v_mode_e_ <= out;
+   if (mem_addr_wr == 471 && mem_wr) me1_f_global_v_orbit_e_ <= out;
+   if (mem_addr_wr == 472 && mem_wr) me1_f_global_v_phase0_e_ <= out;
+   if (mem_addr_wr == 473 && mem_wr) me1_f_global_v_sigma_e_ <= out;
+   if (mem_addr_wr == 474 && mem_wr) me1_f_read_int_v_hi_e_ <= out;
+   if (mem_addr_wr == 475 && mem_wr) me1_f_read_int_v_lo_e_ <= out;
+   if (mem_addr_wr == 481 && mem_wr) me1_f_read_int_v_v_e_ <= out;
+   if (mem_wr && (pc_sim_val == 651)) me1_f_show_v_caps_e_ <= out;
+   if (mem_wr && (pc_sim_val == 898)) me1_f_global_v_ORBIT_MAX_e_ <= out;
+   if (mem_addr_wr == 536 && mem_wr) me1_f_main_v_op_e_ <= out;
+   if (mem_wr && (pc_sim_val == 998 || pc_sim_val == 1022)) me1_f_main_v_running_e_ <= out;
 end
 
 // arrays ---------------------------------------------------------------------
@@ -493,46 +493,46 @@ always @ (posedge clk) begin
    if (mem_addr_wr == 79 && mem_wr) arr_me1_f_global_v_yanc_line_e_0079 <= out;
    if (mem_addr_wr == 80 && mem_wr) arr_me1_f_global_v_yanc_line_e_0080 <= out;
    if (mem_addr_wr == 81 && mem_wr) arr_me1_f_global_v_yanc_line_e_0081 <= out;
-   if (mem_addr_wr == 392 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0000 <= out;
-   if (mem_addr_wr == 393 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0001 <= out;
-   if (mem_addr_wr == 394 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0002 <= out;
-   if (mem_addr_wr == 395 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0003 <= out;
-   if (mem_addr_wr == 396 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0004 <= out;
-   if (mem_addr_wr == 397 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0005 <= out;
-   if (mem_addr_wr == 398 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0006 <= out;
-   if (mem_addr_wr == 399 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0007 <= out;
-   if (mem_addr_wr == 400 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0008 <= out;
-   if (mem_addr_wr == 401 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0009 <= out;
-   if (mem_addr_wr == 402 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0010 <= out;
-   if (mem_addr_wr == 403 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0011 <= out;
-   if (mem_addr_wr == 404 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0012 <= out;
-   if (mem_addr_wr == 405 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0013 <= out;
-   if (mem_addr_wr == 406 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0014 <= out;
-   if (mem_addr_wr == 407 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0015 <= out;
-   if (mem_addr_wr == 408 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0016 <= out;
-   if (mem_addr_wr == 409 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0017 <= out;
-   if (mem_addr_wr == 410 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0018 <= out;
-   if (mem_addr_wr == 411 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0019 <= out;
-   if (mem_addr_wr == 412 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0020 <= out;
-   if (mem_addr_wr == 413 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0021 <= out;
-   if (mem_addr_wr == 414 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0022 <= out;
-   if (mem_addr_wr == 415 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0023 <= out;
-   if (mem_addr_wr == 416 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0024 <= out;
-   if (mem_addr_wr == 417 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0025 <= out;
-   if (mem_addr_wr == 418 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0026 <= out;
-   if (mem_addr_wr == 419 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0027 <= out;
-   if (mem_addr_wr == 420 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0028 <= out;
-   if (mem_addr_wr == 421 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0029 <= out;
-   if (mem_addr_wr == 422 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0030 <= out;
-   if (mem_addr_wr == 423 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0031 <= out;
-   if (mem_addr_wr == 424 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0032 <= out;
-   if (mem_addr_wr == 425 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0033 <= out;
-   if (mem_addr_wr == 426 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0034 <= out;
-   if (mem_addr_wr == 427 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0035 <= out;
-   if (mem_addr_wr == 428 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0036 <= out;
-   if (mem_addr_wr == 429 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0037 <= out;
-   if (mem_addr_wr == 430 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0038 <= out;
-   if (mem_addr_wr == 431 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0039 <= out;
+   if (mem_addr_wr == 390 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0000 <= out;
+   if (mem_addr_wr == 391 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0001 <= out;
+   if (mem_addr_wr == 392 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0002 <= out;
+   if (mem_addr_wr == 393 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0003 <= out;
+   if (mem_addr_wr == 394 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0004 <= out;
+   if (mem_addr_wr == 395 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0005 <= out;
+   if (mem_addr_wr == 396 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0006 <= out;
+   if (mem_addr_wr == 397 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0007 <= out;
+   if (mem_addr_wr == 398 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0008 <= out;
+   if (mem_addr_wr == 399 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0009 <= out;
+   if (mem_addr_wr == 400 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0010 <= out;
+   if (mem_addr_wr == 401 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0011 <= out;
+   if (mem_addr_wr == 402 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0012 <= out;
+   if (mem_addr_wr == 403 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0013 <= out;
+   if (mem_addr_wr == 404 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0014 <= out;
+   if (mem_addr_wr == 405 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0015 <= out;
+   if (mem_addr_wr == 406 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0016 <= out;
+   if (mem_addr_wr == 407 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0017 <= out;
+   if (mem_addr_wr == 408 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0018 <= out;
+   if (mem_addr_wr == 409 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0019 <= out;
+   if (mem_addr_wr == 410 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0020 <= out;
+   if (mem_addr_wr == 411 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0021 <= out;
+   if (mem_addr_wr == 412 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0022 <= out;
+   if (mem_addr_wr == 413 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0023 <= out;
+   if (mem_addr_wr == 414 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0024 <= out;
+   if (mem_addr_wr == 415 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0025 <= out;
+   if (mem_addr_wr == 416 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0026 <= out;
+   if (mem_addr_wr == 417 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0027 <= out;
+   if (mem_addr_wr == 418 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0028 <= out;
+   if (mem_addr_wr == 419 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0029 <= out;
+   if (mem_addr_wr == 420 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0030 <= out;
+   if (mem_addr_wr == 421 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0031 <= out;
+   if (mem_addr_wr == 422 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0032 <= out;
+   if (mem_addr_wr == 423 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0033 <= out;
+   if (mem_addr_wr == 424 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0034 <= out;
+   if (mem_addr_wr == 425 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0035 <= out;
+   if (mem_addr_wr == 426 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0036 <= out;
+   if (mem_addr_wr == 427 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0037 <= out;
+   if (mem_addr_wr == 428 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0038 <= out;
+   if (mem_addr_wr == 429 && mem_wr) arr_me1_f_yanc_put_uint_v_d_e_0039 <= out;
 end
 
 
@@ -551,7 +551,7 @@ reg [31:0] valr9 /* verilator public_flat */=0;
 reg [31:0] valr10 /* verilator public_flat */=0;
 /* verilator tracing_on */
 
-reg [19:0] min [0:1036-1];
+reg [19:0] min [0:1045-1];
 
 /* verilator tracing_off */ reg signed [19:0] linetab /* verilator public_flat */ =-1; /* verilator tracing_on */
 reg signed [19:0] linetabs=-1;
@@ -559,7 +559,7 @@ reg signed [19:0] linetabs=-1;
 initial	$readmemb("pc_hits_menu_mem.txt",min);
 
 always @ (posedge clk) begin
-if (pc_sim_val < 1036) linetab <= min[pc_sim_val];
+if (pc_sim_val < 1045) linetab <= min[pc_sim_val];
 linetabs <= linetab;   
 valr1    <= {{(21){1'b0}}, pc_sim_val};
 valr2    <= valr1;
