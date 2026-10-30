@@ -52,3 +52,6 @@ __pycache__/
 
 # --- Manual (docs/) ---
 docs/_build/
+
+# --- DE2-115 board project (projects/de2_115_sapho/): Quartus output, the .sof included ---
+projects/de2_115_sapho/output_files/
