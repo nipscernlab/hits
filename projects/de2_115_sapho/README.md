@@ -16,8 +16,8 @@ HITS on SAPHO  ID 4854  CAPS 1000  running
 option?
 ```
 
-The screen at the end of the simulation. Options 5 (`phase0`) and 6 (`sigma`)
-show only when `CAPS` says the build has the phase of the pulse.
+The screen in the simulation, after the first options. Options 5 (`phase0`) and 6 (`sigma`)
+show, and are taken, only when `CAPS` says the build has the phase of the pulse.
 
 ## How it is put together
 
@@ -77,10 +77,17 @@ Changing the program needs a clone of YANC with its compilers built
 The simulation types on the keyboard the options and values of the menu (the
 occupancy, a negative pedestal, an orbit out of range and then a valid one, stop,
 a letter where a number goes, run) and checks, after each, the registers inside
-`hits` and the text on the screen; at the end, what the 7-segment displays show
-for each register and for the hit count (over 4000 cycles instead of 1 s). It takes about a minute (9.7 ms of simulated
-time; the bench runs the PS/2 clock at 250 kHz instead of the 10 to 17 kHz of a
-keyboard). It is not in the regression of the repository: CI has no YANC.
+`hits` and the text on the screen; then what the 7-segment displays show for each
+register and for the hit count (over 4000 cycles instead of 1 s), the occupancy at
+65535, options 5 and 6 refused (this build has no phase), and the reset, after which
+the program writes its starting values again. It takes about a minute (15 ms of
+simulated time; the bench runs the PS/2 clock at 250 kHz instead of the 10 to 17 kHz
+of a keyboard). It needs only Icarus, since the generated files are in git, and CI
+runs it on every pull request; `run.sh` exits with 1 when the bench fails.
+
+`build.sh` refuses a clone of YANC with uncommitted changes, so `hits_menu.yanc`
+names exactly what built the files, and fails, writing nothing, when the log of the
+assembler does not say "stack depths from the program" (below).
 
 ## On the board
 
@@ -199,7 +206,7 @@ Quartus Prime Lite 24.1, EP4CE115F29C7, this project, 2026-10-30:
 | Signal Tap (with its JTAG hub) | 1569 | 1367 |
 | Total | 7683 (7%) | 3960 |
 
-Memory 720 860 bits (18%), of which 606 208 are Signal Tap (74 signals of 8192
+Memory 721 094 bits (18%), of which 606 208 are Signal Tap (74 signals of 8192
 samples); 12 multipliers of 9 bits (2%), 1 PLL of 4. Fmax in the worst corner
 (Slow 1200mV 85C): **56.7 MHz** for the 40 MHz clock (7.3 ns of slack) and
 80.8 MHz for the 25 MHz one; hold met everywhere. The only ports left
@@ -210,8 +217,8 @@ YANC sizes the two stacks of SAPHO from the program (8 and 8 here). With 7 or
 more labels on one line of the `.asm`, as a long `else if` chain gives, its
 analysis gives up and leaves 128 each, which made SAPHO 7668 logic elements
 ([yanc#54](https://github.com/nipscernlab/yanc/issues/54)); the menu uses a
-`switch`, which does not. After `build.sh`, the log of the assembler must say
-"stack depths from the program", and the simulation fails if a stack overflows.
+`switch`, which does not. `build.sh` stops when the log of the assembler does not
+say "stack depths from the program", and the simulation fails if a stack overflows.
 
 ## Still to do
 

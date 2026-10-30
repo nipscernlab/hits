@@ -5,7 +5,8 @@
 #
 # Needs only Icarus Verilog: the processor and the blocks of SAPHO (sapho/) are the ones
 # software/build.sh wrote. Runs from projects/de2_115_sapho, where SAPHO reads its
-# memories. Ends with "hits_menu: ok".
+# memories. Ends with "hits_menu: ok", and exits with 1 when the bench fails, so CI can
+# run it.
 set -e
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 RTL="$HERE/../../rtl"
@@ -17,5 +18,10 @@ iverilog -g2012 -s hits_menu_tb -o sim/hits_menu.vvp \
     "$RTL/hits.v" "$RTL/hits/hits_core.v" "$RTL/hits/hits_cfg.v" "$RTL/hits/hits_sapho.v" \
     "$RTL"/components/*/*.v \
     sim/hits_menu_tb.v
-vvp -n sim/hits_menu.vvp "$@"
+LOG="$(mktemp)"
+vvp -n sim/hits_menu.vvp "$@" | tee "$LOG"
 rm -f sim/hits_menu.vvp
+status=0
+grep -q "^hits_menu: ok" "$LOG" || status=1
+rm -f "$LOG"
+exit $status

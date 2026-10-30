@@ -237,6 +237,34 @@ initial begin
 			$display("ERROR: hits per gate on the displays \"%s\", the bench counted %0d", got, bench_rate);
 		end else $display("hits per gate of %0d cycles: %0d", GATE, bench_rate);
 	end
+	rate_mode = 0;
+
+	// the top of an unsigned register, 65535 in a 16-bit word
+	type_line("1", 1); type_line("65535", 5);
+	want("occupancy", sim.cfg.occupancy, 65535);
+	want_hex(3, "3  65535");
+
+	// options 5 and 6 are not listed in this build (CAPS 1000), so they are no option:
+	// the values after them are read as options and nothing is written
+	type_line("5", 1); type_line("-3", 2);
+	want("phase0", sim.cfg.phase0, 0);
+	type_line("6", 1); type_line("100", 3);
+	want("sigma", sim.cfg.sigma_k, 0);
+
+	// KEY0 resets the whole system: the program writes again the values it starts with
+	rst = 1;
+	#200 rst = 0;
+	#200000;
+	idle;
+	on_screen("1 occupancy  65530 / 65536", 26);
+	on_screen("4 orbit      3564 crossings", 27);
+	want("occupancy", sim.cfg.occupancy, 65530);
+	want("pedestal", sim.cfg.offset, 146);
+	want("orbit_last", sim.cfg.orbit_last, 3563);
+	want("run", sim.cfg.run, 1);
+	want_hex(3, "3  65530");
+	want_hex(4, "4    146");
+	want_hex(6, "6   3564");
 
 	// the stacks of SAPHO never overflowed (YANC sizes them from the program)
 	want("data stack full", cpu.p_hits_menu.core.sp.fl_full, 0);

@@ -202,6 +202,15 @@ wire mem_we;
 wire [2:0] mem_sel;
 wire [11:0] mem_addr;
 wire [16*PH_PIECES-1:0] mem_wdata;
+// the core takes 210 bits, its widest word (F34): the word of hits_cfg cut or padded to it
+wire [209:0] core_wdata;
+generate
+	if (16*PH_PIECES >= 210) begin : wdata_cut
+		assign core_wdata = mem_wdata[209:0];
+	end else begin : wdata_pad
+		assign core_wdata = {{(210 - 16*PH_PIECES){1'b0}}, mem_wdata};
+	end
+endgenerate
 
 hits_cfg
 #(
@@ -292,7 +301,7 @@ hits_core
 	.mem_we(mem_we),
 	.mem_sel(mem_sel),
 	.mem_addr(mem_addr),
-	.mem_wdata(mem_wdata),
+	.mem_wdata(core_wdata),
 	.hits_out(hits_out),
 	.bt_mask_out(bt_mask_out),
 	.energy_out(energy_out),
