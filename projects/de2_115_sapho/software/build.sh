@@ -22,11 +22,11 @@ if [ -n "$(git -C "$YANC" status --porcelain --untracked-files=no)" ]; then
     exit 1
 fi
 TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
 "$BIN/cppcomp.exe" -o "$TMP/hits_menu" "$HERE/hits_menu.cpp"
 "$BIN/asmcomp.exe" -f 40 -c 1000 "$TMP/hits_menu/hits_menu.asm" | tee "$TMP/asmcomp.log"
 if ! grep -q "stack depths from the program" "$TMP/asmcomp.log"; then
     echo "build.sh: YANC did not size the stacks from the program (yanc#54); nothing written" >&2
-    rm -rf "$TMP"
     exit 1
 fi
 for f in hits_menu.v hits_menu_data.mif hits_menu_inst.mif pc_hits_menu_mem.txt; do
@@ -37,5 +37,4 @@ for f in addr_dec instr_dec processor core ula myKeyPS2 myVGAText; do
     cp "$YANC/SAPHO/$f.v" "$OUT/sapho/$f.v"
 done
 echo "yanc $(git -C "$YANC" log -1 --format='%h %cs')" > "$OUT/hits_menu.yanc"
-rm -rf "$TMP"
 echo "built: hits_menu.v, its memories and sapho/, with $(cat "$OUT/hits_menu.yanc")"

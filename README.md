@@ -198,6 +198,7 @@ projects/de10_nano_arm/          The DE10-Nano SoC (FPGA + ARM/HPS): simulator +
 projects/de10_nano_arm/hardware/ The Quartus project (Qsys, SignalTap, PLL, reconstruction/, output_files/)
 projects/de10_nano_arm/software/ The ARM side: change_occupancy (sets occupancy and pedestal), the boot script, the hps_0.h generator
 projects/de10_nano_arm/tools/    MATLAB script that plots a SignalTap capture (hardware/output_files/stp1.csv)
+projects/de2_115_sapho/          The DE2-115: HITS configured from a menu on SAPHO (PS/2 keyboard, VGA screen), displays and Signal Tap
 verification/regress.py          The regression (and compare_vcd.py, the comparison)
 verification/testbenches/        hits_tb.v (the simulator alone), hits_config_tb.v (the configuration bus), testdata/
 verification/goldens/            The golden VCD of every build

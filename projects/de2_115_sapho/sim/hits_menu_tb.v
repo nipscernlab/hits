@@ -189,6 +189,7 @@ initial begin
 	on_screen("HITS on SAPHO  ID 4854  CAPS 1000  running", 42);
 	on_screen("1 occupancy  65530 / 65536", 26);
 	on_screen("2 pedestal   146 ADC", 20);
+	on_screen("bit 0: a hit on every crossing, bit 1: the mask", 47);
 	want("occupancy", sim.cfg.occupancy, 65530);
 	want("run", sim.cfg.run, 1);
 
