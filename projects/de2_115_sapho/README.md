@@ -67,7 +67,7 @@ noise) from the menu is not there yet.
 | `sim/hits_menu_tb.v`, `sim/run.sh` | the simulation of the whole system |
 | `top_hits_de2_115.v`, `pll_de2_115.v` | the top of the board and its PLL (50 MHz to 40 and 25 MHz) |
 | `hex_debug.v` | what reached `hits`, on the 7-segment displays |
-| `BOARD_TEST.md` | the test on the board, step by step |
+| `TESTE_NA_PLACA.md` | the test on the board, step by step (in Portuguese) |
 | `signaltap/make_stp.py`, `signaltap/stp1.stp` | the Signal Tap: the script writes the `.stp` |
 | `hits_de2_115.qpf`, `.qsf`, `.sdc` | the Quartus project: sources, pins, timing |
 
@@ -168,8 +168,8 @@ of the window; commit that only if the script is changed to match.
 
 The whole procedure, from installing the tools to the report, with what the
 screen, the displays and Signal Tap must show at each step and the expected hit
-rates, is in [BOARD_TEST.md](BOARD_TEST.md), written for the student who has the
-board and the assistant helping them.
+rates, is in [TESTE_NA_PLACA.md](TESTE_NA_PLACA.md), in Portuguese, written for the
+student who has the board and the assistant helping them.
 
 ## Size and speed
 
@@ -204,5 +204,5 @@ say "stack depths from the program", and the simulation fails if a stack overflo
 
 ## Still to do
 
-The test on the board ([BOARD_TEST.md](BOARD_TEST.md)): step 4 of issue #14. Then the captures of Signal Tap
+The test on the board ([TESTE_NA_PLACA.md](TESTE_NA_PLACA.md)): step 4 of issue #14. Then the captures of Signal Tap
 against the simulation, sample by sample.
