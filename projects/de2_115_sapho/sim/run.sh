@@ -13,7 +13,7 @@ S=sapho
 cd "$HERE"
 iverilog -g2012 -s hits_menu_tb -o sim/hits_menu.vvp \
     "$S/addr_dec.v" "$S/instr_dec.v" "$S/processor.v" "$S/core.v" "$S/ula.v" \
-    "$S/myKeyPS2.v" "$S/myVGAText.v" hits_menu.v \
+    "$S/myKeyPS2.v" "$S/myVGAText.v" hits_menu.v hex_debug.v\
     "$RTL/hits.v" "$RTL/hits/hits_core.v" "$RTL/hits/hits_cfg.v" "$RTL/hits/hits_sapho.v" \
     "$RTL"/components/*/*.v \
     sim/hits_menu_tb.v
