@@ -20,7 +20,7 @@ Table 1: releases of HITS.
 
 | Version | What it is | Source |
 |---|---|---|
-| 1.0.0 | the first release: the HITS of the revised paper, with the phase of the pulse | `main` when the revised paper is resubmitted, on the same commit as the tag `paper-jsen-2026-r1` |
+| 1.0.0 | the first release: the HITS of the revised paper, with the phase of the pulse | `main`, on the same commit as the tag `paper-jsen-2026-r1` |
 
 The versions of the papers are kept by their tags, not as releases:
 `paper-jsen-2026` is the code of the submitted paper and `paper-jsen-2026-r1`

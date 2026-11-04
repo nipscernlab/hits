@@ -85,8 +85,8 @@ BUILDS = {
                       "hits_tb_golden_paper.vcd"),
     # THE HITS OF THE REVISED PAPER (revision R1 of the Sensors Journal paper):
     # the current default with the CSA/CR-4RC shaper and the Lorenzetti energy
-    # spectrum (energy_seg_lorenzetti.mif, occupancy 65530/65536). To be frozen once the
-    # paper numbers close.
+    # spectrum (energy_seg_lorenzetti.mif, occupancy 65530/65536). Its golden is
+    # FROZEN (see FROZEN).
     "paper_r1":      ("core", ["USE_SHAPER_CSA_CR4RC", "USE_ENERGY_LORENZETTI"],
                       "hits_tb_golden_paper_r1.vcd"),
     # the leap-forward generator (RNG_TYPE = "leap")
@@ -128,6 +128,10 @@ FROZEN = {
         # N_CYCLES). The new file is the old one (c0a38647...) with only those names
         # changed, checked with the comparison of compare_vcd.py; every value is the same.
         "62ea349f7f7e656b00e11fe78104a71d8456354c758331c4c425ecc96aa82c85",
+    # The build of the revised paper (tag paper-jsen-2026-r1, release 1.0.0), frozen
+    # on 2026-11-04: every number of the revision comes from this golden.
+    "hits_tb_golden_paper_r1.vcd":
+        "54febb402ac7ea3d08319278365ade84867828171a5617d136a581999efe023a",
 }
 
 # where a choice can be left on by hand; the builds pass their own macros
