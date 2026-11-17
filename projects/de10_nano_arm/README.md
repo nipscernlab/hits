@@ -55,8 +55,10 @@ If a step does not give what it says, **stop there** and report it (see
 - the DE10-Nano kit: the board, its 5 V power supply and the USB cable of its
   USB-Blaster II port (mini-USB);
 - a micro-SD card of at least 2 GB, and a card reader for the PC;
-- an Ethernet cable, and a router or switch with DHCP on the same network as the
-  PC (or a direct cable to the PC, see *Troubleshooting*);
+- an Ethernet cable, and either a direct connection to the PC or a router or
+  switch on the same network as the PC: the image of the card has a fixed
+  address and does not ask for one by DHCP (Step 9);
+- a mini-USB cable for the UART port of the board, for the serial console;
 - a Windows PC with:
   - Quartus Prime Lite **23.1std.1** with Cyclone V support (Signal Tap comes
     with it);
@@ -220,12 +222,37 @@ of the board gives another one (01010) for the images of Terasic, which this is
 not.
 
 **What you should see:** after about a minute Linux has booted with the new
-design. LED0 blinks once per second; LED1 to LED7 are off.
+design. LED0 blinks once per second; LED1 to LED7 are on. They show the register
+that the ARM writes in Step 10, which starts at 65535 (`resetValue` of
+`led_pio` in `hardware/soc_system.qsys`): until then the simulator runs with
+occupancy 127 and pedestal -1. Reported by the IC students on 2026-11-14; an
+earlier version of this guide said they were off.
 
 ### Step 9: find the board on the network, log in, and copy the ARM program
 
-Find the IP address the router gave the board (the list of DHCP clients of the
-router, or an IP scanner such as Advanced IP Scanner). From the PC:
+The image of the card has a fixed address, `10.15.1.210/24` on `eth0`, and
+does not ask the router for one: it never appears in the list of DHCP clients of
+a router or in an IP scanner (found by the IC students on 2026-11-14 with
+`ip addr` on the serial console). There are two ways to reach it; neither has
+been checked on the board yet, so report which one you used:
+
+- **Cable straight to the PC:** give the Ethernet adapter of the PC a fixed
+  address on the same network, for example `10.15.1.100`, mask
+  `255.255.255.0`, no gateway (*Settings > Network > Ethernet > IP assignment*).
+  The address of the board is then `10.15.1.210`.
+- **Through the router of the lab:** log in on the serial console
+  (*Troubleshooting*) and give the board, for this session, a free address of
+  the network of the PC, for example on a `192.168.0.x` network:
+
+  ```sh
+  ip addr flush dev eth0
+  ip addr add 192.168.0.210/24 dev eth0
+  ```
+
+  The address is lost when the board is turned off. Ask before choosing it, so
+  that it does not collide with another machine.
+
+From the PC:
 
 ```powershell
 scp C:\hits\projects\de10_nano_arm\software\change_occupancy\build\change_occupancy root@<IP of the board>:/home/root/change_occupancy_new
@@ -334,11 +361,12 @@ Send to Luciano, by e-mail:
 
 ### Troubleshooting
 
-- **No IP on the router:** connect a mini-USB cable to the UART port of the board
-  and open a serial terminal (PuTTY, 115200 baud) on the COM port that appears;
-  you get the Linux console there, and `ip addr` shows the address.
-- **No router:** connect the cable straight to the PC; then the board has no DHCP
-  server and an address has to be set by hand on both sides (ask before doing it).
+- **Serial console:** connect a mini-USB cable to the UART port of the board and
+  open a serial terminal (PuTTY, 115200 baud) on the COM port that appears; you
+  get the Linux console there, and `ip addr` shows the address of the board.
+- **The board does not answer on the network:** check with `ip addr` on the
+  serial console that `eth0` has the address you expect (Step 9). The image
+  comes with `10.15.1.210/24` and no DHCP.
 - **LED0 does not blink after Step 8:** first check that all six switches of SW10
   are ON. Then go back to the old design: put the card in the PC, copy
   `C:\hits\soc_system_2025-06-12.rbf` over `E:\soc_system.rbf`, boot again, and
