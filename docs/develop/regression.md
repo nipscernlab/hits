@@ -39,7 +39,7 @@ Table 1: the builds of the regression and their goldens (in `verification/golden
 | `sim_round_robin` | core | `USE_RNG_ROUND_ROBIN` | `hits_tb_golden_round_robin.vcd` |
 | `sim_round_robin_legacy` | core | `USE_RNG_ROUND_ROBIN USE_SHAPER_LEGACY` | `hits_tb_golden_round_robin_legacy.vcd` |
 | `paper` | core | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC USE_NOISE_SIGMA8 USE_ADC_FLOOR USE_SHAPER_NO_PIPE USE_OCC_PAPER` | `hits_tb_golden_paper.vcd` (frozen) |
-| `paper_r1` | core | `USE_SHAPER_CSA_CR4RC USE_ENERGY_LORENZETTI` | `hits_tb_golden_paper_r1.vcd` |
+| `paper_r1` | core | `USE_SHAPER_CSA_CR4RC USE_ENERGY_LORENZETTI` | `hits_tb_golden_paper_r1.vcd` (frozen) |
 | `sim_leap` | core | `USE_RNG_LEAP` | `hits_tb_golden_leap.vcd` |
 | `sim_leap_legacy` | core | `USE_RNG_LEAP USE_SHAPER_LEGACY` | `hits_tb_golden_leap_legacy.vcd` |
 | `sim_leap_csa_cr4rc` | core | `USE_RNG_LEAP USE_SHAPER_CSA_CR4RC` | `hits_tb_golden_leap_csa_cr4rc.vcd` |
@@ -57,9 +57,9 @@ The comparison ignores only what is not behavior: the `$date` and `$version`
 blocks, the `RTL_DIR` path of the testbench, and the order of value changes
 within one time step.
 
-The golden of `paper` is frozen: `regress.py` keeps its SHA-256 and fails if the
-file changes, even if someone regenerated it. Changing that hash is a decision
-about the paper, not a fix.
+The goldens of `paper` and `paper_r1` are frozen: `regress.py` keeps their
+SHA-256 and fails if a file changes, even if someone regenerated it. Changing
+one of those hashes is a decision about a paper, not a fix.
 
 ## When it runs
 
