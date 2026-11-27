@@ -396,7 +396,7 @@ fails, the core changed. The `bus` builds test the configuration bus (see
 | `sim_round_robin` | core | `USE_RNG_ROUND_ROBIN` | `hits_tb_golden_round_robin.vcd` |
 | `sim_round_robin_legacy` | core | `USE_RNG_ROUND_ROBIN USE_SHAPER_LEGACY` | `hits_tb_golden_round_robin_legacy.vcd` |
 | **`paper`** | core | `USE_RNG_ROUND_ROBIN USE_SHAPER_CSA_CR4RC USE_NOISE_SIGMA8 USE_ADC_FLOOR USE_SHAPER_NO_PIPE USE_OCC_PAPER` | `hits_tb_golden_paper.vcd` (**frozen**, see below) |
-| `paper_r1` | core | `USE_SHAPER_CSA_CR4RC USE_ENERGY_LORENZETTI` | `hits_tb_golden_paper_r1.vcd` (to be frozen with the tag `paper-jsen-2026-r1`) |
+| `paper_r1` | core | `USE_SHAPER_CSA_CR4RC USE_ENERGY_LORENZETTI` | `hits_tb_golden_paper_r1.vcd` (**frozen**, tag `paper-jsen-2026-r1`) |
 | `sim_leap` | core | `USE_RNG_LEAP` | `hits_tb_golden_leap.vcd` |
 | `sim_leap_legacy` | core | `USE_RNG_LEAP USE_SHAPER_LEGACY` | `hits_tb_golden_leap_legacy.vcd` |
 | `sim_leap_csa_cr4rc` | core | `USE_RNG_LEAP USE_SHAPER_CSA_CR4RC` | `hits_tb_golden_leap_csa_cr4rc.vcd` |
@@ -459,8 +459,8 @@ The revision of the paper describes the current HITS, keeping only its pulse,
 the CSA + CR-4RC shaper. Its configuration is the `paper_r1` build:
 `USE_SHAPER_CSA_CR4RC` plus `USE_ENERGY_LORENZETTI`, on top of the defaults
 (xoshiro, segmented energy, Gaussian noise with sigma = 4, rounding ADC, the
-pipelined CSA shaper). Its golden is not frozen yet; it will be once the
-numbers of the paper close.
+pipelined CSA shaper). Its golden is **frozen** like that of `paper`, and its
+code is the tag `paper-jsen-2026-r1`, which is the release 1.0.0.
 
 `energy_seg_lorenzetti.mif` is the energy per bunch crossing of the hottest
 cell of the hadronic barrel in the public Lorenzetti simulator
